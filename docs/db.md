@@ -182,6 +182,14 @@ $fn$;
 
 Năm luật hàm này ép: không nhận Comfort của chính mình · không nhận lại cái đã nhận · tối đa 3 lần / 24h · không trả bản chưa dịch sang ngôn ngữ người đọc · `moved` không lùi về `unknown`.
 
+Chỉ `authenticated` gọi được. Supabase cấp `execute` cho `anon` theo mặc định — đã revoke
+(`0002_revoke_request_comfort_from_anon.sql`); chưa đăng nhập thì `auth.uid()` là null nên hàm
+vốn đã không trả gì, nhưng để `anon` gọi được một `security definer` là thừa bề mặt tấn công.
+
+**Đã kiểm bằng SQL thật trên project, không phải suy đoán.** Cả năm luật đều đúng như thiết kế.
+Điểm từng nghi ngờ: CTE `insert ... returning` **có** ghi `deliveries` — Postgres đảm bảo CTE
+sửa dữ liệu chạy đúng một lần dù không được tham chiếu, nên không cần viết lại bằng `plpgsql`.
+
 ---
 
 # App — SQLite

@@ -55,9 +55,14 @@ Verify:
 <!-- Điền ngay khi dựng xong scaffold. Lệnh phải copy-paste chạy được.
      Kèm điều kiện bỏ qua, nếu không agent sẽ chạy full suite cho mọi sửa đổi nhỏ. -->
 
+```powershell
+cd app; npx tsc --noEmit    # typecheck
+cd app; npm test            # jest-expo
+cd app; npx expo start      # quét QR bằng Expo Go trên máy thật
 ```
-<chưa có — điền khi có scaffold>
-```
+
+Phần server không có lệnh chạy được ở máy: kiểm bằng MCP Supabase (`execute_sql` cho luật pool,
+`get_advisors` cho RLS hở) rồi dán kết quả thật.
 
 Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào**, đừng báo xong suông.
 
@@ -75,13 +80,21 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
 <!-- Chỉ thêm case dự án này GẶP THẬT. Danh sách generic sẽ bị lướt qua.
      Với app ghi chú, các case thường xuất hiện sớm: -->
 
-Chưa có. Thêm dần khi gặp — mỗi lần fix một bug thuộc loại mới thì thêm một dòng.
+* Pool rỗng, và "hết lượt 3 Comfort / 24h" — hai chuyện khác nhau, phải là hai thông báo khác nhau.
+* Mất mạng ở màn hotline: vẫn phải hiện được danh sách đóng gói sẵn (ADR 0005).
+* Entry không chọn tag nào → `unknown`, không phải mảng rỗng.
+* `moved` không bao giờ lùi về `unknown` khi tìm Comfort.
 
 ## Chỗ dễ vỡ
 
 <!-- Điền khi có file được import từ nhiều nơi. -->
 
-Chưa có. Khi có: sửa file nào → grep import của nó, test đúng những chỗ đó.
+* **Contract Tag nằm ở ba chỗ**: `docs/tags.md` ⇄ enum `tag` trong `supabase/migrations/0001_init.sql`
+  ⇄ `app/src/tags.ts`. Lệch một chỗ thì `app/src/tags.test.ts` đỏ — đó là việc của nó.
+* **Luật pool nằm trong `request_comfort()`, không nằm trong app.** Đổi cách chọn Comfort thì viết
+  migration, đừng sửa client.
+* **`received_comforts.entry_id` chỉ tồn tại trên máy.** Server không biết Comfort nào thuộc Entry
+  nào, và cố ý như vậy.
 
 ## Trước khi báo DONE
 
