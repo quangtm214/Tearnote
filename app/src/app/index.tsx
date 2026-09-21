@@ -79,6 +79,11 @@ export default function Timeline() {
             Gửi ẩn danh cho ai đó đang trải qua điều tương tự. Cần một tài khoản.
           </Text>
         </Pressable>
+
+        <Pressable style={styles.nutCho} onPress={() => router.push('/settings')}>
+          <Text style={styles.chuCho}>Cài đặt</Text>
+          <Text style={styles.phuCho}>Lời đã viết, và công tắc tắt nhận lời từ người lạ.</Text>
+        </Pressable>
       </ScrollView>
 
       <View style={styles.chanMan}>

@@ -221,6 +221,18 @@ Nguồn sự thật. Tồn tại kể cả khi không có mạng, không có tà
 | `path` | text | not null | Đường dẫn file trên máy |
 | `remote` | text | | Đường dẫn Storage, `null` nếu chưa sync |
 
+## `settings`
+
+Cài đặt của người dùng. Chỉ ở máy, không đồng bộ, không lên server.
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| `key` | text | PK | |
+| `value` | text | not null | |
+
+Khoá đang dùng: `nhan_comfort` = `bat` \| `tat`. Thiếu khoá ⇒ coi như `bat`.
+Tắt thì không còn nút xin Comfort ở bất kỳ Entry nào — overview.md §6.
+
 ## `received_comforts`
 
 Comfort đã nhận, giữ để xem lại offline. Bản sao, không phải nguồn sự thật.

@@ -31,6 +31,11 @@ db.execSync(`
     remote   text
   );
 
+  create table if not exists settings (
+    key   text primary key,
+    value text not null
+  );
+
   create table if not exists received_comforts (
     comfort_id  text primary key,
     entry_id    text not null references entries(id) on delete cascade,
@@ -148,3 +153,29 @@ export function listReceivedComforts(entryId: string): ReceivedComfort[] {
 export function markThanked(comfortId: string): void {
   db.runSync(`update received_comforts set thanked = 1 where comfort_id = ?`, comfortId);
 }
+
+/**
+ * Cài đặt của người dùng, dạng khoá–giá trị. Chỉ ở máy, không đồng bộ.
+ * Mặc định nằm ở chỗ gọi, không nằm ở đây — DB không biết giá trị nào là hợp lý.
+ */
+export function getSetting(key: string): string | null {
+  return db.getFirstSync<{ value: string }>(`select value from settings where key = ?`, key)?.value
+    ?? null;
+}
+
+export function setSetting(key: string, value: string): void {
+  db.runSync(
+    `insert into settings (key, value) values (?, ?)
+     on conflict (key) do update set value = excluded.value`,
+    key,
+    value,
+  );
+}
+
+/**
+ * Công tắc tắt hoàn toàn việc nhận Comfort — overview.md §6 gọi đây là một trong hai
+ * lưới an toàn duy nhất, vì hệ thống không tự nhận ra ai đang khủng hoảng.
+ * Mặc định BẬT: pool là lý do Tearnote tồn tại. Tắt rồi thì không còn nút xin ở đâu cả.
+ */
+export const nhanComfortBat = () => getSetting('nhan_comfort') !== 'tat';
+export const datNhanComfort = (bat: boolean) => setSetting('nhan_comfort', bat ? 'bat' : 'tat');

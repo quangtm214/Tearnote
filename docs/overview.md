@@ -78,6 +78,10 @@ Một repo, `app/` và `server/` tách rõ. Không dùng công cụ monorepo cho
 - **Đồng ý rõ ràng trước khi Comfort vào pool.** Người viết phải biết nó sẽ được gửi cho người lạ, và phải thu hồi được.
 - **Phải có điều khoản sử dụng trước khi người lạ đầu tiên dùng app.**
 
+Tình trạng: thu hồi Comfort **đã có** (màn "Lời tôi đã viết"), công tắc tắt nhận Comfort
+**đã có** (Cài đặt). Hotline mới có bản đóng gói sẵn, **chưa** lấy từ server.
+Điều khoản sử dụng **chưa có** — đây là thứ chặn launch.
+
 ## 7. Chắp vá có chủ đích
 
 Ghi lại để không quên, không phải để bào chữa.

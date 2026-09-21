@@ -7,6 +7,7 @@ import {
   getEntry,
   listReceivedComforts,
   markThanked,
+  nhanComfortBat,
   saveReceivedComfort,
   type Entry,
   type ReceivedComfort,
@@ -21,12 +22,14 @@ export default function EntryComfortScreen() {
   const [entry, setEntry] = useState<Entry | null>(null);
   const [ds, setDs] = useState<ReceivedComfort[]>([]);
   const [dangXin, setDangXin] = useState(false);
+  const [choNhan, setChoNhan] = useState(true);
   const [thongBao, setThongBao] = useState<string | null>(null);
 
   const nap = useCallback(() => {
     if (!entryId) return;
     setEntry(getEntry(entryId));
     setDs(listReceivedComforts(entryId));
+    setChoNhan(nhanComfortBat());
   }, [entryId]);
 
   useEffect(nap, [nap]);
@@ -124,8 +127,8 @@ export default function EntryComfortScreen() {
 
         {thongBao ? <Text style={s.thongBao}>{thongBao}</Text> : null}
 
-        {/* Mỗi Entry một Comfort — ADR 0007. Nhận rồi thì không còn nút xin. */}
-        {ds.length === 0 ? (
+        {/* Mỗi Entry một Comfort (ADR 0007), và công tắc tắt nhận thì không còn nút xin ở đâu cả. */}
+        {ds.length === 0 && choNhan ? (
           <Pressable
             style={[s.nutChinh, dangXin && s.mo]}
             onPress={xin}
@@ -137,6 +140,12 @@ export default function EntryComfortScreen() {
               <Text style={s.chuNutChinh}>Xin một lời động viên</Text>
             )}
           </Pressable>
+        ) : null}
+
+        {ds.length === 0 && !choNhan ? (
+          <Text style={s.giaiThich}>
+            Bạn đang tắt nhận lời từ người lạ. Bật lại trong Cài đặt nếu muốn.
+          </Text>
         ) : null}
 
         <Pressable style={s.nutThoat} onPress={thoat} accessibilityRole="button">
