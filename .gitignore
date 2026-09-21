@@ -1,0 +1,21 @@
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.orig.*
+
+# Biến môi trường thật — không bao giờ commit
+.env
+.env.local
+
+# SQLite sinh ra lúc chạy
+*.db
+*.db-journal
+
+# Native build, chỉ sinh khi prebuild
+/app/android/
+/app/ios/
+
+.DS_Store
+npm-debug.*
