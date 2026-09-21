@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 /**
  * Token hệ thống của Tearnote. Chỉ hằng số — không component, không context, không hook.
  *
@@ -29,15 +27,12 @@ export const color = {
 } as const;
 
 /**
- * Chữ — chỉ font hệ thống, không thêm package font nào.
- * (Nếu sau này thêm font: cần một sans humanist có chữ thường mở, hỗ trợ đủ dấu tiếng Việt
- * và kana tiếng Nhật trong CÙNG một family — ví dụ Noto Sans / Noto Sans JP. Đừng thêm trước khi
- * có màn hình thật để đo, và đừng dùng hai family cho ba ngôn ngữ vì nhịp chữ sẽ lệch giữa các locale.)
- */
-export const fontFamily = Platform.select({ ios: 'System', default: undefined });
-
-/**
- * Thang cỡ chữ — bắt đầu từ 17 chứ không phải 16, và không có nấc nào dưới 14.
+ * Thang cỡ chữ. Font hệ thống, đúng mặc định của React Native, không khai báo family ở đâu cả.
+ * (Nếu sau này thêm font: cần một sans humanist hỗ trợ đủ dấu tiếng Việt và kana tiếng Nhật
+ * trong CÙNG một family — ví dụ Noto Sans / Noto Sans JP. Đừng thêm trước khi có màn hình thật
+ * để đo, và đừng dùng hai family cho ba ngôn ngữ vì nhịp chữ sẽ lệch giữa các locale.)
+ *
+ * Thang bắt đầu từ 17 chứ không phải 16, và không có nấc nào dưới 14.
  * Mắt nhoè lúc nửa đêm không đọc được caption 12. lineHeight rộng (~1.5) vì tiếng Việt có dấu
  * chồng hai tầng, dòng sát nhau là dấu dính vào dòng trên. Chỉ 3 weight: font hệ thống Android
  * (Roboto) render '600' không ổn định, nên dừng ở 400 / 500 / 700.
@@ -95,3 +90,9 @@ export const touch = {
   /** Nút hotline. To hơn vì lúc cần tới nó là lúc tay run nhất. */
   hotline: 64,
 } as const;
+
+/**
+ * Cường độ 1–5 → chiều cao vạch. Một thang duy nhất: màn ghi Entry và màn timeline phải vẽ
+ * cùng tỉ lệ, nếu không người dùng thấy hai mức khác nhau cho cùng một Entry.
+ */
+export const caoVach = (intensity: number) => 16 + intensity * 12;

@@ -5,16 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { listEntries, type Entry } from '@/db';
 import { TAG_LABEL_VI } from '@/tags';
-import { color, radius, space, text, touch } from '@/theme';
+import { caoVach, color, radius, space, text, touch } from '@/theme';
 
 const gio = new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
 const ngay = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
 
 /** Khoá nhóm theo ngày địa phương. */
 const khoaNgay = (ms: number) => new Date(ms).toDateString();
-
-/** Cường độ 1–5 → chiều cao vạch dọc. Đọc được khi lướt, không cần đọc số. */
-const caoVach = (intensity: number) => 16 + intensity * 12;
 
 function DongEntry({ e }: { e: Entry }) {
   const nhanTag = e.tags.map((t) => TAG_LABEL_VI[t]).join(' · ');
@@ -29,7 +26,7 @@ function DongEntry({ e }: { e: Entry }) {
       <View style={[styles.vach, { height: caoVach(e.intensity) }]} />
       <View style={styles.noiDung}>
         {e.durationMin !== null && <Text style={styles.phu}>{e.durationMin} phút</Text>}
-        {nhanTag.length > 0 && <Text style={styles.tag}>{nhanTag}</Text>}
+        <Text style={styles.tag}>{nhanTag}</Text>
         {e.reflection ? (
           <Text style={styles.than} numberOfLines={3}>
             {e.reflection}
@@ -76,6 +73,12 @@ export default function Timeline() {
             </View>
           ))
         )}
+        <Pressable style={styles.nutCho} onPress={() => router.push('/comfort/write')}>
+          <Text style={styles.chuCho}>Viết một lời cho người lạ</Text>
+          <Text style={styles.phuCho}>
+            Gửi ẩn danh cho ai đó đang trải qua điều tương tự. Cần một tài khoản.
+          </Text>
+        </Pressable>
       </ScrollView>
 
       <View style={styles.chanMan}>
@@ -110,6 +113,9 @@ const styles = StyleSheet.create({
   phu: { ...text.phu, color: color.chuPhu },
   tag: { ...text.phu, color: color.anhTrang, marginTop: space.xs },
   than: { ...text.than, color: color.chuChinh, marginTop: space.sm },
+  nutCho: { minHeight: touch.toiThieu, marginTop: space.xl, justifyContent: 'center' },
+  chuCho: { ...text.nut, color: color.anhTrang },
+  phuCho: { ...text.phu, color: color.chuPhu, marginTop: space.xs, maxWidth: 320 },
   chanMan: { paddingHorizontal: space.man, paddingBottom: space.md, gap: space.sm },
   nutChinh: {
     height: touch.chinh,

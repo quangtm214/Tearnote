@@ -2,7 +2,7 @@
 
 Tài liệu này mô tả Tearnote là gì, MVP gồm những gì và cố tình bỏ những gì. Từ vựng chuẩn nằm ở [CONTEXT.md](../CONTEXT.md); lý do đằng sau từng quyết định nằm ở [docs/adr/](./adr/).
 
-Trạng thái: chưa có code. Mọi quyết định dưới đây đã chốt qua thảo luận, chưa cái nào được kiểm chứng bằng thực tế.
+Trạng thái: schema đã deploy và kiểm bằng SQL thật; app đã có timeline, ghi Entry, hotline, đăng nhập, viết/nhận Comfort. Chưa chạy trên thiết bị thật, chưa launch. Mục 8 liệt kê phần còn thiếu.
 
 ## 1. Sản phẩm
 
@@ -51,7 +51,7 @@ Nếu Comfort bị cắt, Tearnote không còn lý do tồn tại.
 ```
 app/      Expo (React Native + TypeScript), Android trước
           SQLite = nguồn sự thật cho Entry
-server/   Supabase: Postgres + auth + storage
+supabase/   Supabase: Postgres + auth + storage
           Pool Comfort, bản dịch, hàng đợi kiểm duyệt, hotline, backup Entry
 batch     Routine Claude chạy đêm: kiểm duyệt rồi dịch Comfort — tạm thời
 ```

@@ -1,6 +1,6 @@
 # CLAUDE.md — Tearnote
 
-**Trạng thái: đã chốt stack và phạm vi MVP, chưa có code.**
+**Trạng thái: schema đã deploy, app chạy được lát cắt Entry + Comfort. Chưa launch.**
 File này cố tình ngắn. Mỗi khi chốt một quyết định hoặc dựng xong một tầng, cập nhật đúng mục tương ứng bên dưới — không viết trước.
 
 ## Sản phẩm
@@ -23,7 +23,8 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Auth | Supabase anonymous auth cho phần nhật ký; tài khoản thật bắt buộc để **viết** Comfort hoặc bật sync | Không ép đăng ký để dùng app, nhưng viết cho người lạ đọc thì cần danh tính bền. Xem ADR 0002, 0004, 0006 |
 | Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 4 việc nhỏ, không đáng tự dựng |
 | Test runner | jest-expo | Đi kèm Expo, không thêm dependency |
-| Package manager | npm | Mặc định của Expo; pnpm hay vỡ với native module RN |
+| Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 khoá react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
+| `@react-native/jest-preset` ghim đúng version RN | `0.86.3`, không để `^` | `legacy-peer-deps` cho npm tự lấy 0.87.1 và jest chết ngay. Nâng RN thì nâng cả gói này |
 
 Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi để cả repo bám theo.
 
@@ -95,6 +96,10 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
   migration, đừng sửa client.
 * **`received_comforts.entry_id` chỉ tồn tại trên máy.** Server không biết Comfort nào thuộc Entry
   nào, và cố ý như vậy.
+* **Giới hạn độ dài Comfort có ở hai nơi**: CHECK `char_length(body) between 20 and 500` và
+  `array_length(tags,1) between 1 and 2` trong migration, lặp lại thành hằng số trong
+  `app/src/app/comfort/write.tsx` để hiện bộ đếm. Sửa CHECK mà quên sửa hằng số thì người dùng
+  gõ xong mới bị server từ chối.
 
 ## Trước khi báo DONE
 

@@ -10,9 +10,9 @@ import * as SecureStore from 'expo-secure-store';
 // (thêm custom claim) thì phải cắt nhỏ theo khoá. Đừng đổi sang AsyncStorage —
 // token auth nằm plaintext trên máy là bước lùi, không phải bước đơn giản hoá.
 const store = {
-  getItem: (k: string) => SecureStore.getItemAsync(k),
-  setItem: (k: string, v: string) => SecureStore.setItemAsync(k, v),
-  removeItem: (k: string) => SecureStore.deleteItemAsync(k),
+  getItem: SecureStore.getItemAsync,
+  setItem: SecureStore.setItemAsync,
+  removeItem: SecureStore.deleteItemAsync,
 };
 
 export const supabase = createClient(

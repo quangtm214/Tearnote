@@ -73,13 +73,11 @@ export default function EntryComfortScreen() {
   }
 
   async function camOn(comfortId: string) {
-    try {
-      await supabase.from('deliveries').update({ thanked: true }).eq('comfort_id', comfortId);
-    } catch {
-      // Không chặn: cảm ơn hụt trên server không đáng để hiện lỗi cho người dùng lúc này.
-    }
+    // Đánh dấu ở máy trước: cảm ơn hụt trên server không đáng để chặn người dùng lúc này,
+    // và supabase-js trả { error } chứ không throw nên try/catch ở đây là thừa.
     markThanked(comfortId);
     nap();
+    await supabase.from('deliveries').update({ thanked: true }).eq('comfort_id', comfortId);
   }
 
   const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -89,7 +87,7 @@ export default function EntryComfortScreen() {
       <SafeAreaView style={s.man}>
         <View style={s.noiDung}>
           <Text style={s.tieuDe}>Không tìm thấy</Text>
-          <Text style={s.giaiThich}>Trang nhật ký này không còn nữa.</Text>
+          <Text style={s.giaiThich}>Entry này không còn nữa.</Text>
           <Pressable style={s.nutThoat} onPress={thoat} accessibilityRole="button">
             <Text style={s.chuThoat}>Quay lại</Text>
           </Pressable>
@@ -104,7 +102,7 @@ export default function EntryComfortScreen() {
         <Text style={s.tieuDe}>Lời từ người lạ</Text>
 
         {ds.length === 0 ? (
-          <Text style={s.giaiThich}>Chưa có lời nào cho trang này.</Text>
+          <Text style={s.giaiThich}>Chưa có lời nào cho Entry này.</Text>
         ) : (
           ds.map((c) => (
             <View key={c.comfortId} style={s.the}>
@@ -126,17 +124,20 @@ export default function EntryComfortScreen() {
 
         {thongBao ? <Text style={s.thongBao}>{thongBao}</Text> : null}
 
-        <Pressable
-          style={[s.nutChinh, dangXin && s.mo]}
-          onPress={xin}
-          disabled={dangXin}
-          accessibilityRole="button">
-          {dangXin ? (
-            <ActivityIndicator color={color.demKhuya} />
-          ) : (
-            <Text style={s.chuNutChinh}>Xin một lời động viên</Text>
-          )}
-        </Pressable>
+        {/* Mỗi Entry một Comfort — ADR 0007. Nhận rồi thì không còn nút xin. */}
+        {ds.length === 0 ? (
+          <Pressable
+            style={[s.nutChinh, dangXin && s.mo]}
+            onPress={xin}
+            disabled={dangXin}
+            accessibilityRole="button">
+            {dangXin ? (
+              <ActivityIndicator color={color.demKhuya} />
+            ) : (
+              <Text style={s.chuNutChinh}>Xin một lời động viên</Text>
+            )}
+          </Pressable>
+        ) : null}
 
         <Pressable style={s.nutThoat} onPress={thoat} accessibilityRole="button">
           <Text style={s.chuThoat}>Quay lại</Text>

@@ -26,5 +26,5 @@ _Avoid_: category, label, mood, lý do
 Danh sách chốt: [docs/tags.md](./docs/tags.md)
 
 **Delivery**:
-Một lần gửi cụ thể: Comfort nào, tới người nào, cho Entry nào. Cùng một Comfort không được gửi lại cho người đã nhận nó.
+Một lần gửi cụ thể: Comfort nào, tới người nào. Cùng một Comfort không được gửi lại cho người đã nhận nó. Server cố ý **không** biết Delivery thuộc Entry nào — mối nối đó chỉ nằm trong SQLite trên máy (ADR 0004).
 _Avoid_: send, gửi note, match

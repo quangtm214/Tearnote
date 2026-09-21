@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { insertEntry } from '@/db';
 import { MAX_ENTRY_TAGS, TAG_IDS, TAG_LABEL_VI, type TagId } from '@/tags';
-import { color, radius, space, text, touch } from '@/theme';
+import { caoVach, color, radius, space, text, touch } from '@/theme';
+import { Pill } from '@/ui';
 
 const luc = new Intl.DateTimeFormat('vi-VN', {
   hour: '2-digit',
@@ -34,29 +35,6 @@ const THOI_LUONG: { nhan: string; phut: number | null }[] = [
 
 const CUONG_DO = [1, 2, 3, 4, 5];
 
-function Pill({
-  nhan,
-  chon,
-  tat,
-  onPress,
-}: {
-  nhan: string;
-  chon: boolean;
-  tat?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={tat}
-      accessibilityRole="button"
-      accessibilityState={{ selected: chon, disabled: !!tat }}
-      style={[styles.pill, chon && styles.pillChon, tat && styles.pillTat]}
-    >
-      <Text style={[styles.chuPill, chon && styles.chuPillChon]}>{nhan}</Text>
-    </Pressable>
-  );
-}
 
 export default function GhiEntry() {
   const [luiPhut, setLuiPhut] = useState(0);
@@ -129,7 +107,7 @@ export default function GhiEntry() {
               <View
                 style={[
                   styles.nac,
-                  { height: 12 + n * 9 },
+                  { height: caoVach(n) },
                   n <= intensity && styles.nacChon,
                 ]}
               />
@@ -177,17 +155,6 @@ const styles = StyleSheet.create({
   nhan: { ...text.nhan, color: color.chuChinh, marginTop: space.lg },
   phu: { ...text.phu, color: color.chuPhu, marginTop: space.xs },
   hang: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
-  pill: {
-    minHeight: touch.toiThieu,
-    justifyContent: 'center',
-    paddingHorizontal: space.md,
-    borderRadius: radius.vien,
-    backgroundColor: color.matGiay,
-  },
-  pillChon: { backgroundColor: color.anhTrang },
-  pillTat: { opacity: 0.35 },
-  chuPill: { ...text.nut, color: color.chuPhu },
-  chuPillChon: { color: color.demKhuya },
   oNac: {
     width: touch.toiThieu,
     height: touch.toiThieu,

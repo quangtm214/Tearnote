@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-import { color, text } from '@/theme';
+import { color } from '@/theme';
 
 /**
  * Stack chung cho mọi route. Không liệt kê từng màn — expo-router tự đăng ký theo file,
@@ -15,9 +15,6 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: color.demKhuya },
-          headerStyle: { backgroundColor: color.demKhuya },
-          headerTintColor: color.chuChinh,
-          headerTitleStyle: { fontSize: text.nhan.fontSize },
           animation: 'fade',
         }}
       />

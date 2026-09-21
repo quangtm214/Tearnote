@@ -12,12 +12,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { isRealAccount, supabase } from '@/supabase';
-import { TAG_IDS, TAG_LABEL_VI, type TagId } from '@/tags';
+import { MAX_COMFORT_TAGS, TAG_IDS, TAG_LABEL_VI, type TagId } from '@/tags';
 import { color, radius, space, text, touch } from '@/theme';
+import { Pill } from '@/ui';
 
 const TOI_THIEU = 20;
 const TOI_DA = 500;
-const TAG_TOI_DA = 2;
 
 /**
  * Viết Comfort. Hai luật quan trọng nhất KHÔNG nằm ở đây mà ở DB:
@@ -50,7 +50,7 @@ export default function WriteComfortScreen() {
     setTags((truoc) =>
       truoc.includes(t)
         ? truoc.filter((x) => x !== t)
-        : truoc.length >= TAG_TOI_DA
+        : truoc.length >= MAX_COMFORT_TAGS
           ? truoc
           : [...truoc, t],
     );
@@ -76,12 +76,18 @@ export default function WriteComfortScreen() {
       });
 
       if (error) {
-        // 42501 = RLS chặn. Ở bảng này chỉ có một lý do: đã đủ 5 lời trong 24h.
-        setLoi(
-          error.code === '42501'
-            ? 'Hôm nay bạn đã gửi 5 lời rồi. Mai quay lại nhé.'
-            : 'Chưa gửi được. Có vẻ mạng đang chập chờn — thử lại sau một lát.',
-        );
+        // 42501 = RLS chặn, và policy comfort_insert có ba điều kiện. Hết lượt 5/24h là
+        // lý do hay gặp nhất, nhưng tài khoản anonymous hoặc session hết hạn cũng trả
+        // đúng mã này — hỏi lại DB để khỏi hiện một câu sai.
+        if (error.code === '42501') {
+          setLoi(
+            (await isRealAccount())
+              ? 'Hôm nay bạn đã gửi 5 lời rồi. Mai quay lại nhé.'
+              : 'Phiên đăng nhập đã hết. Đăng nhập lại rồi gửi nhé.',
+          );
+        } else {
+          setLoi('Chưa gửi được. Có vẻ mạng đang chập chờn — thử lại sau một lát.');
+        }
         return;
       }
       setXong(true);
@@ -146,20 +152,18 @@ export default function WriteComfortScreen() {
         </Text>
 
         <Text style={s.nhan}>Lời này dành cho chuyện gì?</Text>
-        <Text style={s.phu}>Chọn tối đa {TAG_TOI_DA}.</Text>
+        <Text style={s.phu}>Chọn tối đa {MAX_COMFORT_TAGS}.</Text>
         <View style={s.hangTag}>
           {TAG_IDS.map((t) => {
             const chon = tags.includes(t);
             return (
-              <Pressable
+              <Pill
                 key={t}
+                nhan={TAG_LABEL_VI[t]}
+                chon={chon}
+                tat={dangGui || (!chon && tags.length >= MAX_COMFORT_TAGS)}
                 onPress={() => doiTag(t)}
-                disabled={dangGui}
-                accessibilityRole="button"
-                accessibilityState={{ selected: chon }}
-                style={[s.tag, chon && s.tagChon]}>
-                <Text style={[s.chuTag, chon && s.chuTagChon]}>{TAG_LABEL_VI[t]}</Text>
-              </Pressable>
+              />
             );
           })}
         </View>
@@ -188,6 +192,7 @@ export default function WriteComfortScreen() {
 }
 
 const s = StyleSheet.create({
+  hangTag: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   man: { flex: 1, backgroundColor: color.demKhuya },
   giua: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   noiDung: { paddingHorizontal: space.man, paddingVertical: space.lg, gap: space.md },
@@ -211,17 +216,6 @@ const s = StyleSheet.create({
     minHeight: 160,
   },
   dem: { ...text.phu, color: color.chuPhu },
-  hangTag: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  tag: {
-    minHeight: touch.toiThieu,
-    justifyContent: 'center',
-    paddingHorizontal: space.md,
-    borderRadius: radius.vien,
-    backgroundColor: color.matGiay,
-  },
-  tagChon: { backgroundColor: color.anhTrang },
-  chuTag: { ...text.nut, color: color.chuPhu },
-  chuTagChon: { color: color.demKhuya },
   loi: {
     ...text.than,
     color: color.chuChinh,

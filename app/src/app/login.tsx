@@ -39,10 +39,18 @@ export default function LoginScreen() {
 
     setDangChay(true);
     try {
+      // Đăng ký khi đang có session anonymous phải NÂNG CẤP chính user đó, không tạo user mới:
+      // deliveries neo vào user id: tạo mới là mất lịch sử "đã nhận Comfort nào", trần 3/24h
+      // reset, và người dùng nhận lại đúng lời đã đọc. signUp chỉ dùng khi chưa có session.
+      const { data: phien } = await supabase.auth.getSession();
+      const anDanh = phien.session?.user.is_anonymous === true;
+
       const { data, error } =
         kieu === 'vao'
           ? await supabase.auth.signInWithPassword({ email, password: matKhau })
-          : await supabase.auth.signUp({ email, password: matKhau });
+          : anDanh
+            ? await supabase.auth.updateUser({ email, password: matKhau })
+            : await supabase.auth.signUp({ email, password: matKhau });
 
       if (error) {
         setLoi(
@@ -53,8 +61,8 @@ export default function LoginScreen() {
         return;
       }
 
-      // signUp mà chưa có session = dự án đang bật xác minh email.
-      if (!data.session) {
+      // Không có session trả về = dự án đang bật xác minh email (cả signUp lẫn updateUser).
+      if (!('session' in data) || !data.session) {
         setThongBao('Đã gửi thư xác minh tới email của bạn. Xác minh xong thì quay lại đăng nhập.');
         return;
       }

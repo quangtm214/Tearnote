@@ -5,7 +5,7 @@ Hai kho tách biệt. Đọc [ADR 0004](./adr/0004-luu-tru-local-first.md) trư�
 - **SQLite trên máy** — nguồn sự thật của Entry. Luôn có, kể cả khi không đăng nhập.
 - **Supabase (Postgres)** — pool Comfort, bản dịch, hotline, và bản sao Entry cho ai bật sync.
 
-Thiết kế, chưa chạy lần nào.
+Đã apply lên project thật và kiểm bằng SQL — xem cuối mục `request_comfort()`.
 
 ## Về "tài khoản"
 

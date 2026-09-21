@@ -33,8 +33,9 @@ export const TAG_LABEL_VI: Record<TagId, string> = {
   unknown: 'Không rõ vì sao',
 };
 
-/** Entry được gắn tối đa 3 tag. */
+/** Entry được gắn tối đa 3 tag, Comfort tối đa 2. Cả hai đều có CHECK tương ứng trong migration. */
 export const MAX_ENTRY_TAGS = 3;
+export const MAX_COMFORT_TAGS = 2;
 
 /**
  * Không chọn tag nào thì rơi về 'unknown' — 'unknown' là tag thật, không phải giá trị rỗng,
