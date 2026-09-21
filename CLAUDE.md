@@ -37,6 +37,22 @@ Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi đ
 * Bug phát hiện ngoài scope → ghi nhận, không tự sửa.
 * Mỗi dòng đổi phải truy được về yêu cầu của user.
 
+## Luật commit
+
+Ép bằng `.husky/commit-msg`, nhưng đừng để hook phải chặn — viết đúng ngay từ đầu.
+
+* **Một dòng title, hết.** Không phần thân, không bullet, không giải thích bên dưới. Lý do của thay đổi nằm ở code, comment và `docs/`, không nằm ở commit message.
+* **Tối đa 100 ký tự.**
+* **Toàn bộ bằng tiếng Anh**, kể cả khi mọi thứ khác trong repo là tiếng Việt.
+* **Không `Co-Authored-By`, không trailer nào cả.** Commit đứng tên chủ repo, không đứng tên Claude hay bất kỳ agent nào.
+* Không `--no-verify`. Hook chặn thì sửa message, đừng đi vòng.
+
+```
+feat(app): add settings screen with comfort opt-out switch
+fix: reject anonymous accounts from writing comforts
+docs: record pool rule verification results
+```
+
 ## Trước khi code
 
 1. **Tìm cái đã có trước khi viết mới.** Repo còn nhỏ nên đọc hết được — đọc, đừng đoán.

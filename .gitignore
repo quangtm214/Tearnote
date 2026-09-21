@@ -17,5 +17,8 @@ expo-env.d.ts
 /app/android/
 /app/ios/
 
+# husky tự sinh
+.husky/_/
+
 .DS_Store
 npm-debug.*

@@ -1,0 +1,46 @@
+#!/bin/sh
+# Luật commit của repo này. Xem "Luật commit" trong CLAUDE.md.
+#   1. Chỉ một dòng title, không có phần thân bên dưới.
+#   2. Tối đa 100 ký tự.
+#   3. Tiếng Anh — chặn bằng cách cấm ký tự ngoài ASCII (tiếng Việt có dấu là non-ASCII).
+#   4. Không có trailer Co-Authored-By.
+#
+# husky chạy file này bằng `sh -e`, nên mọi kiểm tra phải viết dạng if/then:
+# một dòng `grep ... && fail` sẽ tự thoát khi grep không khớp.
+
+msg_file="$1"
+
+fail() {
+  echo "commit-msg bị từ chối: $1" >&2
+  echo "  title: $title" >&2
+  echo "  luat: mot dong, <= 100 ky tu, tieng Anh, khong Co-Authored-By" >&2
+  exit 1
+}
+
+# Bỏ dòng comment của git, bỏ dòng trắng ở cuối
+body=$(grep -v '^#' "$msg_file" | sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}')
+title=$(printf '%s\n' "$body" | head -1)
+extra=$(printf '%s\n' "$body" | tail -n +2 | grep -c '[^[:space:]]' || true)
+len=$(printf '%s' "$title" | wc -c)
+
+if [ -z "$title" ]; then
+  fail "message rong"
+fi
+
+if [ "$extra" -ne 0 ]; then
+  fail "chi duoc co title, khong duoc them noi dung phia sau"
+fi
+
+if [ "$len" -gt 100 ]; then
+  fail "title dai $len ky tu, toi da 100"
+fi
+
+if printf '%s' "$title" | LC_ALL=C grep -q '[^ -~]'; then
+  fail "title phai bang tieng Anh (co ky tu ngoai ASCII)"
+fi
+
+if printf '%s\n' "$body" | grep -qi 'co-authored-by'; then
+  fail "khong duoc co trailer Co-Authored-By"
+fi
+
+exit 0
