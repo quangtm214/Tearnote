@@ -27,6 +27,28 @@ export const color = {
 } as const;
 
 /**
+ * World "màn hình một-bit" — đang thay dần `color` ở trên, bắt đầu từ Timeline.
+ * Hai tông duy nhất; mọi tông ở giữa là dither PNG (assets/images/dither), không có xám đặc.
+ * Mực dịu chứ không trắng: #A9A59B trên #0B0B0C ≈ 8:1, đọc được mà không chói lúc 2 giờ sáng.
+ */
+export const bit = {
+  nen: '#0B0B0C',
+  muc: '#A9A59B',
+  /** Màu duy nhất của app, chỉ ở nút trợ giúp (~7.7:1 trên nền). */
+  den: '#C99A4E',
+} as const;
+
+/**
+ * Chữ pixel VT323 (nạp ở _layout) cho tiêu đề và nhãn in hoa; chữ thân vẫn là font hệ thống.
+ * VT323 có đủ dấu tiếng Việt nhưng không có kana — khi có tiếng Nhật thì ghép DotGothic16.
+ * lineHeight rộng vì chữ hoa có dấu chồng hai tầng (Ữ, Ầ).
+ */
+export const pixel = {
+  tieuDe: { fontFamily: 'VT323', fontSize: 32, lineHeight: 40 },
+  nhan: { fontFamily: 'VT323', fontSize: 22, lineHeight: 28 },
+} as const;
+
+/**
  * Thang cỡ chữ. Font hệ thống, đúng mặc định của React Native, không khai báo family ở đâu cả.
  * (Nếu sau này thêm font: cần một sans humanist hỗ trợ đủ dấu tiếng Việt và kana tiếng Nhật
  * trong CÙNG một family — ví dụ Noto Sans / Noto Sans JP. Đừng thêm trước khi có màn hình thật

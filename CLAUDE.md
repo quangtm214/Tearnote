@@ -24,6 +24,8 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 4 việc nhỏ, không đáng tự dựng |
 | Test runner | jest-expo | Đi kèm Expo, không thêm dependency |
 | Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 khoá react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
+| Visual world | "Màn hình một-bit": `bit` + `pixel` trong `app/src/theme.ts`, dither là PNG lặp trong `app/assets/images/dither/` | Chọn qua `/impeccable`; hướng chi tiết ở `.impeccable/surfaces/`. Mới có Timeline, các màn khác còn world cũ |
+| Font | `expo-font` + VT323 (OFL) cho tiêu đề/nhãn; chữ thân là font hệ thống | Không có font pixel nào đủ cả Việt lẫn Nhật; khi có tiếng Nhật thì ghép DotGothic16 |
 | `@react-native/jest-preset` ghim đúng version RN | `0.86.3`, không để `^` | `legacy-peer-deps` cho npm tự lấy 0.87.1 và jest chết ngay. Nâng RN thì nâng cả gói này |
 
 Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi để cả repo bám theo.
