@@ -21,8 +21,12 @@ describe('contract Tag', () => {
     for (const id of TAG_IDS) expect(md).toContain(`\`${id}\``);
   });
 
-  it('mỗi tag đều có nhãn tiếng Việt', () => {
-    for (const id of TAG_IDS) expect(TAG_LABEL_VI[id]).toBeTruthy();
+  it('nhãn tiếng Việt trùng cột vi trong docs/tags.md', () => {
+    const md = readFileSync(join(repoRoot, 'docs', 'tags.md'), 'utf8');
+    const fromMd = Object.fromEntries(
+      [...md.matchAll(/^\| `([a-z_]+)` \| ([^|]+?) \|/gm)].map((m) => [m[1], m[2]]),
+    );
+    expect(fromMd).toEqual(TAG_LABEL_VI);
   });
 });
 

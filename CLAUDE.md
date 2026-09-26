@@ -24,8 +24,12 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 4 việc nhỏ, không đáng tự dựng |
 | Test runner | jest-expo | Đi kèm Expo, không thêm dependency |
 | Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 khoá react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
-| Visual world | "Màn hình một-bit": `bit` + `pixel` trong `app/src/theme.ts`, dither là PNG lặp trong `app/assets/images/dither/` | Chọn qua `/impeccable`; hướng chi tiết ở `.impeccable/surfaces/`. Mới có Timeline, các màn khác còn world cũ |
-| Font | `expo-font` + VT323 (OFL) cho tiêu đề/nhãn; chữ thân là font hệ thống | Không có font pixel nào đủ cả Việt lẫn Nhật; khi có tiếng Nhật thì ghép DotGothic16 |
+| Visual world | "Album ảnh trang đen": `album` + `butChi` trong `app/src/theme.ts` | Chọn qua `/impeccable` (thay world một-bit — bị bỏ vì lạnh, retro, khó đọc); hướng chi tiết ở `.impeccable/surfaces/`. Đã phủ mọi màn; mảnh dùng chung ở `app/src/ui.tsx`, world cũ đã xoá |
+| Lưới / heatmap | Chỉ bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục (DESIGN.md) | Nhìn cả năm một lượt mới thấy mùa nào dày. Màu = tổng cường độ trong ngày, ngưỡng cố định ở `app/src/lich.ts` để màu cùng nghĩa giữa các năm |
+| Từ vựng trên UI | "lần khóc" thay "Entry", "lời từ/cho người lạ" thay "Comfort" (PRODUCT.md) | Screen reader đọc chữ Anh sai giữa câu Việt; các khái niệm khác vốn đã Việt hoá trên UI |
+| Nhãn Tag tiếng Việt | Cột `vi` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL_VI` (test kiểm) | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau — đổi nhãn là đổi contract |
+| Dropdown / select | Tự dựng bằng `Modal` của RN core, không thêm `@react-native-picker/picker` | Không thêm dependency; style được theo world album |
+| Font | `expo-font` + Patrick Hand (OFL) cho tiêu đề/chú thích tiếng Việt; Reflection và nút bấm là font hệ thống. Yomogi nằm sẵn trong `assets/fonts` cho tiếng Nhật, chưa nạp | Yomogi rộng cố định với chữ Latin nên tách chữ có dấu ("l ần") |
 | `@react-native/jest-preset` ghim đúng version RN | `0.86.3`, không để `^` | `legacy-peer-deps` cho npm tự lấy 0.87.1 và jest chết ngay. Nâng RN thì nâng cả gói này |
 
 Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi để cả repo bám theo.
@@ -93,6 +97,9 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
 
 * [docs/tags.md](docs/tags.md) — danh sách Tag. Entry và Comfort dùng chung; đây là toàn bộ cơ chế match. Đừng thêm/bớt Tag mà không hỏi.
 * [docs/db.md](docs/db.md) ⇄ migration Supabase ⇄ schema SQLite trong app. Ba chỗ này phải khớp; sửa một thì sửa cả ba.
+* [DESIGN.md](DESIGN.md) — nguồn sự thật cho giao diện. Mọi màn mới hoặc chỉnh UI dùng token
+  `album` / `butChi` trong `app/src/theme.ts` và luật trong DESIGN.md; không dùng token `color` cũ
+  (chỉ còn cho các màn chưa chuyển). Đổi world hay thêm token thì cập nhật DESIGN.md cùng lúc.
 
 ## Edge case bắt buộc xét
 

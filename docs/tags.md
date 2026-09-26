@@ -1,4 +1,4 @@
-# Tag — contract giữa Entry và Comfort
+| `unknown` | Không rõ vì sao || `moved` | Vì vui, vì cảm động || `anxiety` | Lo về tương lai || `overwhelm` | Kiệt sức, quá tải || `family` | Chuyện gia đình || `loneliness` | Cô đơn || `self_worth` | Thấy mình không đủ tốt || `pressure` | Áp lực công việc, học tập || `grief` | Mất người thân || `heartbreak` | Chuyện tình cảm |# Tag — contract giữa Entry và Comfort
 
 Đây là nguồn sự thật cho danh sách Tag. Entry và Comfort dùng chung đúng danh sách này — đó là toàn bộ cơ chế match. Đổi danh sách sau khi có dữ liệu là migrate đau, nên coi nó là contract.
 
@@ -8,18 +8,20 @@ Tag mô tả **hoàn cảnh**, không mô tả cảm xúc. Cường độ cảm 
 
 | id | vi | en | ja |
 |---|---|---|---|
-| `heartbreak` | Chia tay, chuyện tình cảm | Heartbreak | 失恋 |
+| `heartbreak` | Chuyện tình cảm | Heartbreak | 失恋 |
 | `grief` | Mất người thân | Grief | 喪失 |
 | `pressure` | Áp lực công việc, học tập | Pressure | プレッシャー |
-| `self_worth` | Tự ti, ghét bản thân | Self-worth | 自己嫌悪 |
+| `self_worth` | Thấy mình không đủ tốt | Self-worth | 自己嫌悪 |
 | `loneliness` | Cô đơn | Loneliness | 孤独 |
-| `family` | Gia đình | Family | 家族 |
+| `family` | Chuyện gia đình | Family | 家族 |
 | `overwhelm` | Kiệt sức, quá tải | Overwhelm | 疲弊 |
-| `anxiety` | Lo âu về tương lai | Anxiety | 将来への不安 |
-| `moved` | Xúc động, hạnh phúc | Moved | 感動 |
-| `unknown` | Không rõ lý do | Unknown | 理由がわからない |
+| `anxiety` | Lo về tương lai | Anxiety | 将来への不安 |
+| `moved` | Vì vui, vì cảm động | Moved | 感動 |
+| `unknown` | Không rõ vì sao | Unknown | 理由がわからない |
 
 `id` là thứ lưu trong DB và dùng để match. Nhãn hiển thị nằm ở tầng i18n của app, không lưu trong DB.
+
+Cột `vi` phải trùng từng chữ với `TAG_LABEL_VI` trong `app/src/tags.ts` (test kiểm). Nhãn là thứ khiến người viết và người nhận hiểu một Tag giống nhau, nên đổi nhãn cũng là đổi contract: `grief` là mất người thân chứ không phải mọi mất mát; `moved` phải nói rõ là vì vui, vì "xúc động" trong tiếng Việt dùng được cả cho buồn — mà `moved` không lùi về `unknown`.
 
 ## Luật
 

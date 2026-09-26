@@ -19,19 +19,26 @@ export const TAG_IDS = [
 
 export type TagId = (typeof TAG_IDS)[number];
 
-/** Nhãn tiếng Việt. en/ja nằm trong docs/tags.md, thêm vào khi làm i18n. */
+/**
+ * Nhãn tiếng Việt — phải trùng cột vi trong docs/tags.md (tags.test.ts kiểm). en/ja nằm trong
+ * docs, thêm vào khi làm i18n. Nhãn quyết định người viết và người nhận hiểu Tag giống nhau,
+ * nên nó là một phần của cơ chế match chứ không chỉ là chữ trên nút.
+ */
 export const TAG_LABEL_VI: Record<TagId, string> = {
-  heartbreak: 'Chia tay, thất tình',
-  grief: 'Mất mát',
-  pressure: 'Áp lực',
-  self_worth: 'Tự trách mình',
+  heartbreak: 'Chuyện tình cảm',
+  grief: 'Mất người thân',
+  pressure: 'Áp lực công việc, học tập',
+  self_worth: 'Thấy mình không đủ tốt',
   loneliness: 'Cô đơn',
-  family: 'Gia đình',
-  overwhelm: 'Kiệt sức',
-  anxiety: 'Lo cho tương lai',
-  moved: 'Xúc động',
+  family: 'Chuyện gia đình',
+  overwhelm: 'Kiệt sức, quá tải',
+  anxiety: 'Lo về tương lai',
+  moved: 'Vì vui, vì cảm động',
   unknown: 'Không rõ vì sao',
 };
+
+/** Vài nhãn có dấu phẩy bên trong, nên nhiều Tag nối bằng "; " để không đọc thành nhiều Tag hơn. */
+export const nhanTags = (tags: readonly TagId[]) => tags.map((t) => TAG_LABEL_VI[t]).join('; ');
 
 /** Entry được gắn tối đa 3 tag, Comfort tối đa 2. Cả hai đều có CHECK tương ứng trong migration. */
 export const MAX_ENTRY_TAGS = 3;

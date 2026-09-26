@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-26T00:00:00Z",
+  "title": "Design System: Tearnote",
+  "extensions": {
+    "colorMeta": {
+      "den": {
+        "role": "primary",
+        "displayName": "Đèn Còn Sáng",
+        "canonical": "#E2A55A",
+        "tonalRamp": [
+          "#3A2410",
+          "#5C3A18",
+          "#80531F",
+          "#A66E2A",
+          "#C98A3E",
+          "#E2A55A",
+          "#EDC28A",
+          "#F7E1C2"
+        ]
+      },
+      "trang": {
+        "role": "neutral",
+        "displayName": "Trang Giấy Bồi",
+        "canonical": "#1A1614",
+        "tonalRamp": [
+          "#1A1614",
+          "#2B2622",
+          "#3A322C",
+          "#57504A",
+          "#7A726A",
+          "#B3AA9C",
+          "#E4DCCF",
+          "#F4EFE8"
+        ]
+      },
+      "tam": {
+        "role": "neutral",
+        "displayName": "Tấm Dán",
+        "canonical": "#2B2622",
+        "tonalRamp": [
+          "#1A1614",
+          "#2B2622",
+          "#3A322C",
+          "#57504A",
+          "#7A726A",
+          "#B3AA9C",
+          "#E4DCCF",
+          "#F4EFE8"
+        ]
+      },
+      "kep": {
+        "role": "neutral",
+        "displayName": "Mẩu Giấy Kẹp",
+        "canonical": "#3A322C",
+        "tonalRamp": [
+          "#1A1614",
+          "#2B2622",
+          "#3A322C",
+          "#57504A",
+          "#7A726A",
+          "#B3AA9C",
+          "#E4DCCF",
+          "#F4EFE8"
+        ]
+      },
+      "chu": {
+        "role": "neutral",
+        "displayName": "Chữ Ngà",
+        "canonical": "#E4DCCF",
+        "tonalRamp": [
+          "#1A1614",
+          "#2B2622",
+          "#3A322C",
+          "#57504A",
+          "#7A726A",
+          "#B3AA9C",
+          "#E4DCCF",
+          "#F4EFE8"
+        ]
+      },
+      "but-chi": {
+        "role": "neutral",
+        "displayName": "Bút Chì Trắng",
+        "canonical": "#B3AA9C",
+        "tonalRamp": [
+          "#1A1614",
+          "#2B2622",
+          "#3A322C",
+          "#57504A",
+          "#7A726A",
+          "#B3AA9C",
+          "#E4DCCF",
+          "#F4EFE8"
+        ]
+      },
+      "po-luya": {
+        "role": "neutral",
+        "displayName": "Giấy Pơ-luya",
+        "canonical": "rgba(228, 220, 207, 0.06)"
+      },
+      "vien-mo": {
+        "role": "neutral",
+        "displayName": "Viền Mờ",
+        "canonical": "rgba(228, 220, 207, 0.12)"
+      },
+      "lich": {
+        "role": "neutral",
+        "displayName": "Thang Lịch",
+        "canonical": "rgba(228, 220, 207, 0.06)",
+        "tonalRamp": [
+          "rgba(228, 220, 207, 0.06)",
+          "rgba(228, 220, 207, 0.22)",
+          "rgba(228, 220, 207, 0.4)",
+          "rgba(228, 220, 207, 0.58)",
+          "rgba(228, 220, 207, 0.78)",
+          "rgba(228, 220, 207, 1)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "tieu-de": {
+        "displayName": "Tiêu đề viết tay",
+        "purpose": "Tiêu đề màn."
+      },
+      "ngay": {
+        "displayName": "Ngày",
+        "purpose": "Đầu mỗi nhóm đêm, màu bút chì."
+      },
+      "chu-thich": {
+        "displayName": "Chú thích bút chì",
+        "purpose": "Giờ · thời lượng · Tag dưới tấm; chữ trên mẩu giấy kẹp; câu trang trống."
+      },
+      "than": {
+        "displayName": "Thân",
+        "purpose": "Reflection. Font hệ thống, cỡ mặc định của app."
+      },
+      "nut": {
+        "displayName": "Nút",
+        "purpose": "Nhãn nút và dòng lối. Font hệ thống 500."
+      },
+      "phu": {
+        "displayName": "Phụ",
+        "purpose": "Dòng giải thích dưới lối. Nhỏ nhất được phép."
+      }
+    },
+    "shadows": [
+      {
+        "name": "nam-tren-trang",
+        "value": "0 3px 6px rgba(0,0,0,0.45)",
+        "purpose": "RN: shadowOffset 0/3, opacity 0.45, radius 6, elevation 3. Tấm Entry, nút chính, mẩu kẹp (elevation 6)."
+      },
+      {
+        "name": "nhac-khoi-trang",
+        "value": "0 8px 12px rgba(0,0,0,0.6)",
+        "purpose": "RN: translateY -3, shadowOffset 0/8, opacity 0.6, radius 12, elevation 10. Trạng thái nhấn của tấm và nút chính."
+      }
+    ],
+    "motion": [
+      {
+        "name": "chuyen-man",
+        "value": "fade",
+        "purpose": "Stack animation giữa các màn (expo-router)."
+      },
+      {
+        "name": "nhac-tam",
+        "value": "instant",
+        "purpose": "Nhấc tấm khi nhấn hiện là trạng thái tức thời, chưa có chuyển động theo thời gian."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Tấm Entry",
+      "kind": "card",
+      "refersTo": "tam-entry",
+      "description": "Tấm giấy góc vuông giữ bằng bốn góc dán, Reflection font hệ thống, chú thích bút chì và nét cường độ bên dưới.",
+      "html": "<div class=\"ds-o-tam\"><button class=\"ds-tam\"><span class=\"ds-goc ds-tl\"></span><span class=\"ds-goc ds-tr\"></span><span class=\"ds-goc ds-bl\"></span><span class=\"ds-goc ds-br\"></span>Mở lại tin nhắn cũ rồi khóc. Không biết mình đang chờ điều gì nữa.</button><div class=\"ds-chu-thich\"><span>10:04 · 15 phút · Chia tay, thất tình</span><span class=\"ds-vach\"><i style=\"height:13px;transform:rotate(-4deg)\"></i><i style=\"height:15px;transform:rotate(3deg)\"></i><i style=\"height:12px;transform:rotate(-2deg)\"></i><i style=\"height:14px;transform:rotate(5deg)\"></i></span></div></div>",
+      "css": ".ds-o-tam { background: #1A1614; padding: 20px; } .ds-tam { position: relative; display: block; width: 100%; text-align: left; background: #2B2622; color: #E4DCCF; font: 400 17px/26px system-ui, Roboto, sans-serif; padding: 24px; border: none; border-radius: 0; box-shadow: 0 3px 6px rgba(0,0,0,0.45); transition: transform .15s, box-shadow .15s; } .ds-tam:hover, .ds-tam:active { transform: translateY(-3px); box-shadow: 0 8px 12px rgba(0,0,0,0.6); } .ds-tam:focus-visible { outline: 2px solid #B3AA9C; outline-offset: 4px; } .ds-goc { position: absolute; width: 0; height: 0; border: 7px solid transparent; } .ds-tl { top: -2px; left: -2px; border-top-color: #B3AA9C; border-left-color: #B3AA9C; } .ds-tr { top: -2px; right: -2px; border-top-color: #B3AA9C; border-right-color: #B3AA9C; } .ds-bl { bottom: -2px; left: -2px; border-bottom-color: #B3AA9C; border-left-color: #B3AA9C; } .ds-br { bottom: -2px; right: -2px; border-bottom-color: #B3AA9C; border-right-color: #B3AA9C; } .ds-chu-thich { display: flex; gap: 16px; margin-top: 8px; color: #B3AA9C; font: 400 19px/29px 'Patrick Hand', cursive; } .ds-chu-thich span:first-child { flex: 1; } .ds-vach { display: flex; align-items: flex-end; gap: 4px; height: 26px; padding-bottom: 5px; box-sizing: border-box; } .ds-vach i { display: block; width: 2px; background: #B3AA9C; border-radius: 1px; }"
+    },
+    {
+      "name": "Mẩu giấy kẹp",
+      "kind": "custom",
+      "refersTo": "manh-kep",
+      "description": "Trạng thái Comfort trên tấm: 'có một lời kẹp ở đây' hoặc 'đã cảm ơn'; không có Comfort thì không có mẩu.",
+      "html": "<div class=\"ds-nen-kep\"><div class=\"ds-tam-kep\">Cô đơn, Kiệt sức<span class=\"ds-kep\">có một lời kẹp ở đây</span></div></div>",
+      "css": ".ds-nen-kep { background: #1A1614; padding: 20px 28px 36px 20px; } .ds-tam-kep { position: relative; background: #2B2622; color: #E4DCCF; font: 400 17px/26px system-ui, Roboto, sans-serif; padding: 24px; box-shadow: 0 3px 6px rgba(0,0,0,0.45); } .ds-kep { position: absolute; right: -8px; bottom: -18px; background: #3A322C; color: #E4DCCF; font: 400 19px/29px 'Patrick Hand', cursive; padding: 4px 16px; transform: rotate(-2deg); box-shadow: 0 3px 6px rgba(0,0,0,0.45); }"
+    },
+    {
+      "name": "Nút chính",
+      "kind": "button",
+      "refersTo": "nut-chinh",
+      "description": "'Ghi một lần khóc': một tấm dán có góc dán 10, nhấn thì nhấc khỏi trang.",
+      "html": "<div class=\"ds-nen\"><button class=\"ds-nut-chinh\"><span class=\"ds-g ds-g1\"></span><span class=\"ds-g ds-g2\"></span><span class=\"ds-g ds-g3\"></span><span class=\"ds-g ds-g4\"></span>Ghi một lần khóc</button></div>",
+      "css": ".ds-nen { background: #1A1614; padding: 16px 20px; } .ds-nut-chinh { position: relative; width: 100%; min-height: 56px; background: #2B2622; color: #E4DCCF; font: 500 17px/22px system-ui, Roboto, sans-serif; border: none; border-radius: 0; box-shadow: 0 3px 6px rgba(0,0,0,0.45); transition: transform .15s, box-shadow .15s; } .ds-nut-chinh:hover, .ds-nut-chinh:active { transform: translateY(-3px); box-shadow: 0 8px 12px rgba(0,0,0,0.6); } .ds-nut-chinh:focus-visible { outline: 2px solid #B3AA9C; outline-offset: 4px; } .ds-g { position: absolute; width: 0; height: 0; border: 5px solid transparent; } .ds-g1 { top: -2px; left: -2px; border-top-color: #B3AA9C; border-left-color: #B3AA9C; } .ds-g2 { top: -2px; right: -2px; border-top-color: #B3AA9C; border-right-color: #B3AA9C; } .ds-g3 { bottom: -2px; left: -2px; border-bottom-color: #B3AA9C; border-left-color: #B3AA9C; } .ds-g4 { bottom: -2px; right: -2px; border-bottom-color: #B3AA9C; border-right-color: #B3AA9C; }"
+    },
+    {
+      "name": "Nút trợ giúp",
+      "kind": "button",
+      "refersTo": "nut-tro-giup",
+      "description": "'Cần trợ giúp ngay': chỗ duy nhất có hổ phách. Viền khi nghỉ, tô kín khi nhấn. Cao 64.",
+      "html": "<div class=\"ds-nen-tg\"><button class=\"ds-nut-tro-giup\">Cần trợ giúp ngay</button></div>",
+      "css": ".ds-nen-tg { background: #1A1614; padding: 16px 20px; } .ds-nut-tro-giup { width: 100%; min-height: 64px; background: transparent; color: #E2A55A; font: 500 17px/22px system-ui, Roboto, sans-serif; border: 1.5px solid #E2A55A; border-radius: 0; } .ds-nut-tro-giup:hover, .ds-nut-tro-giup:active { background: #E2A55A; color: #1A1614; } .ds-nut-tro-giup:focus-visible { outline: 2px solid #E4DCCF; outline-offset: 3px; }"
+    },
+    {
+      "name": "Dòng lối",
+      "kind": "nav",
+      "refersTo": "dong-loi",
+      "description": "Lối phụ dạng dòng chữ: nhãn và dòng giải thích bút chì, không nền không viền.",
+      "html": "<div class=\"ds-nen-loi\"><button class=\"ds-loi\"><span class=\"ds-chu-loi\">Cài đặt</span><span class=\"ds-phu-loi\">Lời đã viết, và công tắc tắt nhận lời từ người lạ.</span></button></div>",
+      "css": ".ds-nen-loi { background: #1A1614; padding: 0 20px; } .ds-loi { display: flex; flex-direction: column; align-items: flex-start; min-height: 48px; width: 100%; padding: 16px 0; background: none; border: none; text-align: left; } .ds-loi:hover, .ds-loi:active { opacity: .6; } .ds-loi:focus-visible { outline: 2px solid #B3AA9C; outline-offset: 2px; } .ds-chu-loi { color: #E4DCCF; font: 500 17px/22px system-ui, Roboto, sans-serif; } .ds-phu-loi { color: #B3AA9C; font: 400 14px/20px system-ui, Roboto, sans-serif; margin-top: 4px; max-width: 320px; }"
+    },
+    {
+      "name": "Tờ pơ-luya",
+      "kind": "custom",
+      "refersTo": "po-luya",
+      "description": "Ngăn giữa hai đêm: mép giấy mỏng sáng, hơi lệch, chìa quá lề; không khung.",
+      "html": "<div class=\"ds-nen-pl\"><div class=\"ds-po-luya\"></div></div>",
+      "css": ".ds-nen-pl { background: #1A1614; padding: 24px 20px; } .ds-po-luya { height: 10px; margin: 0 -8px; background: rgba(228,220,207,0.06); border-top: 1px solid rgba(228,220,207,0.22); transform: rotate(-0.8deg); }"
+    },
+    {
+      "name": "Bảng năm",
+      "kind": "custom",
+      "refersTo": "bang-nam",
+      "description": "Màn Lịch, ngoại lệ luật Một Trục: 12 cột tháng × 31 hàng ngày, ô tô theo tổng cường độ trong ngày (ngưỡng 1–2 · 3–4 · 5–6 · 7–9 · 10+), không số, không bấm được.",
+      "html": "<div class=\"ds-nen-bn\"><div class=\"ds-bn\"><i style=\"background:rgba(228, 220, 207, 0.06)\"></i><i style=\"background:rgba(228, 220, 207, 0.22)\"></i><i style=\"background:rgba(228, 220, 207, 0.4)\"></i><i style=\"background:rgba(228, 220, 207, 0.58)\"></i><i style=\"background:rgba(228, 220, 207, 0.78)\"></i><i style=\"background:rgba(228, 220, 207, 1)\"></i><i style=\"background:rgba(228, 220, 207, 0.06)\"></i><i style=\"background:rgba(228, 220, 207, 0.4)\"></i><i style=\"background:rgba(228, 220, 207, 0.22)\"></i><i style=\"background:rgba(228, 220, 207, 0.06)\"></i><i style=\"background:rgba(228, 220, 207, 0.58)\"></i><i style=\"background:rgba(228, 220, 207, 1)\"></i></div></div>",
+      "css": ".ds-nen-bn { background: #1A1614; padding: 20px; } .ds-bn { display: grid; grid-template-columns: repeat(12, 18px); gap: 3px; } .ds-bn i { display: block; height: 18px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Cuốn album chỉ mình mở",
+    "overview": "Tearnote là một cuốn album ảnh trang đen để trong ngăn kéo. Mỗi lần khóc là một tấm giấy dán lên trang, giữ bằng bốn góc dán tam giác; ngày tháng và chi tiết được ghi bằng bút chì trắng bên dưới. Comfort là một mẩu giấy nhỏ người lạ lặng lẽ kẹp vào trang. Giữa hai đêm có một tờ giấy pơ-luya mỏng. Tất cả đi theo một trục dọc duy nhất, đọc từ trên xuống như lật album.\n\nMọi tông đều ấm, lệch về nâu; không có xám xanh, không có trắng tinh. Độ tương phản vừa đủ để đọc qua mắt nhoè lúc 2 giờ sáng rồi dừng lại. Mật độ thưa: khoảng trống giữa các tấm là tín hiệu \"không có gì gấp\". Chữ viết tay chỉ dùng cho những gì một người sẽ ghi bằng bút chì trên album (tiêu đề, ngày, chú thích, mẩu giấy kẹp); còn thứ phải đọc được (Reflection, nút bấm) là font hệ thống.\n\nTừ chối: danh sách thẻ bo tròn kèm biểu đồ của app mood tracker, và mọi dạng lưới hoặc heatmap — trừ đúng một chỗ: bảng năm ở màn Lịch (xem luật Một Trục). Điều hướng, Back, sheet, switch vẫn theo Material 3 / HIG; world là lớp theming, không thay quy ước nền tảng.",
+    "keyCharacteristics": [
+      "Trang giấy bồi đen ấm, tấm dán góc vuông, bốn góc dán tam giác.",
+      "Nổi bằng bóng mềm thấp, không bằng viền.",
+      "Bút chì trắng (Patrick Hand) cho chú thích; font hệ thống cho mọi thứ phải đọc kỹ.",
+      "Cường độ là n nét bút chì đếm tay, không phải biểu đồ.",
+      "Hổ phách chỉ có một chỗ: lối trợ giúp."
+    ],
+    "rules": [
+      {
+        "name": "The Một Ngọn Đèn Rule",
+        "body": "`den` chỉ xuất hiện ở lối trợ giúp. Không dùng cho trạng thái chọn, link, badge hay nhấn mạnh. Nếu một màn có hai chỗ hổ phách thì một chỗ sai.",
+        "section": "colors"
+      },
+      {
+        "name": "The Không Xám Xanh Rule",
+        "body": "Mọi tông trung tính lệch về nâu. Không `#FFFFFF`, không `#000` làm nền.",
+        "section": "colors"
+      },
+      {
+        "name": "The Bút Chì Chỉ Để Ghi Chú Rule",
+        "body": "Patrick Hand chỉ cho tiêu đề, ngày, chú thích và mẩu giấy kẹp. Reflection và nút bấm luôn là font hệ thống.",
+        "section": "typography"
+      },
+      {
+        "name": "The Một Family Một Ngôn Ngữ Rule",
+        "body": "Patrick Hand cho tiếng Việt (và Anh). Không dùng Yomogi cho tiếng Việt: chữ Latin rộng cố định làm tách chữ có dấu. Yomogi (`app/assets/fonts/Yomogi-Regular.ttf`, chưa nạp) dành cho tiếng Nhật khi có i18n.",
+        "section": "typography"
+      },
+      {
+        "name": "The Không Dưới 14 Rule",
+        "body": "Không cỡ chữ nào dưới 14; line height rộng (~1.5) vì dấu tiếng Việt chồng hai tầng. Layout phải chịu được font scale hệ thống.",
+        "section": "typography"
+      },
+      {
+        "name": "The Một Trục Rule",
+        "body": "Không lưới, không cột, không heatmap. Mọi thứ nằm trên một trục dọc theo thời gian. Ngoại lệ duy nhất: bảng năm ở màn Lịch. Ngoại lệ không lan sang màn khác; Timeline vẫn là một trục.",
+        "section": "layout"
+      },
+      {
+        "name": "The Bóng Là Giấy Rule",
+        "body": "Bóng chỉ để nói \"tờ giấy này nằm trên trang\". Mềm, thấp, đen, không lệch cứng, không màu.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** dùng `album` và `butChi` từ `app/src/theme.ts` cho mọi màn mới hoặc màn đang chuyển world.",
+      "**Do** giữ Reflection và nút bấm ở font hệ thống cỡ `than` / `nut`.",
+      "**Do** cho mọi tờ giấy góc vuông và bóng \"nằm trên trang\"; nhấn thì \"nhấc khỏi trang\".",
+      "**Do** biểu diễn cường độ bằng đúng n nét bút chì.",
+      "**Do** giữ lối trợ giúp ở chân màn, cao 64, là chỗ duy nhất có `den`."
+    ],
+    "donts": [
+      "**Don't** dùng `color`, `text.tieuDe`, `text.nhan`, `radius` hay `caoVach` cho màn thuộc world này; chúng chỉ còn phục vụ màn chưa chuyển.",
+      "**Don't** dùng `den` ở bất kỳ đâu ngoài lối trợ giúp.",
+      "**Don't** dùng Patrick Hand cho Reflection hoặc nhãn nút; don't dùng Yomogi cho tiếng Việt.",
+      "**Don't** vẽ biểu đồ, lưới, heatmap hay ô trống cho cường độ — ngoài bảng năm ở màn Lịch.",
+      "**Don't** bo tròn tấm dán hoặc thay bóng bằng viền.",
+      "**Don't** đặt tờ pơ-luya ở đâu khác ngoài giữa hai đêm."
+    ]
+  }
+}

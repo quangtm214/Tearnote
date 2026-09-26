@@ -40,8 +40,12 @@ export async function ensureSession(): Promise<void> {
   if (!data.session) await supabase.auth.signInAnonymously();
 }
 
-/** Tài khoản thật = đã đăng nhập bằng email. Chỉ tài khoản thật mới được viết Comfort. */
+/**
+ * Tài khoản thật = đã đăng nhập bằng email. Chỉ tài khoản thật mới được viết Comfort.
+ * Đọc session trên máy chứ không `getUser()`: gọi mạng thì mất sóng là bị coi như chưa đăng nhập.
+ * Chỉ để chọn màn/câu chữ — luật thật do RLS ép (docs/db.md).
+ */
 export async function isRealAccount(): Promise<boolean> {
-  const { data } = await supabase.auth.getUser();
-  return !!data.user && data.user.is_anonymous !== true;
+  const { data } = await supabase.auth.getSession();
+  return !!data.session && data.session.user.is_anonymous !== true;
 }

@@ -42,13 +42,13 @@ Các app cùng loại (Tracking My Tears, Cry Tracker, Tear Tales, Ductts, CryAp
 - Pool rỗng và hết lượt 3/24h là hai tình huống khác nhau, hai thông báo khác nhau.
 - Không chẩn đoán: không gắn nhãn "trầm cảm", "rối loạn lo âu".
 - Không có phát hiện khủng hoảng — hệ thống dựa vào việc người dùng tự bấm trợ giúp hoặc tự tắt nhận Comfort.
-- Chưa có: i18n (copy hiện hardcode tiếng Việt), hotline lấy từ server, điều khoản sử dụng (chặn launch), ảnh và voice note trong Entry, thống kê.
+- Chưa có: i18n (copy hiện hardcode tiếng Việt), hotline lấy từ server, điều khoản sử dụng (chặn launch), ảnh và voice note trong Entry, thống kê tần suất / Tag hay gặp. Đã có: Lịch — bảng cường độ cả năm.
 
 ## Brand Commitments
 
 - Tên: **Tearnote**.
 - Giọng văn: nhẹ, ít lời, không khuyên. Như người ngồi cạnh im lặng — câu ngắn, không cổ vũ, không emoji, không "bạn làm tốt lắm".
-- Từ vựng chuẩn: Entry, Reflection, Comfort, Tag, Delivery (CONTEXT.md).
+- Từ vựng chuẩn (code, docs): Entry, Reflection, Comfort, Tag, Delivery (CONTEXT.md). Không lộ ra UI: trên UI tiếng Việt, Entry là "lần khóc", Comfort là "lời từ người lạ" (khi nhận) / "lời cho người lạ" (khi viết); không dùng chữ Entry, Comfort, Tag, pool, server; xưng "bạn".
 
 ## Evidence on Hand
 

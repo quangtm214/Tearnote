@@ -4,7 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
-import { color } from '@/theme';
+import { album } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -14,7 +14,7 @@ SplashScreen.preventAutoHideAsync();
  */
 export default function RootLayout() {
   // Font lỗi thì vẫn mở app bằng font hệ thống — không để màn trắng chặn lối trợ giúp.
-  const [xong, loi] = useFonts({ VT323: require('../../assets/fonts/VT323-Regular.ttf') });
+  const [xong, loi] = useFonts({ PatrickHand: require('../../assets/fonts/PatrickHand-Regular.ttf') });
 
   useEffect(() => {
     if (xong || loi) SplashScreen.hideAsync();
@@ -28,7 +28,7 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: color.demKhuya },
+          contentStyle: { backgroundColor: album.trang },
           animation: 'fade',
         }}
       />

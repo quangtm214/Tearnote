@@ -1,10 +1,11 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { datNhanComfort, nhanComfortBat } from '@/db';
-import { color, radius, space, text, touch } from '@/theme';
+import { album, butChi, space, text } from '@/theme';
+import { ChanMan, DongLoi } from '@/ui';
 
 export default function CaiDat() {
   const [nhan, setNhan] = useState(true);
@@ -25,56 +26,50 @@ export default function CaiDat() {
   return (
     <SafeAreaView style={s.man} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={s.cuon}>
-        <Text style={s.tieuDe}>Cài đặt</Text>
+        <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
+          Cài đặt
+        </Text>
 
         <View style={s.hang}>
           <View style={s.trai}>
             <Text style={s.nhan}>Nhận lời từ người lạ</Text>
             <Text style={s.phu}>
-              Tắt thì không còn nút xin ở bất kỳ Entry nào. Nhật ký vẫn dùng bình thường.
+              Tắt thì không nhận thêm lời nào từ người lạ. Việc ghi lại vẫn như cũ.
             </Text>
           </View>
           <Switch
             value={nhan}
             onValueChange={doiNhan}
-            trackColor={{ false: color.matGiay, true: color.anhTrang }}
-            thumbColor={color.chuChinh}
+            trackColor={{ false: album.kep, true: album.butChi }}
+            thumbColor={nhan ? album.chu : album.butChi}
             accessibilityLabel="Nhận lời từ người lạ"
           />
         </View>
 
-        <Pressable style={s.muc} onPress={() => router.push('/comfort/cua-toi')}>
-          <Text style={s.nhan}>Lời tôi đã viết</Text>
-          <Text style={s.phu}>Xem lại và thu hồi những lời mình đã gửi vào pool.</Text>
-        </Pressable>
+        <DongLoi
+          nhan="Lời bạn đã viết"
+          phu="Xem lại, hoặc thu hồi lời đã viết."
+          onPress={() => router.push('/comfort/cua-toi')}
+        />
+        <DongLoi
+          nhan="Viết một lời cho người lạ"
+          phu="Cần đăng nhập. Tối đa 5 lời trong 24 giờ."
+          onPress={() => router.push('/comfort/write')}
+        />
 
-        <Pressable style={s.muc} onPress={() => router.push('/comfort/write')}>
-          <Text style={s.nhan}>Viết một lời cho người lạ</Text>
-          <Text style={s.phu}>Cần một tài khoản thật. Tối đa 5 lời mỗi 24 giờ.</Text>
-        </Pressable>
-
-        <Pressable style={s.nutThoat} onPress={thoat} accessibilityRole="button">
-          <Text style={s.chuThoat}>Quay lại</Text>
-        </Pressable>
+        <DongLoi nhan="Quay lại" onPress={thoat} />
       </ScrollView>
+      <ChanMan />
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  man: { flex: 1, backgroundColor: color.demKhuya },
+  man: { flex: 1, backgroundColor: album.trang },
   cuon: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl },
-  tieuDe: { ...text.tieuDe, color: color.chuChinh, marginBottom: space.lg },
-  hang: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.xl },
+  tieuDe: { color: album.chu, marginBottom: space.lg },
+  hang: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
   trai: { flex: 1 },
-  muc: { minHeight: touch.toiThieu, marginBottom: space.xl },
-  nhan: { ...text.nut, color: color.chuChinh },
-  phu: { ...text.phu, color: color.chuPhu, marginTop: space.xs },
-  nutThoat: {
-    minHeight: touch.toiThieu,
-    justifyContent: 'center',
-    borderRadius: radius.o,
-    marginTop: space.lg,
-  },
-  chuThoat: { ...text.nut, color: color.chuPhu },
+  nhan: { ...text.nut, color: album.chu },
+  phu: { ...text.phu, color: album.butChi, marginTop: space.xs, maxWidth: 320 },
 });

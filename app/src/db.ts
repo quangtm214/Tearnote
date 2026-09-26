@@ -73,8 +73,16 @@ const toEntry = (r: EntryRow): Entry => ({
   reflection: r.reflection,
 });
 
+/**
+ * UUID v4 do SQLite sinh (randomblob dùng nguồn ngẫu nhiên an toàn của SQLite). Hermes không có
+ * `crypto.randomUUID`, và id phải là uuid thật vì server dùng lại nó khi sync (docs/db.md).
+ */
+const UUID_V4 = `select lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4'
+  || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1)
+  || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6))) as id`;
+
 export function insertEntry(e: Omit<Entry, 'id'>): string {
-  const id = crypto.randomUUID();
+  const id = db.getFirstSync<{ id: string }>(UUID_V4)!.id;
   db.runSync(
     `insert into entries (id, occurred_at, duration_min, intensity, tags, reflection)
      values (?, ?, ?, ?, ?, ?)`,

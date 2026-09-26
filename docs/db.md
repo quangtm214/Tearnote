@@ -230,8 +230,12 @@ Cài đặt của người dùng. Chỉ ở máy, không đồng bộ, không l�
 | `key` | text | PK | |
 | `value` | text | not null | |
 
-Khoá đang dùng: `nhan_comfort` = `bat` \| `tat`. Thiếu khoá ⇒ coi như `bat`.
-Tắt thì không còn nút xin Comfort ở bất kỳ Entry nào — overview.md §6.
+Khoá đang dùng:
+
+- `nhan_comfort` = `bat` \| `tat`. Thiếu khoá ⇒ coi như `bat`.
+  Tắt thì không còn nút xin Comfort ở bất kỳ Entry nào — overview.md §6.
+- `timeline_dung` = id của Entry mở gần nhất. Mở lại app thì Timeline cuộn về đêm của Entry đó
+  (DESIGN.md, Layout). Thiếu khoá hoặc Entry không còn ⇒ đứng ở đầu trang.
 
 ## `received_comforts`
 

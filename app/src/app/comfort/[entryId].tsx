@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -13,10 +13,14 @@ import {
   type ReceivedComfort,
 } from '@/db';
 import { ensureSession, supabase } from '@/supabase';
-import { color, radius, space, text, touch } from '@/theme';
+import { album, butChi, space, text, touch } from '@/theme';
+import { bong, ChanMan, DongLoi, nhanNgay, NutChinh, TamEntry } from '@/ui';
 
 type ComfortRow = { comfort_id: string; body: string; translated: boolean };
 
+/**
+ * Mở một Entry: đọc lại đủ Reflection (Timeline cắt ở 6 dòng), rồi xem hoặc xin lời từ người lạ.
+ */
 export default function EntryComfortScreen() {
   const { entryId } = useLocalSearchParams<{ entryId: string }>();
   const [entry, setEntry] = useState<Entry | null>(null);
@@ -34,6 +38,12 @@ export default function EntryComfortScreen() {
 
   useEffect(nap, [nap]);
 
+  // Thông báo mới mount thì TalkBack không chắc đọc — đọc thẳng cho chắc.
+  const bao = (msg: string) => {
+    setThongBao(msg);
+    AccessibilityInfo.announceForAccessibility(msg);
+  };
+
   async function xin() {
     if (!entry || dangXin) return;
     setThongBao(null);
@@ -46,17 +56,25 @@ export default function EntryComfortScreen() {
       });
 
       if (error) {
-        setThongBao('Chưa lấy được. Có vẻ mạng đang chập chờn — thử lại sau một lát.');
+        // supabase-js trả lỗi mạng qua `error` với code rỗng; có code là server từ chối.
+        bao(
+          error.code
+            ? 'Chưa nhận được. Thử lại sau một lát.'
+            : 'Không kết nối được. Kiểm tra mạng rồi thử lại.',
+        );
         return;
       }
 
       const rows = (data ?? []) as ComfortRow[];
       const row = rows[0];
       if (!row) {
-        setThongBao(
+        // Hai lý do khác hẳn nhau, hai câu khác nhau (CLAUDE.md: edge case bắt buộc).
+        const chiVui = entry.tags.length === 1 && entry.tags[0] === 'moved';
+        const chuaCo = `Lúc này chưa có lời nào cho ${chiVui ? 'niềm vui' : 'chuyện'} này.`;
+        bao(
           (await daDuLuot())
-            ? 'Bạn đã nhận 3 lời trong hôm nay rồi. Mai quay lại nhé.'
-            : 'Chưa có lời nào hợp với hoàn cảnh này. Thử lại sau nhé.'
+            ? 'Bạn đã nhận đủ 3 lời trong 24 giờ qua. Chưa nhận thêm được.'
+            : `${chuaCo} Lần này không tính vào lượt của bạn.`,
         );
         return;
       }
@@ -68,8 +86,9 @@ export default function EntryComfortScreen() {
         translated: row.translated,
       });
       nap();
+      AccessibilityInfo.announceForAccessibility(row.body);
     } catch {
-      setThongBao('Không kết nối được. Kiểm tra mạng rồi thử lại.');
+      bao('Không kết nối được. Kiểm tra mạng rồi thử lại.');
     } finally {
       setDangXin(false);
     }
@@ -87,38 +106,47 @@ export default function EntryComfortScreen() {
 
   if (!entryId || !entry) {
     return (
-      <SafeAreaView style={s.man}>
-        <View style={s.noiDung}>
-          <Text style={s.tieuDe}>Không tìm thấy</Text>
-          <Text style={s.giaiThich}>Entry này không còn nữa.</Text>
-          <Pressable style={s.nutThoat} onPress={thoat} accessibilityRole="button">
-            <Text style={s.chuThoat}>Quay lại</Text>
-          </Pressable>
+      <SafeAreaView style={s.man} edges={['top', 'bottom']}>
+        <View style={[s.man, s.cuon]}>
+          <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
+            Không tìm thấy
+          </Text>
+          <Text style={s.giaiThich}>Lần khóc này không còn trong máy.</Text>
+          <DongLoi nhan="Quay lại" onPress={thoat} />
         </View>
+        <ChanMan />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={s.man}>
-      <ScrollView contentContainerStyle={s.noiDung}>
-        <Text style={s.tieuDe}>Lời từ người lạ</Text>
+    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={s.cuon}>
+        <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
+          {nhanNgay(entry.occurredAt)}
+        </Text>
+        <TamEntry e={entry} />
+
+        <Text style={[butChi.ngay, s.nhom]} accessibilityRole="header">
+          Lời từ người lạ
+        </Text>
 
         {ds.length === 0 ? (
-          <Text style={s.giaiThich}>Chưa có lời nào cho Entry này.</Text>
+          <Text style={s.giaiThich}>Chưa có lời nào kẹp ở đây.</Text>
         ) : (
           ds.map((c) => (
-            <View key={c.comfortId} style={s.the}>
+            // Mẩu giấy người lạ kẹp vào trang — cùng tông `kep` với mẩu nhỏ trên Timeline.
+            <View key={c.comfortId} style={s.kep}>
               <Text style={s.than}>{c.body}</Text>
-              {c.translated ? <Text style={s.phu}>đã dịch tự động</Text> : null}
+              {c.translated ? <Text style={[butChi.chuThich, s.phu]}>đã dịch tự động</Text> : null}
               {c.thanked ? (
-                <Text style={s.phu}>Đã cảm ơn</Text>
+                <Text style={[butChi.chuThich, s.phu]}>đã cảm ơn</Text>
               ) : (
                 <Pressable
-                  style={s.nutCamOn}
+                  style={({ pressed }) => [s.nutCamOn, pressed && s.mo]}
                   onPress={() => camOn(c.comfortId)}
                   accessibilityRole="button">
-                  <Text style={s.chuNutCamOn}>Cảm ơn</Text>
+                  <Text style={s.chuCamOn}>Cảm ơn</Text>
                 </Pressable>
               )}
             </View>
@@ -129,29 +157,20 @@ export default function EntryComfortScreen() {
 
         {/* Mỗi Entry một Comfort (ADR 0007), và công tắc tắt nhận thì không còn nút xin ở đâu cả. */}
         {ds.length === 0 && choNhan ? (
-          <Pressable
-            style={[s.nutChinh, dangXin && s.mo]}
-            onPress={xin}
-            disabled={dangXin}
-            accessibilityRole="button">
-            {dangXin ? (
-              <ActivityIndicator color={color.demKhuya} />
-            ) : (
-              <Text style={s.chuNutChinh}>Xin một lời động viên</Text>
-            )}
-          </Pressable>
+          <View style={s.nutXin}>
+            <NutChinh nhan="Nhận một lời từ người lạ" onPress={xin} dangChay={dangXin} />
+          </View>
         ) : null}
 
         {ds.length === 0 && !choNhan ? (
-          <Text style={s.giaiThich}>
-            Bạn đang tắt nhận lời từ người lạ. Bật lại trong Cài đặt nếu muốn.
+          <Text style={[s.giaiThich, s.nutXin]}>
+            Bạn đã tắt nhận lời từ người lạ. Có thể đổi trong Cài đặt.
           </Text>
         ) : null}
 
-        <Pressable style={s.nutThoat} onPress={thoat} accessibilityRole="button">
-          <Text style={s.chuThoat}>Quay lại</Text>
-        </Pressable>
+        <DongLoi nhan="Quay lại" onPress={thoat} />
       </ScrollView>
+      <ChanMan />
     </SafeAreaView>
   );
 }
@@ -175,38 +194,24 @@ async function daDuLuot(): Promise<boolean> {
 }
 
 const s = StyleSheet.create({
-  man: { flex: 1, backgroundColor: color.demKhuya },
-  noiDung: { paddingHorizontal: space.man, paddingVertical: space.lg, gap: space.md },
-  tieuDe: { ...text.tieuDe, color: color.chuChinh },
-  giaiThich: { ...text.than, color: color.chuPhu },
-  the: {
-    backgroundColor: color.matGiay,
-    borderRadius: radius.the,
-    padding: space.md,
+  man: { flex: 1, backgroundColor: album.trang },
+  cuon: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl },
+  tieuDe: { color: album.chu, marginBottom: space.lg },
+  nhom: { color: album.butChi, marginTop: space.lg, marginBottom: space.md },
+  giaiThich: { ...text.than, color: album.butChi },
+  kep: {
+    ...bong,
+    elevation: 6,
+    backgroundColor: album.kep,
+    padding: space.lg,
+    marginBottom: space.lg,
     gap: space.sm,
   },
-  than: { ...text.than, color: color.chuChinh },
-  phu: { ...text.phu, color: color.chuPhu },
-  thongBao: { ...text.than, color: color.anhTrang },
-  nutCamOn: {
-    minHeight: touch.toiThieu,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
-    paddingHorizontal: space.md,
-    borderRadius: radius.vien,
-    backgroundColor: color.demKhuya,
-  },
-  chuNutCamOn: { ...text.nut, color: color.chuChinh },
-  nutChinh: {
-    minHeight: touch.chinh,
-    borderRadius: radius.o,
-    backgroundColor: color.anhTrang,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: space.md,
-  },
-  chuNutChinh: { ...text.nut, color: color.demKhuya },
-  mo: { opacity: 0.5 },
-  nutThoat: { minHeight: touch.toiThieu, justifyContent: 'center', marginTop: space.lg },
-  chuThoat: { ...text.nut, color: color.chuPhu },
+  than: { ...text.than, color: album.chu },
+  phu: { color: album.butChi },
+  nutCamOn: { minHeight: touch.toiThieu, alignSelf: 'flex-start', justifyContent: 'center' },
+  chuCamOn: { ...text.nut, color: album.chu },
+  mo: { opacity: 0.6 },
+  thongBao: { ...text.than, color: album.chu, marginTop: space.md },
+  nutXin: { marginTop: space.lg },
 });

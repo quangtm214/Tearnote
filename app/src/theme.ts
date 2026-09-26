@@ -6,46 +6,53 @@
  */
 
 /**
- * Màu — "phòng ngủ lúc 2 giờ sáng", không phải "dark mode của app SaaS".
- * Nền là xanh mực chứ không phải đen tuyệt đối: đen tuyệt đối trên OLED gây smear khi scroll,
- * và rìa chữ trắng trên nền #000 chói hơn nhiều với mắt vừa khóc xong.
- * Phân tầng bằng độ sáng, không bằng viền — tránh đường kẻ sắc trong bóng tối.
+ * World "album ảnh trang đen" — mọi màn dùng nó (DESIGN.md).
+ * Trang giấy bồi đen ấm, mỗi Entry là một tấm dán giữ bằng bốn góc; chú thích viết bút chì trắng.
+ * Ấm chứ không lạnh: mọi tông lệch về nâu, không có xám xanh.
  */
-export const color = {
-  /** Nền toàn app. Xanh mực đêm, tối nhưng có sắc độ để mắt không phải "neo" vào khoảng đen chết. */
-  demKhuya: '#121A24',
-  /** Bề mặt nổi: thẻ Entry trong timeline, ô nhập, sheet. Chỉ sáng hơn nền vừa đủ để tách lớp. */
-  matGiay: '#1C2632',
-  /** Chữ chính. Trắng ngà hơi lạnh — KHÔNG dùng #FFFFFF, quá gắt trong bóng tối. */
-  chuChinh: '#E4E8ED',
-  /** Chữ phụ: mốc thời gian, chú thích, tag chưa chọn. Vẫn đạt ~4.8:1 trên nền để đọc được qua mắt nhoè. */
-  chuPhu: '#8D9AA9',
-  /** Trạng thái đã chọn / đang hoạt động (tag đã chọn, nấc cường độ, con trỏ). Xanh tím như ánh trăng qua rèm — hiện diện nhưng không reo mừng. */
-  anhTrang: '#9FADD9',
-  /** DUY NHẤT được phép nổi bật: lối vào "cần trợ giúp ngay". Vàng hổ phách ấm như đèn còn sáng — cố ý KHÔNG phải đỏ cảnh báo, người đang khủng hoảng không cần bị doạ thêm. */
-  denConSang: '#E3B071',
+export const album = {
+  /** Trang album. */
+  trang: '#1A1614',
+  /** Tấm dán: Entry, nút chính. Sáng hơn trang vừa đủ để thấy nó nằm trên trang. */
+  tam: '#2B2622',
+  /** Tấm nhỏ người lạ kẹp vào: Comfort đã nhận. */
+  kep: '#3A322C',
+  /** Chữ thân trên tấm. ~11:1 trên tấm — đủ qua mắt nhoè, chưa tới trắng gắt. */
+  chu: '#E4DCCF',
+  /** Bút chì trắng: chú thích, ngày, vạch cường độ. ~7.8:1 trên trang. */
+  butChi: '#B3AA9C',
+  /** Góc dán ảnh — cùng tông bút chì trắng. */
+  goc: '#B3AA9C',
+  /** Giấy pơ-luya ngăn giữa các đêm: vệt sáng rất nhạt. */
+  poLuya: 'rgba(228, 220, 207, 0.06)',
+  /** Hairline duy nhất được dùng: mép trên chân màn, khung trang trống. */
+  vienMo: 'rgba(228, 220, 207, 0.12)',
+  /** Màu duy nhất được nổi: lối trợ giúp (~8:1 trên trang). */
+  den: '#E2A55A',
+  /**
+   * Bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục. Ô trống (ngày có thật, không Entry)
+   * rồi 5 mức theo `NGUONG` trong `lich.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
+   */
+  lich: [
+    'rgba(228, 220, 207, 0.06)',
+    'rgba(228, 220, 207, 0.22)',
+    'rgba(228, 220, 207, 0.40)',
+    'rgba(228, 220, 207, 0.58)',
+    'rgba(228, 220, 207, 0.78)',
+    'rgba(228, 220, 207, 1)',
+  ],
 } as const;
 
 /**
- * World "màn hình một-bit" — đang thay dần `color` ở trên, bắt đầu từ Timeline.
- * Hai tông duy nhất; mọi tông ở giữa là dither PNG (assets/images/dither), không có xám đặc.
- * Mực dịu chứ không trắng: #A9A59B trên #0B0B0C ≈ 8:1, đọc được mà không chói lúc 2 giờ sáng.
+ * Chữ viết tay Patrick Hand (nạp ở _layout) cho tiêu đề và chú thích tiếng Việt. Reflection và
+ * nút bấm vẫn là font hệ thống để đọc qua mắt nhoè. Không dùng Yomogi cho tiếng Việt: chữ Latin
+ * của nó rộng cố định nên tách chữ có dấu ("l ần"). Yomogi (assets/fonts) để dành cho tiếng Nhật
+ * khi có i18n — chưa nạp.
  */
-export const bit = {
-  nen: '#0B0B0C',
-  muc: '#A9A59B',
-  /** Màu duy nhất của app, chỉ ở nút trợ giúp (~7.7:1 trên nền). */
-  den: '#C99A4E',
-} as const;
-
-/**
- * Chữ pixel VT323 (nạp ở _layout) cho tiêu đề và nhãn in hoa; chữ thân vẫn là font hệ thống.
- * VT323 có đủ dấu tiếng Việt nhưng không có kana — khi có tiếng Nhật thì ghép DotGothic16.
- * lineHeight rộng vì chữ hoa có dấu chồng hai tầng (Ữ, Ầ).
- */
-export const pixel = {
-  tieuDe: { fontFamily: 'VT323', fontSize: 32, lineHeight: 40 },
-  nhan: { fontFamily: 'VT323', fontSize: 22, lineHeight: 28 },
+export const butChi = {
+  tieuDe: { fontFamily: 'PatrickHand', fontSize: 34, lineHeight: 46 },
+  ngay: { fontFamily: 'PatrickHand', fontSize: 22, lineHeight: 33 },
+  chuThich: { fontFamily: 'PatrickHand', fontSize: 19, lineHeight: 29 },
 } as const;
 
 /**
@@ -57,13 +64,10 @@ export const pixel = {
  * Thang bắt đầu từ 17 chứ không phải 16, và không có nấc nào dưới 14.
  * Mắt nhoè lúc nửa đêm không đọc được caption 12. lineHeight rộng (~1.5) vì tiếng Việt có dấu
  * chồng hai tầng, dòng sát nhau là dấu dính vào dòng trên. Chỉ 3 weight: font hệ thống Android
- * (Roboto) render '600' không ổn định, nên dừng ở 400 / 500 / 700.
+ * (Roboto) render '600' không ổn định, nên dừng ở 400 / 500. Tiêu đề và nhãn mục là
+ * Patrick Hand (`butChi`).
  */
 export const text = {
-  /** Tiêu đề màn hình. Cỡ lớn để định vị được mà không cần đọc kỹ. */
-  tieuDe: { fontSize: 28, fontWeight: '700', lineHeight: 36 },
-  /** Câu hỏi trong form, tiêu đề nhóm: "Hôm nay vì chuyện gì?" */
-  nhan: { fontSize: 20, fontWeight: '500', lineHeight: 28 },
   /** Chữ thân: Reflection, nội dung Comfort. Đây là cỡ mặc định của app. */
   than: { fontSize: 17, fontWeight: '400', lineHeight: 26 },
   /** Chữ trên nút bấm và tag. Đậm hơn thân một nấc để ngón tay biết chỗ bấm mà không cần viền. */
@@ -88,19 +92,6 @@ export const space = {
 } as const;
 
 /**
- * Bo góc — cố ý KHÔNG dùng một bán kính cho tất cả. Bán kính mã hoá loại phần tử:
- * thẻ nội dung mềm, ô nhập vuông vức hơn để trông "viết được", tag là viên thuốc.
- */
-export const radius = {
-  /** Thẻ Entry, thẻ Comfort. */
-  the: 14,
-  /** Ô nhập liệu, nút chữ nhật. */
-  o: 10,
-  /** Tag cảm xúc, nấc cường độ. */
-  vien: 999,
-} as const;
-
-/**
  * Vùng bấm — 48dp là sàn tuyệt đối (khuyến nghị Android), không phải mục tiêu.
  * Bấm một tay trong bóng tối thì sai số cao hơn bình thường nhiều.
  */
@@ -113,8 +104,3 @@ export const touch = {
   hotline: 64,
 } as const;
 
-/**
- * Cường độ 1–5 → chiều cao vạch. Một thang duy nhất: màn ghi Entry và màn timeline phải vẽ
- * cùng tỉ lệ, nếu không người dùng thấy hai mức khác nhau cho cùng một Entry.
- */
-export const caoVach = (intensity: number) => 16 + intensity * 12;
