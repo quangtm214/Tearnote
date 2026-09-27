@@ -112,7 +112,7 @@ export default function Timeline() {
       </ScrollView>
 
       <ChanMan>
-        <NutChinh nhan="Ghi một lần khóc" onPress={() => router.push('/new')} />
+        <NutChinh nhan="Ghi lại nhật ký" onPress={() => router.push('/new')} />
       </ChanMan>
     </SafeAreaView>
   );
