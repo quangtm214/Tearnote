@@ -21,10 +21,8 @@ export default function CaiDat() {
     setNhan(bat);
   }
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
+    <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
           Cài đặt
@@ -56,8 +54,6 @@ export default function CaiDat() {
           phu="Cần đăng nhập. Tối đa 5 lời trong 24 giờ."
           onPress={() => router.push('/comfort/write')}
         />
-
-        <DongLoi nhan="Quay lại" onPress={thoat} />
       </ScrollView>
       <ChanMan />
     </SafeAreaView>

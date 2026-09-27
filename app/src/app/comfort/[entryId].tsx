@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -102,7 +102,7 @@ export default function EntryComfortScreen() {
     await supabase.from('deliveries').update({ thanked: true }).eq('comfort_id', comfortId);
   }
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   if (!entryId || !entry) {
     return (

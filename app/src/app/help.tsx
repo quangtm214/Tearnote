@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -35,7 +35,7 @@ const mo = (url: string) => Linking.openURL(url).catch(() => {});
  * Một Ngọn Đèn (DESIGN.md). Không có chân màn: đây là nơi nút trợ giúp dẫn tới.
  */
 export default function Help() {
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   return (
     <SafeAreaView style={s.man} edges={['top', 'bottom']}>
