@@ -1,12 +1,12 @@
 ---
 name: check-bug
-description: Đọc sheet TearNoteBug, sửa các bug Mới / Mở lại, mỗi bug một nhánh + commit + PR, rồi ghi Commit/PR, ghi chú và chuyển sang "Chờ xác nhận". Dùng khi user gõ /check-bug hoặc bảo "kiểm tra bug", "sửa bug trong sheet".
+description: Đọc tab Bug của sheet TearNote-Bug-Change, sửa các bug Mới / Mở lại, mỗi bug một nhánh + commit + PR, rồi ghi Commit/PR, ghi chú và chuyển sang "Chờ xác nhận". Dùng khi user gõ /check-bug hoặc bảo "kiểm tra bug", "sửa bug trong sheet".
 disable-model-invocation: true
 ---
 
 # /check-bug
 
-Sheet: `TearNoteBug`, spreadsheet id `1nErKf9eBY7PCtQAnMxMjh5pCqzQ2on4zk0MdR24HOEM`, tab `Bug`.
+Sheet: `TearNote-Bug-Change`, spreadsheet id `1nErKf9eBY7PCtQAnMxMjh5pCqzQ2on4zk0MdR24HOEM`, tab `Bug`.
 Ghi/đọc qua **Zapier Google Sheets** (Google Drive MCP chỉ đọc được). Tool Zapier là deferred —
 nạp bằng ToolSearch `select:mcp__Zapier-MCP__execute_zapier_read_action,mcp__Zapier-MCP__execute_zapier_write_action`.
 
@@ -55,7 +55,7 @@ Ngày ghi dạng `yyyy-mm-dd`. Sau mỗi lần ghi, đọc lại dòng đó đ�
    6. Validate thật: `cd app; npx tsc --noEmit` và `cd app; npm test`. Đỏ thì sửa tiếp; không xanh được
       thì không commit — ghi M = `Chưa sửa được: <lý do>`, trả J về trạng thái cũ, về master, sang bug tiếp.
    7. Commit, message đúng luật commit của repo (một dòng, tiếng Anh, ≤100 ký tự, không trailer):
-      `fix: <ID> <tóm tắt tiếng Anh>` — ví dụ `fix: 7 keep selected tags when saving entry offline`.
+      `fix(bug-<ID>): <tóm tắt tiếng Anh>` — ví dụ `fix(bug-7): keep selected tags when saving entry offline`.
       Không dùng `#<ID>` (GitHub sẽ link nhầm sang issue/PR số đó).
    8. `git push -u origin fix/bug-<ID>` rồi `gh pr create --base master --title "<message commit>" --body "<body>"`.
       Body: bug nào (ID + màn hình + mô tả ngắn), nguyên nhân, cách sửa, cách user test lại trên máy.

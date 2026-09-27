@@ -30,7 +30,7 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Nhãn Tag tiếng Việt | Cột `vi` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL_VI` (test kiểm) | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau — đổi nhãn là đổi contract |
 | Dropdown / select | Tự dựng bằng `Modal` của RN core, không thêm `@react-native-picker/picker` | Không thêm dependency; style được theo world album |
 | Font | `expo-font` + Patrick Hand (OFL) cho tiêu đề/chú thích tiếng Việt; Reflection và nút bấm là font hệ thống. Yomogi nằm sẵn trong `assets/fonts` cho tiếng Nhật, chưa nạp | Yomogi rộng cố định với chữ Latin nên tách chữ có dấu ("l ần") |
-| Theo dõi bug | Google Sheet `TearNoteBug`, sửa bằng `/check-bug` (`.claude/skills/check-bug/`) | Mỗi bug một nhánh `fix/bug-<ID>` + PR, commit `fix: <ID> ...`; Claude ghi sheet qua Zapier, user xác nhận |
+| Theo dõi bug / thay đổi | Google Sheet `TearNote-Bug-Change`: tab Bug → `/check-bug`, tab Change → `/check-change` (`.claude/skills/`) | Mỗi mục một nhánh + PR (`fix/bug-<ID>` commit `fix(bug-<ID>): ...`; `change/<ID>` commit `<type>(change-<ID>): ...`); Claude ghi sheet qua Zapier, user xác nhận |
 | `@react-native/jest-preset` ghim đúng version RN | `0.86.3`, không để `^` | `legacy-peer-deps` cho npm tự lấy 0.87.1 và jest chết ngay. Nâng RN thì nâng cả gói này |
 
 Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi để cả repo bám theo.
