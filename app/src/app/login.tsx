@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
   KeyboardAvoidingView,
@@ -21,9 +21,11 @@ import { ChanMan, DongLoi, NutChinh } from '@/ui';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [matKhau, setMatKhau] = useState('');
-  const [dangChay, setDangChay] = useState<'vao' | 'tao' | null>(null);
+  const [dangChay, setDangChay] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
   const [thongBao, setThongBao] = useState<string | null>(null);
+  // Do màn Tạo tài khoản gửi về khi xong (register.tsx).
+  const { tao, email: emailMoi } = useLocalSearchParams<{ tao?: string; email?: string }>();
 
   const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -32,7 +34,18 @@ export default function LoginScreen() {
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  async function chay(kieu: 'vao' | 'tao') {
+  useEffect(() => {
+    // Đã có session thật thì màn này hết việc — trả người dùng về chỗ họ đến.
+    if (tao === 'xong') return thoat();
+    if (tao !== 'xacMinh') return;
+    const msg = 'Đã gửi thư xác minh tới email của bạn. Xác minh xong thì đăng nhập ở đây.';
+    if (emailMoi) setEmail(emailMoi);
+    setLoi(null);
+    setThongBao(msg);
+    AccessibilityInfo.announceForAccessibility(msg);
+  }, [tao, emailMoi]);
+
+  async function dangNhap() {
     if (dangChay) return;
     setLoi(null);
     setThongBao(null);
@@ -42,52 +55,16 @@ export default function LoginScreen() {
       return;
     }
 
-    setDangChay(kieu);
+    setDangChay(true);
     try {
-      // Đăng ký khi đang có session anonymous phải NÂNG CẤP chính user đó, không tạo user mới:
-      // deliveries neo vào user id: tạo mới là mất lịch sử "đã nhận Comfort nào", trần 3/24h
-      // reset, và người dùng nhận lại đúng lời đã đọc. signUp chỉ dùng khi chưa có session.
-      const { data: phien } = await supabase.auth.getSession();
-      const anDanh = phien.session?.user.is_anonymous === true;
-
-      if (kieu === 'tao' && anDanh) {
-        const { data, error } = await supabase.auth.updateUser({ email, password: matKhau });
-        if (error) return baoLoi(LOI_TAO);
-        // updateUser không bao giờ trả session. Còn chờ xác minh thì email mới nằm ở new_email;
-        // đã đổi ngay (dự án tắt xác minh) thì làm mới JWT để claim is_anonymous hết là true —
-        // không thì RLS vẫn coi đây là tài khoản ẩn danh và chặn viết.
-        if (data.user.new_email || !data.user.email) return xacMinh();
-        await supabase.auth.refreshSession();
-        return thoat();
-      }
-
-      const { data, error } =
-        kieu === 'vao'
-          ? await supabase.auth.signInWithPassword({ email, password: matKhau })
-          : await supabase.auth.signUp({ email, password: matKhau });
-
-      if (error) {
-        return baoLoi(
-          kieu === 'vao'
-            ? 'Không đăng nhập được. Kiểm tra lại email, mật khẩu và kết nối mạng.'
-            : LOI_TAO,
-        );
-      }
-
-      // Không có session trả về = dự án đang bật xác minh email.
-      if (!data.session) return xacMinh();
+      const { error } = await supabase.auth.signInWithPassword({ email, password: matKhau });
+      if (error) return baoLoi('Không đăng nhập được. Kiểm tra lại email, mật khẩu và kết nối mạng.');
       thoat();
     } catch {
       baoLoi('Không kết nối được. Kiểm tra mạng rồi thử lại.');
     } finally {
-      setDangChay(null);
+      setDangChay(false);
     }
-  }
-
-  function xacMinh() {
-    const msg = 'Đã gửi thư xác minh tới email của bạn. Xác minh xong thì quay lại đăng nhập.';
-    setThongBao(msg);
-    AccessibilityInfo.announceForAccessibility(msg);
   }
 
   return (
@@ -139,13 +116,8 @@ export default function LoginScreen() {
           {loi ? <Text style={s.loi}>{loi}</Text> : null}
           {thongBao ? <Text style={s.loi}>{thongBao}</Text> : null}
 
-          <NutChinh
-            nhan="Đăng nhập"
-            onPress={() => chay('vao')}
-            tat={dangChay === 'tao'}
-            dangChay={dangChay === 'vao'}
-          />
-          <DongLoi nhan="Tạo tài khoản mới" onPress={() => chay('tao')} />
+          <NutChinh nhan="Đăng nhập" onPress={dangNhap} dangChay={dangChay} />
+          <DongLoi nhan="Tạo tài khoản mới" onPress={() => router.push('/register')} />
 
           <DongLoi nhan="Để sau" onPress={thoat} />
         </ScrollView>
@@ -154,9 +126,6 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const LOI_TAO =
-  'Không tạo được tài khoản. Có thể email này đã có tài khoản — thử Đăng nhập. Hoặc kiểm tra mạng.';
 
 const s = StyleSheet.create({
   man: { flex: 1, backgroundColor: album.trang },
