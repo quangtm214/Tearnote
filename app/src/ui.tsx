@@ -99,7 +99,7 @@ export function TamEntry({ e, tt, onPress }: { e: Entry; tt?: TrangThai; onPress
   ].filter(Boolean);
   const nhanComfort = tt === 'kep' ? 'có một lời kẹp ở đây' : tt === 'camOn' ? 'đã cảm ơn' : null;
   return (
-    <View style={s.oTam}>
+    <View style={[s.oTam, nhanComfort ? s.duoiKep : null]}>
       <Pressable
         onPress={onPress}
         accessibilityRole={onPress ? 'button' : 'text'}
@@ -118,21 +118,22 @@ export function TamEntry({ e, tt, onPress }: { e: Entry; tt?: TrangThai; onPress
         <Text style={s.than} numberOfLines={onPress ? 6 : undefined}>
           {e.reflection || nhanTag}
         </Text>
+        {/* Chú thích nằm trong tấm: để ngoài thì giờ và nét cường độ lơ lửng giữa hai tấm, không rõ
+            của tấm trên hay tấm dưới. Đã đọc trong nhãn của tấm — ẩn khỏi screen reader để không đọc lặp. */}
+        <View
+          style={s.dongChuThich}
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+        >
+          <Text style={[butChi.chuThich, s.chuThich]}>{phan.join(' · ')}</Text>
+          <Vach n={e.intensity} />
+        </View>
         {nhanComfort && (
           <View style={s.kep}>
             <Text style={[butChi.chuThich, s.chuKep]}>{nhanComfort}</Text>
           </View>
         )}
       </Pressable>
-      {/* Đã đọc trong nhãn của tấm — ẩn khỏi screen reader để không đọc lặp. */}
-      <View
-        style={[s.dongChuThich, nhanComfort ? s.duoiKep : null]}
-        importantForAccessibility="no-hide-descendants"
-        accessibilityElementsHidden
-      >
-        <Text style={[butChi.chuThich, s.chuThich]}>{phan.join(' · ')}</Text>
-        <Vach n={e.intensity} />
-      </View>
     </View>
   );
 }
@@ -292,9 +293,10 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: space.md,
-    marginTop: space.sm,
+    marginTop: space.md,
   },
-  duoiKep: { marginTop: space.lg + space.sm },
+  // Mẩu kẹp chờm 18 xuống dưới tấm — chừa chỗ để nó không chạm tấm kế tiếp.
+  duoiKep: { marginBottom: space.xl },
   chuThich: { color: album.butChi, flex: 1 },
   vach: { flexDirection: 'row', alignItems: 'flex-end', gap: 4, height: 26, paddingBottom: 5 },
   net: { width: 2, backgroundColor: album.butChi, borderRadius: 1 },
