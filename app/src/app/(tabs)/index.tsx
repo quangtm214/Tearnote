@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getSetting, listEntries, listReceivedComforts, setSetting, type Entry } from '@/db';
 import { album, butChi, space } from '@/theme';
-import { ChanMan, DongLoi, GocDan, nhanNgay, NutChinh, TamEntry, type TrangThai } from '@/ui';
+import { ChanMan, GocDan, nhanNgay, NutChinh, TamEntry, type TrangThai } from '@/ui';
 
 
 /** Khoá nhóm theo ngày địa phương. */
@@ -51,7 +51,7 @@ export default function Timeline() {
   const khoaDung = eDung ? khoaNgay(eDung.occurredAt) : null;
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
+    <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView ref={cuon} contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
           Những lần đã khóc
@@ -93,22 +93,6 @@ export default function Timeline() {
             );
           })
         )}
-
-        <DongLoi
-          nhan="Viết một lời cho người lạ"
-          phu="Gửi ẩn danh cho ai đó đang trải qua điều tương tự. Cần đăng nhập."
-          onPress={() => router.push('/comfort/write')}
-        />
-        <DongLoi
-          nhan="Lịch"
-          phu="Cả năm trên một trang, đậm nhạt theo cường độ mỗi ngày."
-          onPress={() => router.push('/lich')}
-        />
-        <DongLoi
-          nhan="Cài đặt"
-          phu="Lời bạn đã viết, và việc nhận lời từ người lạ."
-          onPress={() => router.push('/settings')}
-        />
       </ScrollView>
 
       <ChanMan>

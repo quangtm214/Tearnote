@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -83,7 +83,7 @@ export default function ComfortCuaToi() {
     await nap();
   }
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   return (
     <SafeAreaView style={s.man} edges={['top', 'bottom']}>

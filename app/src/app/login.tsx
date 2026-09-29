@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -27,7 +27,7 @@ export default function LoginScreen() {
   // Do màn Tạo tài khoản gửi về khi xong (register.tsx).
   const { tao, email: emailMoi } = useLocalSearchParams<{ tao?: string; email?: string }>();
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   const baoLoi = (msg: string) => {
     setLoi(msg);

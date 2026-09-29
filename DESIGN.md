@@ -176,7 +176,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 
 Một cột dọc duy nhất, lề ngang `man` (20). Khoảng giữa các tấm là `lg` (24); chú thích cách tấm `sm` (8), và `lg + sm` (32) khi tấm có mẩu giấy kẹp chờm xuống. Giữa hai đêm: tờ pơ-luya với `md` phía trên, `xl` phía dưới. Tiêu đề cách nội dung `lg`.
 
-Chân màn cố định ngoài vùng cuộn (`ChanMan` trong `ui.tsx`), **ở mọi màn trừ màn hotline** — ADR 0005 đòi lối trợ giúp hiển thị thường trực: nút chính (nếu màn có, như Timeline) rồi nút trợ giúp, cách nhau `sm`, tách khỏi trang bằng một hairline `vien-mo`. Màn khác kết thúc vùng cuộn bằng dòng lối "Quay lại". Màn có ô nhập bọc nội dung trong `KeyboardAvoidingView` (behavior `padding`): Android edge-to-edge không tự co cửa sổ, thiếu nó là bàn phím che ô đang gõ. Vùng bấm tối thiểu 48, nút chính 56, trợ giúp 64 (`touch` trong theme). Mở lại app thì cuộn thẳng tới đêm của Entry mở gần nhất, không animate.
+Chân màn cố định ngoài vùng cuộn (`ChanMan` trong `ui.tsx`), **ở mọi màn trừ màn hotline** — ADR 0005 đòi lối trợ giúp hiển thị thường trực: nút chính (nếu màn có, như Timeline) rồi nút trợ giúp, cách nhau `sm`, tách khỏi trang bằng một hairline `vien-mo`. Ba màn Nhật ký, Lịch, Cài đặt là tab: dưới chân màn có thêm thanh điều hướng, không có "Quay lại". Màn khác kết thúc vùng cuộn bằng dòng lối "Quay lại". Màn có ô nhập bọc nội dung trong `KeyboardAvoidingView` (behavior `padding`): Android edge-to-edge không tự co cửa sổ, thiếu nó là bàn phím che ô đang gõ. Vùng bấm tối thiểu 48, nút chính 56, trợ giúp 64 (`touch` trong theme). Mở lại app thì cuộn thẳng tới đêm của Entry mở gần nhất, không animate.
 
 ### Named Rules
 **The Một Trục Rule.** Không lưới, không cột, không heatmap. Mọi thứ nằm trên một trục dọc theo thời gian. **Ngoại lệ duy nhất:** bảng năm ở màn Lịch — chủ repo chọn lưới vì nhìn cả năm một lượt mới thấy được mùa nào dày, tháng nào thưa. Ngoại lệ không lan sang màn khác; Timeline vẫn là một trục.
@@ -201,7 +201,10 @@ Góc vuông cho mọi tờ giấy (tấm, mẩu kẹp, nút). Hình tam giác c�
 ### Buttons
 - **Nút chính** ("Ghi lại nhật ký", "Lưu lại", "Gửi"): là một tấm dán: nền `tam`, góc dán 10, bóng "nằm trên trang", chữ `nut` màu `chu`. Nhấn thì nhấc khỏi trang.
 - **Nút trợ giúp** ("Cần trợ giúp ngay"): viền `den` 1.5px trên nền trang, chữ `den`; nhấn thì tô kín `den`, chữ chuyển `trang`. Luôn ở chân màn, luôn cùng chỗ.
-- **Dòng lối** (ví dụ "Viết một lời cho người lạ", "Cài đặt", "Quay lại"): không nền, không viền; nhãn `nut` màu `chu`, dòng giải thích `phu` màu `but-chi` (tối đa 320 rộng). Nhấn thì mờ 0.6. Screen reader đọc nhãn, dòng giải thích là hint.
+- **Dòng lối** (ví dụ "Viết một lời cho người lạ", "Lời bạn đã viết", "Quay lại"): không nền, không viền; nhãn `nut` màu `chu`, dòng giải thích `phu` màu `but-chi` (tối đa 320 rộng). Nhấn thì mờ 0.6. Screen reader đọc nhãn, dòng giải thích là hint.
+
+### Thanh điều hướng (`app/src/app/(tabs)/_layout.tsx`)
+Dưới cùng, sau chân màn; nền `trang`, hairline `vien-mo` phía trên, đệm theo inset đáy. Bốn mục chia đều: Nhật ký · Viết lời · Lịch · Cài đặt — icon MaterialCommunityIcons 24 trên nhãn `phu`, vùng bấm tối thiểu 48, cao theo chữ (chịu được font scale). Mục đang mở: icon tô đặc và màu `chu`; mục khác: icon viền và màu `but-chi`. Nhấn thì mờ 0.6. "Viết lời" không phải tab — nó mở màn viết đè lên (không có thanh này). Không dùng `den`, không bo, không pill chỉ báo.
 
 ### Lựa chọn và ô nhập (màn ghi, viết lời, đăng nhập)
 - **Lựa chọn** (Tag, thời điểm, thời lượng): mảnh `tam` góc vuông cao 48, chữ `nut` màu `but-chi`. Chọn thì tô `chu`, chữ đổi sang `trang` — tương phản đủ để thấy qua mắt nhoè mà không cần màu thứ hai. Hết lượt chọn thì các lựa chọn còn lại mờ 0.35. Screen reader: chọn một là `radio`, chọn nhiều (Tag) là `checkbox`.
