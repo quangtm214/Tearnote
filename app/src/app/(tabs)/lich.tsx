@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { listEntries, type Entry } from '@/db';
 import { mucMau, NGUONG, tongTheoNgay } from '@/lich';
 import { album, butChi, space, text, touch } from '@/theme';
-import { bong, ChanMan, DongLoi } from '@/ui';
+import { bong, ChanMan } from '@/ui';
 
 const NGAY = Array.from({ length: 31 }, (_, i) => i + 1);
 /** "1–2" … "10+", suy từ NGUONG để chú thích không lệch ngưỡng. */
@@ -32,10 +32,9 @@ export default function Lich() {
   const namDau = entries.length ? new Date(entries[entries.length - 1].occurredAt).getFullYear() : namNay;
   const cacNam = Array.from({ length: namNay - Math.min(namDau, namNay) + 1 }, (_, i) => namNay - i);
   const tong = tongTheoNgay(entries, nam);
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
+    <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
           Lịch
@@ -98,7 +97,6 @@ export default function Lich() {
             </View>
           ))}
         </View>
-        <DongLoi nhan="Quay lại" onPress={thoat} />
       </ScrollView>
       <ChanMan />
 

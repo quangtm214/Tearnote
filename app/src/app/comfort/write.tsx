@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -34,7 +34,7 @@ export default function WriteComfortScreen() {
   const [xong, setXong] = useState(false);
   const daHoi = useRef(false);
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   // push chứ không replace: đăng nhập xong thì quay về đúng màn này, chữ đã gõ còn nguyên.
   useFocusEffect(

@@ -28,6 +28,7 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Lưới / heatmap | Chỉ bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục (DESIGN.md) | Nhìn cả năm một lượt mới thấy mùa nào dày. Màu = tổng cường độ trong ngày, ngưỡng cố định ở `app/src/lich.ts` để màu cùng nghĩa giữa các năm |
 | Từ vựng trên UI | "lần khóc" thay "Entry", "lời từ/cho người lạ" thay "Comfort" (PRODUCT.md) | Screen reader đọc chữ Anh sai giữa câu Việt; các khái niệm khác vốn đã Việt hoá trên UI |
 | Nhãn Tag tiếng Việt | Cột `vi` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL_VI` (test kiểm) | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau — đổi nhãn là đổi contract |
+| Điều hướng | `Tabs` của `expo-router/js-tabs`, thanh tự dựng; tab = Nhật ký · Lịch · Cài đặt (`app/src/app/(tabs)/`), "Viết lời" là nút mở màn viết. Icon: `@expo/vector-icons` (MaterialCommunityIcons) | Thanh mặc định cao cố định 49, nhãn dưới 14 — vỡ luật chữ của DESIGN.md. Viết lời giữ nguyên luồng đăng nhập / Gửi / Xong nên không làm tab |
 | Dropdown / select | Tự dựng bằng `Modal` của RN core, không thêm `@react-native-picker/picker` | Không thêm dependency; style được theo world album |
 | Font | `expo-font` + Patrick Hand (OFL) cho tiêu đề/chú thích tiếng Việt; Reflection và nút bấm là font hệ thống. Yomogi nằm sẵn trong `assets/fonts` cho tiếng Nhật, chưa nạp | Yomogi rộng cố định với chữ Latin nên tách chữ có dấu ("l ần") |
 | Theo dõi bug / thay đổi | Google Sheet `TearNote-Bug-Change`: tab Bug → `/check-bug`, tab Change → `/check-change` (`.claude/skills/`) | Mỗi mục một nhánh + PR (`fix/bug-<ID>` commit `fix(bug-<ID>): ...`; `change/<ID>` commit `<type>(change-<ID>): ...`); Claude ghi sheet qua Zapier, user xác nhận |
@@ -122,6 +123,9 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
   migration, đừng sửa client.
 * **`received_comforts.entry_id` chỉ tồn tại trên máy.** Server không biết Comfort nào thuộc Entry
   nào, và cố ý như vậy.
+* **Typed routes của Expo sinh sai trên Windows**: `(tabs)/index.tsx` thành `/index` thay vì `/`
+  (generator cắt `/index` trước khi đổi `\` sang `/`). Runtime vẫn đúng; chỗ nào `router.replace('/')`
+  thì viết `'/' as Href`, đừng đổi sang `'/index'` — máy không phải Windows sẽ đỏ.
 * **Giới hạn độ dài Comfort có ở hai nơi**: CHECK `char_length(body) between 20 and 500` và
   `array_length(tags,1) between 1 and 2` trong migration, lặp lại thành hằng số trong
   `app/src/app/comfort/write.tsx` để hiện bộ đếm. Sửa CHECK mà quên sửa hằng số thì người dùng

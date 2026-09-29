@@ -1,18 +1,26 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { AccessibilityInfo, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { datNhanComfort, nhanComfortBat } from '@/db';
+import { supabase } from '@/supabase';
 import { album, butChi, space, text } from '@/theme';
 import { ChanMan, DongLoi } from '@/ui';
 
 export default function CaiDat() {
   const [nhan, setNhan] = useState(true);
+  // null = chưa đăng nhập tài khoản thật (anonymous hoặc chưa có session).
+  const [email, setEmail] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       setNhan(nhanComfortBat());
+      // Session trên máy như isRealAccount — mất mạng vẫn thấy mình đang đăng nhập bằng gì.
+      supabase.auth.getSession().then(({ data }) => {
+        const u = data.session?.user;
+        setEmail(u && !u.is_anonymous ? (u.email ?? null) : null);
+      });
     }, []),
   );
 
@@ -21,10 +29,15 @@ export default function CaiDat() {
     setNhan(bat);
   }
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  async function dangXuat() {
+    // signOut luôn xoá session trên máy, kể cả khi mất mạng (lỗi chỉ là server chưa thu hồi token).
+    await supabase.auth.signOut();
+    setEmail(null);
+    AccessibilityInfo.announceForAccessibility('Đã đăng xuất.');
+  }
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
+    <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
           Cài đặt
@@ -57,7 +70,27 @@ export default function CaiDat() {
           onPress={() => router.push('/comfort/write')}
         />
 
-        <DongLoi nhan="Quay lại" onPress={thoat} />
+        {email ? (
+          <>
+            <View style={s.hang}>
+              <View style={s.trai}>
+                <Text style={s.nhan}>Tài khoản</Text>
+                <Text style={s.phu}>{email}</Text>
+              </View>
+            </View>
+            <DongLoi
+              nhan="Đăng xuất"
+              phu="Những lần khóc vẫn nằm nguyên trên máy."
+              onPress={dangXuat}
+            />
+          </>
+        ) : (
+          <DongLoi
+            nhan="Đăng nhập"
+            phu="Chưa đăng nhập. Chỉ cần khi viết lời cho người lạ."
+            onPress={() => router.push('/login')}
+          />
+        )}
       </ScrollView>
       <ChanMan />
     </SafeAreaView>
