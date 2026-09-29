@@ -199,7 +199,7 @@ Góc vuông cho mọi tờ giấy (tấm, mẩu kẹp, nút). Hình tam giác c�
 ## Components
 
 ### Buttons
-- **Nút chính** ("Ghi một lần khóc", "Lưu lại", "Gửi"): là một tấm dán: nền `tam`, góc dán 10, bóng "nằm trên trang", chữ `nut` màu `chu`. Nhấn thì nhấc khỏi trang.
+- **Nút chính** ("Ghi lại nhật ký", "Lưu lại", "Gửi"): là một tấm dán: nền `tam`, góc dán 10, bóng "nằm trên trang", chữ `nut` màu `chu`. Nhấn thì nhấc khỏi trang.
 - **Nút trợ giúp** ("Cần trợ giúp ngay"): viền `den` 1.5px trên nền trang, chữ `den`; nhấn thì tô kín `den`, chữ chuyển `trang`. Luôn ở chân màn, luôn cùng chỗ.
 - **Dòng lối** (ví dụ "Viết một lời cho người lạ", "Lời bạn đã viết", "Quay lại"): không nền, không viền; nhãn `nut` màu `chu`, dòng giải thích `phu` màu `but-chi` (tối đa 320 rộng). Nhấn thì mờ 0.6. Screen reader đọc nhãn, dòng giải thích là hint.
 
