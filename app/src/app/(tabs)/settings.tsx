@@ -36,10 +36,8 @@ export default function CaiDat() {
     AccessibilityInfo.announceForAccessibility('Đã đăng xuất.');
   }
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
+    <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
           Cài đặt
@@ -93,8 +91,6 @@ export default function CaiDat() {
             onPress={() => router.push('/login')}
           />
         )}
-
-        <DongLoi nhan="Quay lại" onPress={thoat} />
       </ScrollView>
       <ChanMan />
     </SafeAreaView>
