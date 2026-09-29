@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { ClipPath, Defs, Path } from 'react-native-svg';
 
 import type { Entry } from './db';
 import { nhanTags } from './tags';
@@ -42,14 +43,26 @@ export const NET = [
   { height: 13, transform: [{ rotate: '-3deg' }] },
 ];
 
-/** Cường độ 1–5 là đúng n nét bút chì, không phải cột biểu đồ — không vẽ ô trống. */
-export function Vach({ n }: { n: number }) {
+/** Giọt nước mắt vẽ tay (hơi lệch hai bên), khung 20×28: chóp y=1.5, đáy y=26. */
+const GIOT = 'M10 1.5C8.6 5 2.2 11.4 2.2 17.8C2.2 22.3 5.7 26 10 26C14.4 26 17.9 22.3 17.8 17.7C17.7 11.6 11.5 5.1 10 1.5Z';
+
+/**
+ * Cường độ 1–5 là một giọt nước mắt đầy dần: 1 là đáy giọt, 5 là đầy. Mặt nước gợn nhẹ để đọc
+ * thành nước chứ không thành thanh đo. Viền và phần đầy cùng màu bút chì.
+ */
+export function Giot({ n }: { n: number }) {
+  const y = 26 - (24.5 * n) / 5;
   return (
-    <View style={s.vach}>
-      {NET.slice(0, n).map((net, i) => (
-        <View key={i} style={[s.net, net]} />
-      ))}
-    </View>
+    <Svg width={20} height={28} viewBox="0 0 20 28">
+      <Defs>
+        {/* id chỉ cần duy nhất trong một <Svg>: trên native mỗi <Svg> giữ defs riêng. */}
+        <ClipPath id="giot">
+          <Path d={GIOT} />
+        </ClipPath>
+      </Defs>
+      <Path d={`M0 ${y}Q5 ${y - 1.5} 10 ${y}T20 ${y}V28H0Z`} fill={album.butChi} clipPath="url(#giot)" />
+      <Path d={GIOT} fill="none" stroke={album.butChi} strokeWidth={1.5} strokeLinejoin="round" />
+    </Svg>
   );
 }
 
@@ -118,7 +131,7 @@ export function TamEntry({ e, tt, onPress }: { e: Entry; tt?: TrangThai; onPress
         <Text style={s.than} numberOfLines={onPress ? 6 : undefined}>
           {e.reflection || nhanTag}
         </Text>
-        {/* Chú thích nằm trong tấm: để ngoài thì giờ và nét cường độ lơ lửng giữa hai tấm, không rõ
+        {/* Chú thích nằm trong tấm: để ngoài thì giờ và giọt cường độ lơ lửng giữa hai tấm, không rõ
             của tấm trên hay tấm dưới. Đã đọc trong nhãn của tấm — ẩn khỏi screen reader để không đọc lặp. */}
         <View
           style={s.dongChuThich}
@@ -126,7 +139,7 @@ export function TamEntry({ e, tt, onPress }: { e: Entry; tt?: TrangThai; onPress
           accessibilityElementsHidden
         >
           <Text style={[butChi.chuThich, s.chuThich]}>{phan.join(' · ')}</Text>
-          <Vach n={e.intensity} />
+          <Giot n={e.intensity} />
         </View>
         {nhanComfort && (
           <View style={s.kep}>
@@ -289,7 +302,7 @@ const s = StyleSheet.create({
   },
   chuKep: { color: album.chu },
   dongChuThich: {
-    // Không wrap: chú thích tự xuống dòng bên trong, vạch luôn nằm cuối dòng đầu, không tách ra.
+    // Không wrap: chú thích tự xuống dòng bên trong, giọt luôn nằm cuối dòng đầu, không tách ra.
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: space.md,
@@ -298,8 +311,6 @@ const s = StyleSheet.create({
   // Mẩu kẹp chờm 18 xuống dưới tấm — chừa chỗ để nó không chạm tấm kế tiếp.
   duoiKep: { marginBottom: space.xl },
   chuThich: { color: album.butChi, flex: 1 },
-  vach: { flexDirection: 'row', alignItems: 'flex-end', gap: 4, height: 26, paddingBottom: 5 },
-  net: { width: 2, backgroundColor: album.butChi, borderRadius: 1 },
 
   loi: { minHeight: touch.toiThieu, paddingVertical: space.md, justifyContent: 'center', marginTop: space.md },
   mo: { opacity: 0.6 },

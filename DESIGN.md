@@ -125,7 +125,7 @@ Từ chối: danh sách thẻ bo tròn kèm biểu đồ của app mood tracker,
 - Trang giấy bồi đen ấm, tấm dán góc vuông, bốn góc dán tam giác.
 - Nổi bằng bóng mềm thấp, không bằng viền.
 - Bút chì trắng (Patrick Hand) cho chú thích; font hệ thống cho mọi thứ phải đọc kỹ.
-- Cường độ là n nét bút chì đếm tay, không phải biểu đồ.
+- Cường độ trên tấm là một giọt nước mắt vẽ bút chì, đầy dần theo mức — không phải biểu đồ.
 - Hổ phách chỉ có một chỗ: lối trợ giúp.
 
 ## Colors
@@ -140,7 +140,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 - **Tấm Dán** (`tam`): mặt Entry và nút chính. Sáng hơn trang vừa đủ để thấy nó nằm trên trang.
 - **Mẩu Giấy Kẹp** (`kep`): Comfort người lạ kẹp vào tấm. Sáng hơn tấm một nấc.
 - **Chữ Ngà** (`chu`): chữ trên tấm (Reflection, nhãn nút), tiêu đề màn. ~11:1 trên tấm.
-- **Bút Chì Trắng** (`but-chi`): ngày, chú thích, nét cường độ, dòng phụ. ~7.8:1 trên trang. Góc dán (`album.goc`) dùng cùng giá trị.
+- **Bút Chì Trắng** (`but-chi`): ngày, chú thích, giọt cường độ, dòng phụ. ~7.8:1 trên trang. Góc dán (`album.goc`) dùng cùng giá trị.
 - **Giấy Pơ-luya** (`po-luya`): thân tờ ngăn giữa hai đêm; mép trên của nó là cùng tông ở độ đục 0.22.
 - **Viền Mờ** (`vien-mo`): đường hairline duy nhất được dùng: mép trên chân màn, khung trang trống.
 - **Thang Lịch** (`album.lich`): chỉ cho bảng năm. Sáu nấc của cùng tông `chu`, chỉ đổi độ đục: ô trống 0.06 (bằng `po-luya`) rồi 5 mức 0.22 / 0.40 / 0.58 / 0.78 / 1. Không thêm sắc độ mới, không dùng `den`.
@@ -214,10 +214,10 @@ Dưới cùng, sau chân màn; nền `trang`, hairline `vien-mo` phía trên, đ
 - **Nút gạt** (Cài đặt): Switch của nền tảng; bật: track `but-chi`, thumb `chu`; tắt: track `kep`, thumb `but-chi`.
 
 ### Tấm Entry (signature)
-Tấm giấy góc vuông `tam`, padding `lg`, bốn góc dán, bóng thấp. Thân là Reflection (tối đa 6 dòng); không có Reflection thì Tag là thân và chú thích không lặp Tag. Dòng cuối **trong** tấm, cách thân `md`, là chú thích bút chì (giờ · thời lượng · Tag) và, cuối dòng đầu của nó, các nét cường độ — nằm trong tấm để không lơ lửng giữa hai tấm, lẫn sang tấm bên dưới. Toàn tấm là một vùng bấm với nhãn screen reader gộp đủ Reflection, chú thích, cường độ và trạng thái Comfort; dòng chú thích ẩn khỏi screen reader để không đọc lặp. Nhấn: nhấc khỏi trang (hiện là trạng thái tức thời, chưa có chuyển động theo thời gian).
+Tấm giấy góc vuông `tam`, padding `lg`, bốn góc dán, bóng thấp. Thân là Reflection (tối đa 6 dòng); không có Reflection thì Tag là thân và chú thích không lặp Tag. Dòng cuối **trong** tấm, cách thân `md`, là chú thích bút chì (giờ · thời lượng · Tag) và, cuối dòng đầu của nó, giọt cường độ — nằm trong tấm để không lơ lửng giữa hai tấm, lẫn sang tấm bên dưới. Toàn tấm là một vùng bấm với nhãn screen reader gộp đủ Reflection, chú thích, cường độ và trạng thái Comfort; dòng chú thích ẩn khỏi screen reader để không đọc lặp. Nhấn: nhấc khỏi trang (hiện là trạng thái tức thời, chưa có chuyển động theo thời gian).
 
-### Nét cường độ
-Cường độ 1–5 là đúng n nét bút chì đếm tay (`but-chi`, rộng 2, cao 12–15, nghiêng -4° đến 5°). Không vẽ ô trống cho mức chưa đạt, không cột, không thang.
+### Giọt cường độ
+Cường độ 1–5 trên tấm là **một** giọt nước mắt SVG (`Giot` trong `app/src/ui.tsx`, `react-native-svg`), khung 20×28, viền `but-chi` 1.5 hơi lệch hai bên như vẽ tay; phần trong tô `but-chi` đầy dần theo mức — 1 là đáy giọt, 5 là đầy — mặt nước gợn nhẹ để đọc thành nước chứ không thành thanh đo. Không đếm nét, không cột, không đặt nhiều giọt cạnh nhau.
 
 ### Mẩu giấy kẹp (trạng thái Comfort)
 Ba trạng thái: không có gì (chưa xin Comfort) / mẩu `kep` ghi "có một lời kẹp ở đây" / mẩu `kep` ghi "đã cảm ơn" (khi mọi Comfort của Entry đã được cảm ơn). Mẩu chờm qua góc dưới phải của tấm, nghiêng -2°, chữ `chu-thich` màu `chu`, có bóng riêng.
@@ -243,7 +243,7 @@ Ngoại lệ luật Một Trục. 12 cột tháng (`T1`…`T12`) × 31 hàng ng�
 - **Do** dùng `album` và `butChi` từ `app/src/theme.ts` cho mọi màn mới hoặc màn đang chuyển world.
 - **Do** giữ Reflection và nút bấm ở font hệ thống cỡ `than` / `nut`.
 - **Do** cho mọi tờ giấy góc vuông và bóng "nằm trên trang"; nhấn thì "nhấc khỏi trang".
-- **Do** biểu diễn cường độ bằng đúng n nét bút chì.
+- **Do** biểu diễn cường độ trên tấm bằng một giọt nước mắt đầy dần.
 - **Do** giữ lối trợ giúp ở chân màn, cao 64, là chỗ duy nhất có `den`.
 
 ### Don't:
