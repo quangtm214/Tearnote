@@ -115,7 +115,7 @@ components:
 
 **Creative North Star: "Cuốn album chỉ mình mở"**
 
-Tearnote là một cuốn album ảnh trang đen để trong ngăn kéo. Mỗi lần khóc là một tấm giấy dán lên trang, giữ bằng bốn góc dán tam giác; ngày tháng và chi tiết được ghi bằng bút chì trắng bên dưới. Comfort là một mẩu giấy nhỏ người lạ lặng lẽ kẹp vào trang. Giữa hai đêm có một tờ giấy pơ-luya mỏng. Tất cả đi theo một trục dọc duy nhất, đọc từ trên xuống như lật album.
+Tearnote là một cuốn album ảnh trang đen để trong ngăn kéo. Mỗi lần khóc là một tấm giấy dán lên trang, giữ bằng bốn góc dán tam giác; ngày tháng ghi bằng bút chì trắng trên trang, chi tiết ghi ngay trên tấm. Comfort là một mẩu giấy nhỏ người lạ lặng lẽ kẹp vào trang. Giữa hai đêm có một tờ giấy pơ-luya mỏng. Tất cả đi theo một trục dọc duy nhất, đọc từ trên xuống như lật album.
 
 Mọi tông đều ấm, lệch về nâu; không có xám xanh, không có trắng tinh. Độ tương phản vừa đủ để đọc qua mắt nhoè lúc 2 giờ sáng rồi dừng lại. Mật độ thưa: khoảng trống giữa các tấm là tín hiệu "không có gì gấp". Chữ viết tay chỉ dùng cho những gì một người sẽ ghi bằng bút chì trên album (tiêu đề, ngày, chú thích, mẩu giấy kẹp); còn thứ phải đọc được (Reflection, nút bấm) là font hệ thống.
 
@@ -160,7 +160,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 ### Hierarchy
 - **Tiêu đề** (`tieu-de`, Patrick Hand): tiêu đề màn, ví dụ "Những lần đã khóc".
 - **Ngày** (`ngay`, Patrick Hand): đầu mỗi nhóm đêm, màu bút chì.
-- **Chú thích** (`chu-thich`, Patrick Hand): giờ · thời lượng · Tag dưới tấm; chữ trên mẩu giấy kẹp; câu trang trống.
+- **Chú thích** (`chu-thich`, Patrick Hand): giờ · thời lượng · Tag ở dòng cuối trong tấm; chữ trên mẩu giấy kẹp; câu trang trống.
 - **Thân** (`than`, hệ thống): Reflection. Cỡ mặc định của app.
 - **Nút** (`nut`, hệ thống, 500): nhãn nút và dòng lối.
 - **Phụ** (`phu`, hệ thống): dòng giải thích dưới lối, nhỏ nhất được phép.
@@ -174,7 +174,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 
 ## Layout
 
-Một cột dọc duy nhất, lề ngang `man` (20). Khoảng giữa các tấm là `lg` (24); chú thích cách tấm `sm` (8), và `lg + sm` (32) khi tấm có mẩu giấy kẹp chờm xuống. Giữa hai đêm: tờ pơ-luya với `md` phía trên, `xl` phía dưới. Tiêu đề cách nội dung `lg`.
+Một cột dọc duy nhất, lề ngang `man` (20). Khoảng giữa các tấm là `lg` (24), và `xl` (40) khi tấm có mẩu giấy kẹp chờm xuống; chú thích nằm trong tấm, cách thân `md` (16). Giữa hai đêm: tờ pơ-luya với `md` phía trên, `xl` phía dưới. Tiêu đề cách nội dung `lg`.
 
 Chân màn cố định ngoài vùng cuộn (`ChanMan` trong `ui.tsx`), **ở mọi màn trừ màn hotline** — ADR 0005 đòi lối trợ giúp hiển thị thường trực: nút chính (nếu màn có, như Timeline) rồi nút trợ giúp, cách nhau `sm`, tách khỏi trang bằng một hairline `vien-mo`. Ba màn Nhật ký, Lịch, Cài đặt là tab: dưới chân màn có thêm thanh điều hướng, không có "Quay lại". Màn khác kết thúc vùng cuộn bằng dòng lối "Quay lại". Màn có ô nhập bọc nội dung trong `KeyboardAvoidingView` (behavior `padding`): Android edge-to-edge không tự co cửa sổ, thiếu nó là bàn phím che ô đang gõ. Vùng bấm tối thiểu 48, nút chính 56, trợ giúp 64 (`touch` trong theme). Mở lại app thì cuộn thẳng tới đêm của Entry mở gần nhất, không animate.
 
@@ -214,7 +214,7 @@ Dưới cùng, sau chân màn; nền `trang`, hairline `vien-mo` phía trên, đ
 - **Nút gạt** (Cài đặt): Switch của nền tảng; bật: track `but-chi`, thumb `chu`; tắt: track `kep`, thumb `but-chi`.
 
 ### Tấm Entry (signature)
-Tấm giấy góc vuông `tam`, padding `lg`, bốn góc dán, bóng thấp. Thân là Reflection (tối đa 6 dòng); không có Reflection thì Tag là thân và chú thích không lặp Tag. Dưới tấm là dòng chú thích bút chì (giờ · thời lượng · Tag) và, cuối dòng đầu, các nét cường độ. Toàn tấm là một vùng bấm với nhãn screen reader gộp đủ Reflection, chú thích, cường độ và trạng thái Comfort; dòng chú thích ẩn khỏi screen reader để không đọc lặp. Nhấn: nhấc khỏi trang (hiện là trạng thái tức thời, chưa có chuyển động theo thời gian).
+Tấm giấy góc vuông `tam`, padding `lg`, bốn góc dán, bóng thấp. Thân là Reflection (tối đa 6 dòng); không có Reflection thì Tag là thân và chú thích không lặp Tag. Dòng cuối **trong** tấm, cách thân `md`, là chú thích bút chì (giờ · thời lượng · Tag) và, cuối dòng đầu của nó, các nét cường độ — nằm trong tấm để không lơ lửng giữa hai tấm, lẫn sang tấm bên dưới. Toàn tấm là một vùng bấm với nhãn screen reader gộp đủ Reflection, chú thích, cường độ và trạng thái Comfort; dòng chú thích ẩn khỏi screen reader để không đọc lặp. Nhấn: nhấc khỏi trang (hiện là trạng thái tức thời, chưa có chuyển động theo thời gian).
 
 ### Nét cường độ
 Cường độ 1–5 là đúng n nét bút chì đếm tay (`but-chi`, rộng 2, cao 12–15, nghiêng -4° đến 5°). Không vẽ ô trống cho mức chưa đạt, không cột, không thang.
