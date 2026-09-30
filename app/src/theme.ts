@@ -19,7 +19,7 @@ export const album = {
   kep: '#3A322C',
   /** Chữ thân trên tấm. ~11:1 trên tấm — đủ qua mắt nhoè, chưa tới trắng gắt. */
   chu: '#E4DCCF',
-  /** Bút chì trắng: chú thích, ngày, vạch cường độ. ~7.8:1 trên trang. */
+  /** Bút chì trắng: chú thích, ngày, giọt cường độ. ~7.8:1 trên trang. */
   butChi: '#B3AA9C',
   /** Góc dán ảnh — cùng tông bút chì trắng. */
   goc: '#B3AA9C',
