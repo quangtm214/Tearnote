@@ -159,8 +159,8 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 
 ## Typography
 
-**Display Font:** Patrick Hand (`PatrickHand`, nạp ở `_layout.tsx`; lỗi nạp thì rơi về font hệ thống)
-**Body Font:** font hệ thống (Roboto trên Android, San Francisco trên iOS), không khai báo family
+**Display Font:** Patrick Hand (`PatrickHand`) cho tiếng Việt và tiếng Anh, Yomogi (`Yomogi`) cho tiếng Nhật — nạp ở `_layout.tsx`, Yomogi (~4MB) chỉ nạp khi app ở tiếng Nhật; lỗi nạp thì rơi về font hệ thống
+**Body Font:** font hệ thống (Roboto trên Android, San Francisco trên iOS), không khai báo family, cùng một family cho mọi ngôn ngữ
 
 **Character:** bút chì viết tay đặt cạnh chữ in sạch. Chữ tay kể bối cảnh; chữ hệ thống mang nội dung.
 
@@ -175,7 +175,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 ### Named Rules
 **The Bút Chì Chỉ Để Ghi Chú Rule.** Patrick Hand chỉ cho tiêu đề, ngày, chú thích và mẩu giấy kẹp. Reflection và nút bấm luôn là font hệ thống.
 
-**The Một Family Một Ngôn Ngữ Rule.** Patrick Hand cho tiếng Việt (và Anh). Không dùng Yomogi cho tiếng Việt: chữ Latin rộng cố định làm tách chữ có dấu. Yomogi (`app/assets/fonts/Yomogi-Regular.ttf`, chưa nạp) dành cho tiếng Nhật khi có i18n.
+**The Một Family Một Ngôn Ngữ Rule.** Luật này chỉ cho chữ tay: Patrick Hand cho tiếng Việt và tiếng Anh, Yomogi (`app/assets/fonts/Yomogi-Regular.ttf`) cho tiếng Nhật vì Patrick Hand không có kana. Không dùng Yomogi cho tiếng Việt: chữ Latin rộng cố định làm tách chữ có dấu. `butChi` tự đổi family khi đổi ngôn ngữ (`datChuTay` trong `theme.ts`), nên luôn dùng mảng style `[butChi.x, s.y]` — đừng trải `...butChi.x` vào StyleSheet cấp module. Chữ thân thì ngược lại: một family hệ thống cho mọi ngôn ngữ.
 
 **The Không Dưới 14 Rule.** Không cỡ chữ nào dưới 14; line height rộng (~1.5) vì dấu tiếng Việt chồng hai tầng. Layout phải chịu được font scale hệ thống.
 
@@ -214,12 +214,13 @@ Góc vuông cho mọi tờ giấy (tấm, mẩu kẹp, nút). Hình tam giác c�
 Dưới cùng, sau chân màn; nền `trang`, hairline `vien-mo` phía trên, đệm theo inset đáy. Bốn mục chia đều: Nhật ký · Viết lời · Lịch · Cài đặt — icon MaterialCommunityIcons 24 trên nhãn `phu`, vùng bấm tối thiểu 48, cao theo chữ (chịu được font scale). Mục đang mở: icon tô đặc và màu `chu`; mục khác: icon viền và màu `but-chi`. Nhấn thì mờ 0.6. "Viết lời" không phải tab — nó mở màn viết đè lên (không có thanh này). Không dùng `den`, không bo, không pill chỉ báo.
 
 ### Lựa chọn và ô nhập (màn ghi, viết lời, đăng nhập)
-- **Lựa chọn** (Tag, thời điểm, thời lượng): mảnh `tam` góc vuông cao 48, chữ `nut` màu `but-chi`. Chọn thì tô `chu`, chữ đổi sang `trang` — tương phản đủ để thấy qua mắt nhoè mà không cần màu thứ hai. Hết lượt chọn thì các lựa chọn còn lại mờ 0.35. Screen reader: chọn một là `radio`, chọn nhiều (Tag) là `checkbox`.
+- **Lựa chọn** (Tag, thời điểm, thời lượng, ngôn ngữ): mảnh `tam` góc vuông cao 48, chữ `nut` màu `but-chi`. Lựa chọn ngôn ngữ (Cài đặt; "Bạn viết bằng tiếng gì?" ở màn viết lời) ghi tên ngôn ngữ bằng chính nó: Tiếng Việt · English · 日本語. Chọn thì tô `chu`, chữ đổi sang `trang` — tương phản đủ để thấy qua mắt nhoè mà không cần màu thứ hai. Hết lượt chọn thì các lựa chọn còn lại mờ 0.35. Screen reader: chọn một là `radio`, chọn nhiều (Tag) là `checkbox`.
 - **Nhãn mục** ("Lúc nào?", "Vì chuyện gì?"): `ngay` (Patrick Hand) màu `but-chi`, vai trò header.
 - **Chọn cường độ**: 5 vùng bấm 48, mỗi vùng một nét bút chì gấp đôi nét trên tấm; nét tới mức đã chọn màu `chu`, nét trên mức chỉ là `vien-mo`; cạnh đó ghi "3 / 5" bằng `chu-thich`.
 - **Ô nhập**: nền `tam`, góc vuông, chữ `than` màu `chu`, placeholder và con trỏ `but-chi`. Không viền.
 - **Kèm ảnh hay ghi âm** (màn ghi, sau ô Reflection): ba dòng lối "Chụp ảnh" · "Chọn ảnh" · "Ghi âm" nằm một hàng (xuống dòng khi chật), khe `lg`. Ảnh đã chọn là ảnh nhỏ vuông 96, hạ sáng 0.85, góc dán 10 vẽ **đè** lên mép ảnh như ảnh thật giữ trong album; bấm ảnh thì hỏi lại "Bỏ ảnh này?" (Giữ lại / Bỏ). Đủ 3 ảnh thì ẩn hai lối ảnh. Đang ghi: chú thích `chu-thich` màu `chu` "Đang ghi · 0:12 / 5:00", dưới là dòng lối "Dừng ghi"; ghi xong thì thay bằng dải Nghe lại và dòng lối "Bỏ ghi âm".
 - **Nút gạt** (Cài đặt): Switch của nền tảng; bật: track `but-chi`, thumb `chu`; tắt: track `kep`, thumb `but-chi`.
+- **Ngôn ngữ** (cuối Cài đặt): nhãn `nut` "Ngôn ngữ" rồi một hàng lựa chọn (chọn một). Bấm là cả giao diện dựng lại ở ngôn ngữ mới, vẫn đứng ở Cài đặt.
 
 ### Tấm Entry (signature)
 Tấm giấy góc vuông `tam`, padding `lg`, bốn góc dán, bóng thấp. Có ảnh thì ảnh nằm đầu tấm, rộng hết lòng tấm, cách thân `md`, góc vuông, hạ sáng 0.85 (ảnh chụp sáng rực giữa trang đen lúc 2 giờ sáng là chói): Timeline chỉ dán ảnh đầu, cắt 4:3 cho nhịp đều; màn một lần khóc dán mọi ảnh theo đúng tỉ lệ. Thân là Reflection (tối đa 6 dòng); không có Reflection thì Tag là thân và chú thích không lặp Tag. Dòng cuối **trong** tấm, cách thân `md`, là chú thích bút chì (giờ · thời lượng · Tag · "n ảnh" · "ghi âm") và, cuối dòng đầu của nó, các nét cường độ — nằm trong tấm để không lơ lửng giữa hai tấm, lẫn sang tấm bên dưới. Toàn tấm là một vùng bấm với nhãn screen reader gộp đủ Reflection, chú thích, cường độ và trạng thái Comfort; dòng chú thích ẩn khỏi screen reader để không đọc lặp. Nhấn: nhấc khỏi trang (hiện là trạng thái tức thời, chưa có chuyển động theo thời gian).
@@ -246,7 +247,7 @@ Tiêu đề, một câu "gọi cấp cứu nếu đang nguy hiểm", rồi từn
 Khung chờ cao tối thiểu 160 với bốn góc dán và hairline `vien-mo`, câu chú thích bút chì canh giữa.
 
 ### Bảng năm (màn Lịch)
-Ngoại lệ luật Một Trục. 12 cột tháng (`T1`…`T12`) × 31 hàng ngày, cột nhãn ngày bên trái; ô vuông góc 18, khe 3, không viền, không số trên ô, không bấm được. Một ô = **tổng** cường độ các Entry trong ngày đó (ngày theo giờ máy, như Timeline), quy ra 5 mức theo ngưỡng cố định 1–2 · 3–4 · 5–6 · 7–9 · 10+ (`NGUONG` trong `app/src/lich.ts`) và tô bằng `album.lich`. Ngày có thật mà không có Entry là ô `lich[0]`; ngày không tồn tại (30/2…) không tô gì. Nhãn cột/hàng là Patrick Hand 14 màu `but-chi`, line height khít ô vì chỉ là chữ số không dấu. Dưới bảng là chú thích màu: 5 ô kèm ngưỡng. Chọn năm bằng dòng lối "2026 ▾" mở một tấm `tam` trong `Modal` (nền đen 0.6), năm đang chọn màu `chu`, năm khác `but-chi`. Screen reader đọc một nhãn tóm tắt cho mỗi cột tháng, không đọc từng ô.
+Ngoại lệ luật Một Trục. 12 cột tháng × 31 hàng ngày, cột nhãn ngày bên trái; nhãn cột theo ngôn ngữ và không quá ~22 rộng để vừa ô: `T1`…`T12` (vi), `J F M …` (en), `1`…`12` (ja — "10月" không vừa); ô vuông góc 18, khe 3, không viền, không số trên ô, không bấm được. Một ô = **tổng** cường độ các Entry trong ngày đó (ngày theo giờ máy, như Timeline), quy ra 5 mức theo ngưỡng cố định 1–2 · 3–4 · 5–6 · 7–9 · 10+ (`NGUONG` trong `app/src/lich.ts`) và tô bằng `album.lich`. Ngày có thật mà không có Entry là ô `lich[0]`; ngày không tồn tại (30/2…) không tô gì. Nhãn cột/hàng là Patrick Hand 14 màu `but-chi`, line height khít ô vì chỉ là chữ số không dấu. Dưới bảng là chú thích màu: 5 ô kèm ngưỡng. Chọn năm bằng dòng lối "2026 ▾" mở một tấm `tam` trong `Modal` (nền đen 0.6), năm đang chọn màu `chu`, năm khác `but-chi`. Screen reader đọc một nhãn tóm tắt cho mỗi cột tháng, không đọc từng ô.
 
 ## Do's and Don'ts
 

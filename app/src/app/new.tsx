@@ -23,15 +23,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { insertEntry } from '@/db';
-import { MAX_ENTRY_TAGS, TAG_IDS, TAG_LABEL_VI, type TagId } from '@/tags';
+import { nhanTag, t } from '@/i18n';
+import { MAX_ENTRY_TAGS, TAG_IDS, type TagId } from '@/tags';
 import { album, butChi, space, text, touch } from '@/theme';
 import {
   ChanMan,
   DongLoi,
   GocDan,
-  gio,
   NET,
   NgheLai,
+  nhanGio,
   nhanNgay,
   NutChinh,
   phutGiay,
@@ -39,13 +40,8 @@ import {
   THOI_LUONG,
 } from '@/ui';
 
-/** Lùi thời điểm — thay cho date picker, không thêm dependency. */
-const LUI = [
-  { nhan: 'Vừa xong', phut: 0 },
-  { nhan: '1 giờ trước', phut: 60 },
-  { nhan: '3 giờ trước', phut: 180 },
-  { nhan: 'Hôm qua', phut: 60 * 24 },
-];
+/** Lùi thời điểm (phút) — thay cho date picker, không thêm dependency. */
+const LUI = [0, 60, 180, 60 * 24];
 
 const CUONG_DO = [1, 2, 3, 4, 5];
 
@@ -76,7 +72,7 @@ export default function GhiEntry() {
     setDangGhi(false);
     void setAudioModeAsync({ allowsRecording: false });
     if (st.url && !st.hasError) setGhiAm(st.url);
-    else bao('Ghi âm bị ngắt giữa chừng. Thử ghi lại.');
+    else bao(t.ghi.ghiNgat);
   });
   const trangThaiGhi = useAudioRecorderState(mayGhi);
 
@@ -87,13 +83,13 @@ export default function GhiEntry() {
   // Cùng cách viết thời điểm với Timeline: "Thứ Bảy, 26 tháng 9 · 00:05".
   const luc = Date.now() - luiPhut * 60_000;
 
-  const doiTag = (t: TagId) =>
-    setTags((cu) => (cu.includes(t) ? cu.filter((x) => x !== t) : [...cu, t]));
+  const doiTag = (tag: TagId) =>
+    setTags((cu) => (cu.includes(tag) ? cu.filter((x) => x !== tag) : [...cu, tag]));
 
   const hoiBo = (cauHoi: string, bo: () => void) =>
     Alert.alert(cauHoi, undefined, [
-      { text: 'Giữ lại', style: 'cancel' },
-      { text: 'Bỏ', style: 'destructive', onPress: bo },
+      { text: t.chung.giuLai, style: 'cancel' },
+      { text: t.ghi.bo, style: 'destructive', onPress: bo },
     ]);
 
   // Camera ghi thẳng vào cache của app nên ảnh thường không vào thư viện máy — riêng tư hơn
@@ -103,7 +99,7 @@ export default function GhiEntry() {
     const conLai = TOI_DA_ANH - anh.length;
     try {
       if (camera && !(await ImagePicker.requestCameraPermissionsAsync()).granted) {
-        return bao('Tearnote chưa được dùng camera. Có thể cho phép trong Cài đặt của máy.');
+        return bao(t.ghi.chuaCoCamera);
       }
       const kq = camera
         ? await ImagePicker.launchCameraAsync()
@@ -113,7 +109,7 @@ export default function GhiEntry() {
           });
       if (!kq.canceled) setAnh((cu) => [...cu, ...kq.assets.map((a) => a.uri)].slice(0, TOI_DA_ANH));
     } catch {
-      bao(camera ? 'Chưa mở được camera.' : 'Chưa mở được thư viện ảnh.');
+      bao(camera ? t.ghi.loiCamera : t.ghi.loiThuVien);
     }
   }
 
@@ -124,16 +120,16 @@ export default function GhiEntry() {
     try {
       if (!(await requestRecordingPermissionsAsync()).granted) {
         setDangGhi(false);
-        return bao('Tearnote chưa được dùng micro. Có thể cho phép trong Cài đặt của máy.');
+        return bao(t.ghi.chuaCoMic);
       }
       // iOS không cho ghi nếu phiên âm thanh chưa bật ghi; Android bỏ qua cờ này.
       await setAudioModeAsync({ allowsRecording: true });
       await mayGhi.prepareToRecordAsync();
       mayGhi.record({ forDuration: GHI_AM_TOI_DA_GIAY });
-      AccessibilityInfo.announceForAccessibility('Đang ghi âm');
+      AccessibilityInfo.announceForAccessibility(t.ghi.dangGhiAm);
     } catch {
       setDangGhi(false);
-      bao('Chưa ghi âm được. Thử lại.');
+      bao(t.ghi.loiGhiAm);
     }
   }
 
@@ -163,7 +159,7 @@ export default function GhiEntry() {
       router.back();
     } catch {
       daLuu.current = false;
-      bao('Chưa lưu được ảnh hoặc ghi âm. Bấm Lưu lại lần nữa, hoặc bỏ bớt rồi lưu.');
+      bao(t.ghi.loiLuu);
     }
   };
 
@@ -175,46 +171,46 @@ export default function GhiEntry() {
           {/* Nửa trên: chỉ để đọc. Mọi vùng bấm nằm nửa dưới, tầm ngón cái. */}
           <View style={styles.nuaTren}>
             <Text style={[butChi.tieuDe, styles.tieuDe]} accessibilityRole="header">
-              Lúc nãy thế nào?
+              {t.ghi.tieuDe}
             </Text>
-            <Text style={styles.phu}>Không cần điền hết. Bấm Lưu lúc nào cũng được.</Text>
+            <Text style={styles.phu}>{t.ghi.moDau}</Text>
           </View>
 
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
-            Lúc nào?
+            {t.ghi.lucNao}
           </Text>
           <Text style={styles.phu}>
-            {nhanNgay(luc)} · {gio.format(luc)}
+            {nhanNgay(luc)} · {nhanGio(luc)}
           </Text>
           <View style={styles.hang} accessibilityRole="radiogroup">
-            {LUI.map((o) => (
+            {LUI.map((phut) => (
               <Pill
-                key={o.nhan}
-                nhan={o.nhan}
+                key={phut}
+                nhan={t.ghi.lui(phut)}
                 mot
-                chon={luiPhut === o.phut}
-                onPress={() => setLuiPhut(o.phut)}
+                chon={luiPhut === phut}
+                onPress={() => setLuiPhut(phut)}
               />
             ))}
           </View>
 
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
-            Kéo dài bao lâu?
+            {t.ghi.baoLau}
           </Text>
           <View style={styles.hang} accessibilityRole="radiogroup">
-            {THOI_LUONG.map((o) => (
+            {THOI_LUONG.map((phut) => (
               <Pill
-                key={o.nhan}
-                nhan={o.nhan}
+                key={String(phut)}
+                nhan={t.thoiLuong(phut)}
                 mot
-                chon={durationMin === o.phut}
-                onPress={() => setDurationMin(o.phut)}
+                chon={durationMin === phut}
+                onPress={() => setDurationMin(phut)}
               />
             ))}
           </View>
 
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
-            Nặng đến đâu?
+            {t.ghi.nangDenDau}
           </Text>
           <View style={styles.hang} accessibilityRole="radiogroup">
             {CUONG_DO.map((n) => (
@@ -222,7 +218,7 @@ export default function GhiEntry() {
                 key={n}
                 onPress={() => setIntensity(n)}
                 accessibilityRole="radio"
-                accessibilityLabel={`Cường độ ${n} trên 5`}
+                accessibilityLabel={t.chung.cuongDo(n)}
                 accessibilityState={{ checked: intensity === n }}
                 style={styles.oNac}
               >
@@ -242,29 +238,29 @@ export default function GhiEntry() {
           </View>
 
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
-            Vì chuyện gì?
+            {t.ghi.viChuyenGi}
           </Text>
-          <Text style={styles.phu}>Tối đa {MAX_ENTRY_TAGS}. Không chọn cũng được.</Text>
+          <Text style={styles.phu}>{t.ghi.toiDaTag(MAX_ENTRY_TAGS)}</Text>
           <View style={styles.hang}>
-            {TAG_IDS.map((t) => (
+            {TAG_IDS.map((tag) => (
               <Pill
-                key={t}
-                nhan={TAG_LABEL_VI[t]}
-                chon={tags.includes(t)}
-                tat={daDay && !tags.includes(t)}
-                onPress={() => doiTag(t)}
+                key={tag}
+                nhan={nhanTag(tag)}
+                chon={tags.includes(tag)}
+                tat={daDay && !tags.includes(tag)}
+                onPress={() => doiTag(tag)}
               />
             ))}
           </View>
 
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
-            Muốn ghi thêm gì không?
+            {t.ghi.ghiThem}
           </Text>
           <TextInput
             value={reflection}
             onChangeText={setReflection}
-            accessibilityLabel="Muốn ghi thêm gì không"
-            placeholder="Muốn viết gì thì viết. Chỉ bạn đọc được."
+            accessibilityLabel={t.ghi.ghiThem}
+            placeholder={t.ghi.ghiThemGoiY}
             placeholderTextColor={album.butChi}
             selectionColor={album.butChi}
             multiline
@@ -273,23 +269,20 @@ export default function GhiEntry() {
           />
 
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
-            Kèm ảnh hay ghi âm?
+            {t.ghi.kem}
           </Text>
-          <Text style={styles.phu}>
-            Tối đa {TOI_DA_ANH} ảnh và một đoạn ghi âm {GHI_AM_TOI_DA_GIAY / 60} phút. Chỉ nằm trong
-            máy.
-          </Text>
+          <Text style={styles.phu}>{t.ghi.kemGioiHan(TOI_DA_ANH, GHI_AM_TOI_DA_GIAY / 60)}</Text>
           {anh.length > 0 && (
             <View style={styles.hang}>
               {anh.map((uri, i) => (
                 <Pressable
                   key={uri}
                   onPress={() =>
-                    hoiBo('Bỏ ảnh này?', () => setAnh((cu) => cu.filter((x) => x !== uri)))
+                    hoiBo(t.ghi.boAnhHoi, () => setAnh((cu) => cu.filter((x) => x !== uri)))
                   }
                   accessibilityRole="button"
-                  accessibilityLabel={`Ảnh ${i + 1}`}
-                  accessibilityHint="Bấm để bỏ ảnh này"
+                  accessibilityLabel={t.ghi.anhSo(i + 1)}
+                  accessibilityHint={t.ghi.boAnhGoiY}
                 >
                   <Image source={{ uri }} resizeMethod="resize" style={styles.anhNho} />
                   {/* Sau ảnh để góc dán đè lên mép ảnh, như ảnh thật giữ trong album. */}
@@ -301,38 +294,40 @@ export default function GhiEntry() {
           {dangGhi ? (
             <>
               <Text style={[butChi.chuThich, styles.giayGhi]}>
-                Đang ghi · {phutGiay(trangThaiGhi.durationMillis / 1000)} /{' '}
-                {phutGiay(GHI_AM_TOI_DA_GIAY)}
+                {t.ghi.dangGhi(
+                  phutGiay(trangThaiGhi.durationMillis / 1000),
+                  phutGiay(GHI_AM_TOI_DA_GIAY),
+                )}
               </Text>
               <DongLoi
-                nhan="Dừng ghi"
-                onPress={() => void mayGhi.stop().catch(() => bao('Chưa dừng được. Thử lại.'))}
+                nhan={t.ghi.dungGhi}
+                onPress={() => void mayGhi.stop().catch(() => bao(t.ghi.loiDung))}
               />
             </>
           ) : ghiAm ? (
             <View style={styles.ghiAm}>
               <NgheLai uri={ghiAm} />
               <DongLoi
-                nhan="Bỏ ghi âm"
-                onPress={() => hoiBo('Bỏ đoạn ghi âm này?', () => setGhiAm(null))}
+                nhan={t.ghi.boGhiAm}
+                onPress={() => hoiBo(t.ghi.boGhiAmHoi, () => setGhiAm(null))}
               />
             </View>
           ) : null}
           <View style={styles.hangLoi}>
             {anh.length < TOI_DA_ANH && (
               <>
-                <DongLoi nhan="Chụp ảnh" onPress={() => void layAnh(true)} />
-                <DongLoi nhan="Chọn ảnh" onPress={() => void layAnh(false)} />
+                <DongLoi nhan={t.ghi.chupAnh} onPress={() => void layAnh(true)} />
+                <DongLoi nhan={t.ghi.chonAnh} onPress={() => void layAnh(false)} />
               </>
             )}
-            {!dangGhi && !ghiAm && <DongLoi nhan="Ghi âm" onPress={() => void batDauGhi()} />}
+            {!dangGhi && !ghiAm && <DongLoi nhan={t.ghi.ghiAm} onPress={() => void batDauGhi()} />}
           </View>
           {loi ? <Text style={styles.loi}>{loi}</Text> : null}
 
           <View style={styles.nutLuu}>
-            <NutChinh nhan="Lưu lại" onPress={() => void luu()} />
+            <NutChinh nhan={t.ghi.luu} onPress={() => void luu()} />
           </View>
-          <DongLoi nhan="Thôi, không ghi nữa" onPress={() => router.back()} />
+          <DongLoi nhan={t.ghi.thoi} onPress={() => router.back()} />
         </ScrollView>
         <ChanMan />
       </KeyboardAvoidingView>

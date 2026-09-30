@@ -2,7 +2,7 @@
 
 Tài liệu này mô tả Tearnote là gì, MVP gồm những gì và cố tình bỏ những gì. Từ vựng chuẩn nằm ở [CONTEXT.md](../CONTEXT.md); lý do đằng sau từng quyết định nằm ở [docs/adr/](./adr/).
 
-Trạng thái: schema đã deploy và kiểm bằng SQL thật; app đã có timeline, ghi Entry, hotline, đăng nhập, viết/nhận Comfort. Chưa chạy trên thiết bị thật, chưa launch. Mục 8 liệt kê phần còn thiếu.
+Trạng thái: schema đã deploy và kiểm bằng SQL thật; app đã có timeline, ghi Entry, hotline, đăng nhập, viết/nhận Comfort, giao diện Anh / Việt / Nhật. Chưa chạy trên thiết bị thật, chưa launch. Mục 8 liệt kê phần còn thiếu.
 
 ## 1. Sản phẩm
 
@@ -18,7 +18,7 @@ Nếu Comfort bị cắt, Tearnote không còn lý do tồn tại.
 - Người muốn quan sát sức khoẻ tinh thần của mình theo thời gian
 - Người cần một chút kết nối, nhưng không muốn chia sẻ với người quen
 
-Đa quốc gia. Ba ngôn ngữ ở v1: **Anh, Việt, Nhật**. Cấu trúc dữ liệu phải cho phép thêm ngôn ngữ mà không sửa schema.
+Đa quốc gia. Ba ngôn ngữ ở v1: **Anh, Việt, Nhật**. Thêm ngôn ngữ không được đòi thêm cột hay bảng: chỉ một giá trị enum `lang` (migration một dòng), một file từ điển trong app, rồi batch đêm dịch lại backlog ([ADR 0003](./adr/0003-dich-comfort-theo-batch.md), [db.md](./db.md)).
 
 ## 3. Phạm vi MVP
 
@@ -29,7 +29,7 @@ Nếu Comfort bị cắt, Tearnote không còn lý do tồn tại.
 - Viết Comfort gửi vào pool chung — cần tài khoản thật, tối đa 5 / 24h
 - Xin Comfort cho một Entry — người dùng chủ động, không tự đẩy; tối đa 3 / 24h
 - Kiểm duyệt Comfort hai lớp: LLM lọc, phần nghi ngờ admin duyệt tay
-- Dịch Comfort sang cả ba ngôn ngữ theo batch đêm
+- Dịch Comfort sang mọi ngôn ngữ app hỗ trợ theo batch đêm
 - Lối vào "cần trợ giúp ngay" hiển thị thường trực, hoạt động cả khi offline
 - Công tắc tắt hoàn toàn việc nhận Comfort
 - Sync Entry lên server: tuỳ chọn, cần đăng nhập và đồng ý rõ ràng

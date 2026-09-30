@@ -14,6 +14,7 @@ import {
   type Entry,
   type ReceivedComfort,
 } from '@/db';
+import { ngonNgu, t } from '@/i18n';
 import { ensureSession, supabase } from '@/supabase';
 import { album, butChi, space, text, touch } from '@/theme';
 import { bong, ChanMan, DongLoi, NgheLai, nhanNgay, NutChinh, TamEntry } from '@/ui';
@@ -54,18 +55,15 @@ export default function EntryComfortScreen() {
     setDangXin(true);
     try {
       await ensureSession();
+      // Lời trả về bằng ngôn ngữ app; pool chỉ gồm lời đã có bản ngôn ngữ đó (docs/db.md).
       const { data, error } = await supabase.rpc('request_comfort', {
         p_tags: entry.tags,
-        p_lang: 'vi',
+        p_lang: ngonNgu(),
       });
 
       if (error) {
         // supabase-js trả lỗi mạng qua `error` với code rỗng; có code là server từ chối.
-        bao(
-          error.code
-            ? 'Chưa nhận được. Thử lại sau một lát.'
-            : 'Không kết nối được. Kiểm tra mạng rồi thử lại.',
-        );
+        bao(error.code ? t.lanKhoc.loiNhan : t.chung.loiMang);
         return;
       }
 
@@ -74,12 +72,7 @@ export default function EntryComfortScreen() {
       if (!row) {
         // Hai lý do khác hẳn nhau, hai câu khác nhau (CLAUDE.md: edge case bắt buộc).
         const chiVui = entry.tags.length === 1 && entry.tags[0] === 'moved';
-        const chuaCo = `Lúc này chưa có lời nào cho ${chiVui ? 'niềm vui' : 'chuyện'} này.`;
-        bao(
-          (await daDuLuot())
-            ? 'Bạn đã nhận đủ 3 lời trong 24 giờ qua. Chưa nhận thêm được.'
-            : `${chuaCo} Lần này không tính vào lượt của bạn.`,
-        );
+        bao((await daDuLuot()) ? t.lanKhoc.hetLuot : t.lanKhoc.poolRong(chiVui));
         return;
       }
 
@@ -92,7 +85,7 @@ export default function EntryComfortScreen() {
       nap();
       AccessibilityInfo.announceForAccessibility(row.body);
     } catch {
-      bao('Không kết nối được. Kiểm tra mạng rồi thử lại.');
+      bao(t.chung.loiMang);
     } finally {
       setDangXin(false);
     }
@@ -114,10 +107,10 @@ export default function EntryComfortScreen() {
       <SafeAreaView style={s.man} edges={['top', 'bottom']}>
         <View style={[s.man, s.cuon]}>
           <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            Không tìm thấy
+            {t.lanKhoc.khongThay}
           </Text>
-          <Text style={s.giaiThich}>Lần khóc này không còn trong máy.</Text>
-          <DongLoi nhan="Quay lại" onPress={thoat} />
+          <Text style={s.giaiThich}>{t.lanKhoc.khongThayPhu}</Text>
+          <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
         </View>
         <ChanMan />
       </SafeAreaView>
@@ -135,25 +128,25 @@ export default function EntryComfortScreen() {
         {ghiAm ? <NgheLai uri={ghiAm.uri} /> : null}
 
         <Text style={[butChi.ngay, s.nhom]} accessibilityRole="header">
-          Lời từ người lạ
+          {t.lanKhoc.loiTuNguoiLa}
         </Text>
 
         {ds.length === 0 ? (
-          <Text style={s.giaiThich}>Chưa có lời nào kẹp ở đây.</Text>
+          <Text style={s.giaiThich}>{t.lanKhoc.chuaKep}</Text>
         ) : (
           ds.map((c) => (
             // Mẩu giấy người lạ kẹp vào trang — cùng tông `kep` với mẩu nhỏ trên Timeline.
             <View key={c.comfortId} style={s.kep}>
               <Text style={s.than}>{c.body}</Text>
-              {c.translated ? <Text style={[butChi.chuThich, s.phu]}>đã dịch tự động</Text> : null}
+              {c.translated ? <Text style={[butChi.chuThich, s.phu]}>{t.chung.daDich}</Text> : null}
               {c.thanked ? (
-                <Text style={[butChi.chuThich, s.phu]}>đã cảm ơn</Text>
+                <Text style={[butChi.chuThich, s.phu]}>{t.chung.daCamOn}</Text>
               ) : (
                 <Pressable
                   style={({ pressed }) => [s.nutCamOn, pressed && s.mo]}
                   onPress={() => camOn(c.comfortId)}
                   accessibilityRole="button">
-                  <Text style={s.chuCamOn}>Cảm ơn</Text>
+                  <Text style={s.chuCamOn}>{t.lanKhoc.camOn}</Text>
                 </Pressable>
               )}
             </View>
@@ -165,17 +158,15 @@ export default function EntryComfortScreen() {
         {/* Mỗi Entry một Comfort (ADR 0007), và công tắc tắt nhận thì không còn nút xin ở đâu cả. */}
         {ds.length === 0 && choNhan ? (
           <View style={s.nutXin}>
-            <NutChinh nhan="Nhận một lời từ người lạ" onPress={xin} dangChay={dangXin} />
+            <NutChinh nhan={t.lanKhoc.xin} onPress={xin} dangChay={dangXin} />
           </View>
         ) : null}
 
         {ds.length === 0 && !choNhan ? (
-          <Text style={[s.giaiThich, s.nutXin]}>
-            Bạn đã tắt nhận lời từ người lạ. Có thể đổi trong Cài đặt.
-          </Text>
+          <Text style={[s.giaiThich, s.nutXin]}>{t.lanKhoc.daTat}</Text>
         ) : null}
 
-        <DongLoi nhan="Quay lại" onPress={thoat} />
+        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
       </ScrollView>
       <ChanMan />
     </SafeAreaView>

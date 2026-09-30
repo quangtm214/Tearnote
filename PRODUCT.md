@@ -42,19 +42,20 @@ Các app cùng loại (Tracking My Tears, Cry Tracker, Tear Tales, Ductts, CryAp
 - Pool rỗng và hết lượt 3/24h là hai tình huống khác nhau, hai thông báo khác nhau.
 - Không chẩn đoán: không gắn nhãn "trầm cảm", "rối loạn lo âu".
 - Không có phát hiện khủng hoảng — hệ thống dựa vào việc người dùng tự bấm trợ giúp hoặc tự tắt nhận Comfort.
-- Chưa có: i18n (copy hiện hardcode tiếng Việt), hotline lấy từ server, điều khoản sử dụng (chặn launch), thống kê tần suất / Tag hay gặp. Đã có: Lịch — bảng cường độ cả năm; ảnh (tối đa 3) và ghi âm (≤ 5 phút) trong Entry, chỉ nằm trên máy.
+- Chưa có: hotline lấy từ server, điều khoản sử dụng (chặn launch), thống kê tần suất / Tag hay gặp. Đã có: Lịch — bảng cường độ cả năm; ảnh (tối đa 3) và ghi âm (≤ 5 phút) trong Entry, chỉ nằm trên máy; giao diện Anh / Việt / Nhật — theo ngôn ngữ máy (máy dùng tiếng khác thì tiếng Anh), đổi được trong Cài đặt.
 
 ## Brand Commitments
 
 - Tên: **Tearnote**.
 - Giọng văn: nhẹ, ít lời, không khuyên. Như người ngồi cạnh im lặng — câu ngắn, không cổ vũ, không emoji, không "bạn làm tốt lắm".
 - Từ vựng chuẩn (code, docs): Entry, Reflection, Comfort, Tag, Delivery (CONTEXT.md). Không lộ ra UI: trên UI tiếng Việt, Entry là "lần khóc", Comfort là "lời từ người lạ" (khi nhận) / "lời cho người lạ" (khi viết); không dùng chữ Entry, Comfort, Tag, pool, server; xưng "bạn".
+- UI tiếng Anh: Entry là "a cry" ("Times I cried"), Comfort là "words from a stranger" / "words for a stranger"; xưng "you". UI tiếng Nhật: Entry là "泣いたこと" / "記録", Comfort là "見知らぬ人からのことば" / "見知らぬ人へのことば"; thể です・ます nhẹ, tránh あなた khi bỏ được. Cùng giọng: câu ngắn, không cổ vũ, không emoji.
 
 ## Evidence on Hand
 
 - Icon và splash: `app/assets/images/`.
 - Danh sách hotline đóng gói sẵn: `app/src/hotlines.ts`.
-- Chưa có: người dùng thật, testimonial, số liệu, Comfort mồi trong pool, điều khoản sử dụng. Nhãn Tag tiếng Nhật chưa được người bản ngữ soát. Không bịa những thứ này.
+- Chưa có: người dùng thật, testimonial, số liệu, Comfort mồi trong pool, điều khoản sử dụng. Nhãn Tag và copy tiếng Anh / tiếng Nhật do Claude viết, chưa người bản ngữ soát — tiếng Nhật bắt buộc soát trước khi có người dùng Nhật. Không bịa những thứ này.
 
 ## Product Principles
 

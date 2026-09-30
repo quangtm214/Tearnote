@@ -3,6 +3,7 @@ import { router, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { t } from '@/i18n';
 import { album, space, text, touch } from '@/theme';
 
 type TenIcon = keyof typeof MaterialCommunityIcons.glyphMap;
@@ -10,12 +11,13 @@ type TenIcon = keyof typeof MaterialCommunityIcons.glyphMap;
 /**
  * "Viết lời" không phải tab: nó mở màn viết đè lên, để luồng đăng nhập / Gửi / Xong của màn đó
  * giữ nguyên. Tab đang mở thì icon tô đặc — chữ ngà và bút chì quá gần nhau để chỉ đổi màu.
+ * Nhãn lấy từ `t.tab[ten]` lúc render.
  */
-const MUC: { ten: string; nhan: string; icon: TenIcon; iconChon?: TenIcon; href?: Href }[] = [
-  { ten: 'index', nhan: 'Nhật ký', icon: 'notebook-outline', iconChon: 'notebook' },
-  { ten: 'viet', nhan: 'Viết lời', icon: 'pencil-outline', href: '/comfort/write' },
-  { ten: 'lich', nhan: 'Lịch', icon: 'calendar-blank-outline', iconChon: 'calendar-blank' },
-  { ten: 'settings', nhan: 'Cài đặt', icon: 'cog-outline', iconChon: 'cog' },
+const MUC: { ten: keyof typeof t.tab; icon: TenIcon; iconChon?: TenIcon; href?: Href }[] = [
+  { ten: 'index', icon: 'notebook-outline', iconChon: 'notebook' },
+  { ten: 'viet', icon: 'pencil-outline', href: '/comfort/write' },
+  { ten: 'lich', icon: 'calendar-blank-outline', iconChon: 'calendar-blank' },
+  { ten: 'settings', icon: 'cog-outline', iconChon: 'cog' },
 ];
 
 /**
@@ -37,11 +39,11 @@ export default function TabLayout() {
                 onPress={() => (m.href ? router.push(m.href) : navigation.navigate(m.ten))}
                 accessibilityRole={m.href ? 'button' : 'tab'}
                 accessibilityState={{ selected: chon }}
-                accessibilityLabel={m.nhan}
+                accessibilityLabel={t.tab[m.ten]}
                 style={({ pressed }) => [s.muc, pressed && s.mo]}
               >
                 <MaterialCommunityIcons name={chon && m.iconChon ? m.iconChon : m.icon} size={24} color={mau} />
-                <Text style={[s.nhan, { color: mau }]}>{m.nhan}</Text>
+                <Text style={[s.nhan, { color: mau }]}>{t.tab[m.ten]}</Text>
               </Pressable>
             );
           })}

@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSMicrophoneUsageDescription": "Tearnote dùng micro để bạn ghi âm kèm một lần khóc. Đoạn ghi âm chỉ nằm trong máy.",
+    "NSPhotoLibraryUsageDescription": "Tearnote mở thư viện ảnh để bạn chọn ảnh kèm một lần khóc. Ảnh chỉ nằm trong máy.",
+    "NSCameraUsageDescription": "Tearnote dùng camera để bạn chụp ảnh kèm một lần khóc. Ảnh chỉ nằm trong máy."
+  }
+}

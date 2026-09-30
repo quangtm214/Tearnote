@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { MAX_ENTRY_TAGS, normalizeTags, TAG_IDS, TAG_LABEL_VI, type TagId } from './tags';
+import { MAX_ENTRY_TAGS, normalizeTags, TAG_IDS, TAG_LABEL, type TagId } from './tags';
 
 /**
  * Tag là contract ba bên: docs/tags.md ⇄ enum `tag` trong Postgres ⇄ file này.
@@ -21,12 +21,11 @@ describe('contract Tag', () => {
     for (const id of TAG_IDS) expect(md).toContain(`\`${id}\``);
   });
 
-  it('nhãn tiếng Việt trùng cột vi trong docs/tags.md', () => {
+  it('nhãn vi/en/ja trùng từng cột trong docs/tags.md', () => {
     const md = readFileSync(join(repoRoot, 'docs', 'tags.md'), 'utf8');
-    const fromMd = Object.fromEntries(
-      [...md.matchAll(/^\| `([a-z_]+)` \| ([^|]+?) \|/gm)].map((m) => [m[1], m[2]]),
-    );
-    expect(fromMd).toEqual(TAG_LABEL_VI);
+    const dong = [...md.matchAll(/^\| `([a-z_]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|/gm)];
+    const cot = (i: number) => Object.fromEntries(dong.map((m) => [m[1], m[i]]));
+    expect({ vi: cot(2), en: cot(3), ja: cot(4) }).toEqual(TAG_LABEL);
   });
 });
 

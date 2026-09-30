@@ -32,6 +32,8 @@ Xoá dữ liệu ⇒ `on delete cascade` ⇒ Comfort của họ biến mất kh�
 
 Enum chứ không phải text tự do: contract ở [tags.md](./tags.md) do DB ép, không phải app tự giữ. Thêm giá trị về sau là `alter type ... add value`.
 
+Thêm một ngôn ngữ = một giá trị `lang` (migration một dòng) + `LANGS` và một file từ điển trong app (`app/src/i18n/`). Không thêm cột, không thêm bảng; batch đêm tự dịch backlog sang giá trị mới ([ADR 0003](./adr/0003-dich-comfort-theo-batch.md)). `LANGS` phải khớp enum (`i18n.test.ts` kiểm).
+
 ---
 
 # Server — Supabase
@@ -45,7 +47,7 @@ Lời động viên ẩn danh, bản gốc, bằng ngôn ngữ người viết.
 | `id` | uuid | PK, default `gen_random_uuid()` | |
 | `author_id` | uuid | not null, FK → `auth.users` **cascade** | Không bao giờ lộ ra ngoài. Bắt buộc là tài khoản thật, không phải anonymous |
 | `body` | text | not null, độ dài 20–500 | |
-| `source_lang` | lang | not null | Luôn dịch từ đây, không dịch chuyền |
+| `source_lang` | lang | not null | Luôn dịch từ đây, không dịch chuyền. Người viết chọn trên màn viết, mặc định là ngôn ngữ app |
 | `tags` | tag[] | not null, 1–2 phần tử | |
 | `status` | comfort_status | not null, default `pending` | `pending` chính là hàng đợi duyệt |
 | `mod_note` | text | | Admin ghi lý do khi từ chối |
@@ -107,6 +109,8 @@ Admin cập nhật; app vẫn đóng gói sẵn bản dự phòng — [ADR 0005]
 | `sort` | int | not null, default 0 | |
 
 **Index:** `(country, sort)`
+
+**Còn nợ:** `name` và `hours` chỉ chứa được một ngôn ngữ. Bản đóng gói trong app (`app/src/hotlines.ts`) đã có đủ en/vi/ja; trước khi app đọc bảng này (hiện chưa đọc) phải thêm bản dịch cho nó.
 
 ## `entries`
 
@@ -182,6 +186,8 @@ $fn$;
 
 Năm luật hàm này ép: không nhận Comfort của chính mình · không nhận lại cái đã nhận · tối đa 3 lần / 24h · không trả bản chưa dịch sang ngôn ngữ người đọc · `moved` không lùi về `unknown`.
 
+App truyền `p_lang` là ngôn ngữ app đang dùng.
+
 Chỉ `authenticated` gọi được. Supabase cấp `execute` cho `anon` theo mặc định — đã revoke
 (`0002_revoke_request_comfort_from_anon.sql`); chưa đăng nhập thì `auth.uid()` là null nên hàm
 vốn đã không trả gì, nhưng để `anon` gọi được một `security definer` là thừa bề mặt tấn công.
@@ -238,6 +244,8 @@ Khoá đang dùng:
   Tắt thì không còn nút xin Comfort ở bất kỳ Entry nào — overview.md §6.
 - `timeline_dung` = id của Entry mở gần nhất. Mở lại app thì Timeline cuộn về đêm của Entry đó
   (DESIGN.md, Layout). Thiếu khoá hoặc Entry không còn ⇒ đứng ở đầu trang.
+- `ngon_ngu` = `vi` \| `en` \| `ja` — ngôn ngữ chọn trong Cài đặt. Thiếu khoá ⇒ theo ngôn ngữ máy;
+  máy dùng tiếng khác ⇒ `en` (`app/src/i18n/index.ts`).
 
 ## `received_comforts`
 
@@ -247,7 +255,7 @@ Comfort đã nhận, giữ để xem lại offline. Bản sao, không phải ngu
 |---|---|---|---|
 | `comfort_id` | text | PK | |
 | `entry_id` | text | not null, FK → `entries` cascade | **Chỉ tồn tại ở đây** — server không biết Comfort nào thuộc Entry nào |
-| `body` | text | not null | |
+| `body` | text | not null | Bằng ngôn ngữ app lúc nhận; đổi ngôn ngữ sau đó thì lời cũ giữ nguyên |
 | `translated` | integer | not null, default 0 | Hiện nhãn "đã dịch tự động" |
 | `received_at` | integer | not null | |
 | `thanked` | integer | not null, default 0 | Để UI không cho cảm ơn hai lần |
