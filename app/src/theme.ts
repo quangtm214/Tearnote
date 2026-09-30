@@ -32,6 +32,7 @@ export const album = {
   /**
    * Bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục. Ô trống (ngày có thật, không Entry)
    * rồi 5 mức theo `NGUONG` trong `lich.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
+   * Thanh chọn cường độ ở màn ghi dùng lại 5 mức này (`lich[1..5]`).
    */
   lich: [
     'rgba(228, 220, 207, 0.06)',

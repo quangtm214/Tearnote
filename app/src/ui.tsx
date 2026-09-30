@@ -34,15 +34,6 @@ export function GocDan({ co = 14 }: { co?: number }) {
   );
 }
 
-/** Nét bút chì đếm tay: mỗi nét lệch một chút về cao và nghiêng, để không thành cột sóng. */
-export const NET = [
-  { height: 13, transform: [{ rotate: '-4deg' }] },
-  { height: 15, transform: [{ rotate: '3deg' }] },
-  { height: 12, transform: [{ rotate: '-2deg' }] },
-  { height: 14, transform: [{ rotate: '5deg' }] },
-  { height: 13, transform: [{ rotate: '-3deg' }] },
-];
-
 /** Giọt nước mắt vẽ tay (hơi lệch hai bên), khung 20×28: chóp y=1.5, đáy y=26. */
 const GIOT = 'M10 1.5C8.6 5 2.2 11.4 2.2 17.8C2.2 22.3 5.7 26 10 26C14.4 26 17.9 22.3 17.8 17.7C17.7 11.6 11.5 5.1 10 1.5Z';
 
