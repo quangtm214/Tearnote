@@ -34,7 +34,7 @@ export function GocDan({ co = 14 }: { co?: number }) {
 }
 
 /** Nét bút chì đếm tay: mỗi nét lệch một chút về cao và nghiêng, để không thành cột sóng. */
-export const NET = [
+const NET = [
   { height: 13, transform: [{ rotate: '-4deg' }] },
   { height: 15, transform: [{ rotate: '3deg' }] },
   { height: 12, transform: [{ rotate: '-2deg' }] },

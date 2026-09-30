@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { insertEntry } from '@/db';
 import { MAX_ENTRY_TAGS, TAG_IDS, TAG_LABEL_VI, type TagId } from '@/tags';
 import { album, butChi, space, text, touch } from '@/theme';
-import { ChanMan, DongLoi, gio, NET, nhanNgay, NutChinh, Pill, THOI_LUONG } from '@/ui';
+import { bong, ChanMan, DongLoi, gio, nhanNgay, NutChinh, Pill, THOI_LUONG } from '@/ui';
 
 /** Lùi thời điểm — thay cho date picker, không thêm dependency. */
 const LUI = [
@@ -17,6 +17,7 @@ const LUI = [
 ];
 
 const CUONG_DO = [1, 2, 3, 4, 5];
+const kep = (n: number) => Math.min(5, Math.max(1, n));
 
 export default function GhiEntry() {
   const [luiPhut, setLuiPhut] = useState(0);
@@ -27,6 +28,12 @@ export default function GhiEntry() {
 
   // Chặn bấm Lưu hai lần liên tiếp trước khi kịp rời màn — mỗi lần bấm là một Entry.
   const daLuu = useRef(false);
+
+  // Slider: bề rộng thanh, và mép trái của nó trên màn — đo lúc chạm, rồi quy pageX ra vị trí trên thanh
+  // (locationX lúc kéo có thể tính theo view đang nằm dưới ngón tay, không phải thanh).
+  const rong = useRef(0);
+  const trai = useRef(0);
+  const chonTheoX = (x: number) => rong.current > 0 && setIntensity(kep(Math.floor((x / rong.current) * 5) + 1));
 
   const daDay = tags.length >= MAX_ENTRY_TAGS;
   // Cùng cách viết thời điểm với Timeline: "Thứ Bảy, 26 tháng 9 · 00:05".
@@ -97,26 +104,41 @@ export default function GhiEntry() {
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
             Nặng đến đâu?
           </Text>
-          <View style={styles.hang} accessibilityRole="radiogroup">
-            {CUONG_DO.map((n) => (
-              <Pressable
-                key={n}
-                onPress={() => setIntensity(n)}
-                accessibilityRole="radio"
-                accessibilityLabel={`Cường độ ${n} trên 5`}
-                accessibilityState={{ checked: intensity === n }}
-                style={styles.oNac}
-              >
-                {/* Nét bút chì như trên tấm, phóng to cho ngón tay; nét chưa tới mức chọn chỉ mờ. */}
-                <View
-                  style={[
-                    styles.nac,
-                    { height: NET[n - 1].height * 2, transform: NET[n - 1].transform },
-                    n <= intensity && styles.nacChon,
-                  ]}
-                />
-              </Pressable>
-            ))}
+          <View style={styles.hang}>
+            {/* Kéo hoặc chạm, bắt vào 5 nấc. Không nhả cho ScrollView giữa chừng, để kéo ngang không thành cuộn. */}
+            <View
+              style={styles.truot}
+              // Chỉ thanh nhận chạm, để locationX luôn tính từ mép trái thanh.
+              pointerEvents="box-only"
+              onLayout={(e) => (rong.current = e.nativeEvent.layout.width)}
+              onStartShouldSetResponder={() => true}
+              onMoveShouldSetResponder={() => true}
+              onResponderTerminationRequest={() => false}
+              onResponderGrant={(e) => {
+                trai.current = e.nativeEvent.pageX - e.nativeEvent.locationX;
+                chonTheoX(e.nativeEvent.locationX);
+              }}
+              onResponderMove={(e) => chonTheoX(e.nativeEvent.pageX - trai.current)}
+              accessible
+              accessibilityRole="adjustable"
+              accessibilityLabel="Cường độ"
+              accessibilityValue={{ min: 1, max: 5, now: intensity, text: `${intensity} trên 5` }}
+              accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+              onAccessibilityAction={(e) =>
+                setIntensity((n) => kep(n + (e.nativeEvent.actionName === 'increment' ? 1 : -1)))
+              }
+            >
+              {/* Đoạn tới mức chọn đậm dần theo thang của bảng năm — cùng một nghĩa "nặng hơn"; đoạn trên mức chỉ mờ. */}
+              <View style={styles.ray}>
+                {CUONG_DO.map((n) => (
+                  <View
+                    key={n}
+                    style={[styles.doan, { backgroundColor: n <= intensity ? album.lich[n] : album.vienMo }]}
+                  />
+                ))}
+              </View>
+              <View style={[styles.con, { left: `${(intensity - 0.5) * 20}%` }]} />
+            </View>
             <Text style={[butChi.chuThich, styles.mucNac]} importantForAccessibility="no">
               {intensity} / 5
             </Text>
@@ -172,15 +194,21 @@ const styles = StyleSheet.create({
   nhan: { color: album.butChi, marginTop: space.lg },
   phu: { ...text.phu, color: album.butChi, marginTop: space.xs },
   hang: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
-  oNac: {
-    width: touch.toiThieu,
-    height: touch.toiThieu,
-    justifyContent: 'center',
-    alignItems: 'center',
+  truot: { flex: 1, height: touch.toiThieu, justifyContent: 'center' },
+  ray: { flexDirection: 'row', gap: 3, height: 8 },
+  doan: { flex: 1 },
+  // Con trượt là một mẩu giấy vuông nằm trên thanh, tâm ở giữa đoạn đang chọn.
+  con: {
+    ...bong,
+    position: 'absolute',
+    top: (touch.toiThieu - 22) / 2,
+    width: 22,
+    height: 22,
+    marginLeft: -11,
+    backgroundColor: album.chu,
   },
-  nac: { width: 3, borderRadius: 1.5, backgroundColor: album.vienMo },
-  nacChon: { backgroundColor: album.chu },
-  mucNac: { color: album.butChi, alignSelf: 'center', marginLeft: space.sm },
+  // Rộng cố định: "1 / 5" hẹp hơn "5 / 5", để chữ co giãn thì thanh bị kéo ngắn dài trong lúc kéo.
+  mucNac: { color: album.butChi, alignSelf: 'center', marginLeft: space.sm, minWidth: 40, textAlign: 'right' },
   oNhap: {
     ...text.than,
     color: album.chu,

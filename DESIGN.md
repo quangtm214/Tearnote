@@ -143,7 +143,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 - **Bút Chì Trắng** (`but-chi`): ngày, chú thích, nét cường độ, dòng phụ. ~7.8:1 trên trang. Góc dán (`album.goc`) dùng cùng giá trị.
 - **Giấy Pơ-luya** (`po-luya`): thân tờ ngăn giữa hai đêm; mép trên của nó là cùng tông ở độ đục 0.22.
 - **Viền Mờ** (`vien-mo`): đường hairline duy nhất được dùng: mép trên chân màn, khung trang trống.
-- **Thang Lịch** (`album.lich`): chỉ cho bảng năm. Sáu nấc của cùng tông `chu`, chỉ đổi độ đục: ô trống 0.06 (bằng `po-luya`) rồi 5 mức 0.22 / 0.40 / 0.58 / 0.78 / 1. Không thêm sắc độ mới, không dùng `den`.
+- **Thang Lịch** (`album.lich`): chỉ cho bảng năm và thanh chọn cường độ ở màn ghi — cả hai cùng nghĩa "nặng hơn". Sáu nấc của cùng tông `chu`, chỉ đổi độ đục: ô trống 0.06 (bằng `po-luya`) rồi 5 mức 0.22 / 0.40 / 0.58 / 0.78 / 1. Không thêm sắc độ mới, không dùng `den`.
 
 ### Named Rules
 **The Một Ngọn Đèn Rule.** `den` chỉ xuất hiện ở lối trợ giúp. Không dùng cho trạng thái chọn, link, badge hay nhấn mạnh. Nếu một màn có hai chỗ hổ phách thì một chỗ sai. **Ngoại lệ duy nhất:** màn hotline (`help.tsx`) chính là lối trợ giúp, nên mỗi nút "Gọi …" là một nút trợ giúp hổ phách.
@@ -209,7 +209,7 @@ Dưới cùng, sau chân màn; nền `trang`, hairline `vien-mo` phía trên, đ
 ### Lựa chọn và ô nhập (màn ghi, viết lời, đăng nhập)
 - **Lựa chọn** (Tag, thời điểm, thời lượng): mảnh `tam` góc vuông cao 48, chữ `nut` màu `but-chi`. Chọn thì tô `chu`, chữ đổi sang `trang` — tương phản đủ để thấy qua mắt nhoè mà không cần màu thứ hai. Hết lượt chọn thì các lựa chọn còn lại mờ 0.35. Screen reader: chọn một là `radio`, chọn nhiều (Tag) là `checkbox`.
 - **Nhãn mục** ("Lúc nào?", "Vì chuyện gì?"): `ngay` (Patrick Hand) màu `but-chi`, vai trò header.
-- **Chọn cường độ**: 5 vùng bấm 48, mỗi vùng một nét bút chì gấp đôi nét trên tấm; nét tới mức đã chọn màu `chu`, nét trên mức chỉ là `vien-mo`; cạnh đó ghi "3 / 5" bằng `chu-thich`.
+- **Chọn cường độ**: slider tự dựng (Gesture Responder của RN core), vùng chạm cao 48 chiếm hết bề ngang. Thanh là 5 đoạn cao 8, khe 3, góc vuông; đoạn tới mức đã chọn tô `album.lich[1..5]` (đậm dần về cuối), đoạn trên mức là `vien-mo`. Con trượt là mẩu vuông 22 màu `chu`, bóng "nằm trên trang", tâm ở giữa đoạn đang chọn. Kéo hoặc chạm, bắt vào 5 nấc; cạnh đó ghi "3 / 5" bằng `chu-thich`. Screen reader: `adjustable`, vuốt lên/xuống để tăng/giảm.
 - **Ô nhập**: nền `tam`, góc vuông, chữ `than` màu `chu`, placeholder và con trỏ `but-chi`. Không viền.
 - **Nút gạt** (Cài đặt): Switch của nền tảng; bật: track `but-chi`, thumb `chu`; tắt: track `kep`, thumb `but-chi`.
 
