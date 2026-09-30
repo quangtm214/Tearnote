@@ -105,11 +105,18 @@ components:
     typography: "{typography.than}"
     rounded: "{rounded.tam}"
     padding: "16px"
+  nghe-lai:
+    backgroundColor: "{colors.tam}"
+    textColor: "{colors.chu}"
+    typography: "{typography.nut}"
+    rounded: "{rounded.tam}"
+    padding: "0 24px"
+    height: "56px"
 ---
 
 # Design System: Tearnote
 
-> **Trạng thái:** mọi màn (`app/src/app/*`) đã ở world "Album ảnh trang đen". Token nằm ở `album` và `butChi` trong `app/src/theme.ts`; mảnh dùng chung (góc dán, tấm Entry, nút chính, nút trợ giúp, dòng lối, lựa chọn, chân màn) ở `app/src/ui.tsx`. World xanh mực cũ (`color`, `radius`, `caoVach`) đã xoá — đừng dựng lại.
+> **Trạng thái:** mọi màn (`app/src/app/*`) đã ở world "Album ảnh trang đen". Token nằm ở `album` và `butChi` trong `app/src/theme.ts`; mảnh dùng chung (góc dán, tấm Entry, nút chính, nút trợ giúp, dòng lối, lựa chọn, chân màn, dải Nghe lại) ở `app/src/ui.tsx`. World xanh mực cũ (`color`, `radius`, `caoVach`) đã xoá — đừng dựng lại.
 
 ## Overview
 
@@ -186,7 +193,7 @@ Chân màn cố định ngoài vùng cuộn (`ChanMan` trong `ui.tsx`), **ở m�
 Hệ lai: tấm giấy nổi khỏi trang bằng bóng mềm thấp, còn phân lớp nền dùng độ sáng (`trang` → `tam` → `kep`). Không dùng viền để tạo lớp.
 
 ### Shadow Vocabulary
-- **Nằm trên trang** (`shadowColor #000, offset 0/3, opacity 0.45, radius 6, elevation 3`): tấm Entry, nút chính, mẩu giấy kẹp (kẹp dùng elevation 6 để nằm trên tấm).
+- **Nằm trên trang** (`shadowColor #000, offset 0/3, opacity 0.45, radius 6, elevation 3`): tấm Entry, nút chính, dải Nghe lại, mẩu giấy kẹp (kẹp dùng elevation 6 để nằm trên tấm).
 - **Nhấc khỏi trang** (`translateY -3, offset 0/8, opacity 0.6, radius 12, elevation 10`): trạng thái nhấn của tấm và nút chính.
 
 ### Named Rules
@@ -211,10 +218,11 @@ Dưới cùng, sau chân màn; nền `trang`, hairline `vien-mo` phía trên, đ
 - **Nhãn mục** ("Lúc nào?", "Vì chuyện gì?"): `ngay` (Patrick Hand) màu `but-chi`, vai trò header.
 - **Chọn cường độ**: 5 vùng bấm 48, mỗi vùng một nét bút chì gấp đôi nét trên tấm; nét tới mức đã chọn màu `chu`, nét trên mức chỉ là `vien-mo`; cạnh đó ghi "3 / 5" bằng `chu-thich`.
 - **Ô nhập**: nền `tam`, góc vuông, chữ `than` màu `chu`, placeholder và con trỏ `but-chi`. Không viền.
+- **Kèm ảnh hay ghi âm** (màn ghi, sau ô Reflection): ba dòng lối "Chụp ảnh" · "Chọn ảnh" · "Ghi âm" nằm một hàng (xuống dòng khi chật), khe `lg`. Ảnh đã chọn là ảnh nhỏ vuông 96, hạ sáng 0.85, góc dán 10 vẽ **đè** lên mép ảnh như ảnh thật giữ trong album; bấm ảnh thì hỏi lại "Bỏ ảnh này?" (Giữ lại / Bỏ). Đủ 3 ảnh thì ẩn hai lối ảnh. Đang ghi: chú thích `chu-thich` màu `chu` "Đang ghi · 0:12 / 5:00", dưới là dòng lối "Dừng ghi"; ghi xong thì thay bằng dải Nghe lại và dòng lối "Bỏ ghi âm".
 - **Nút gạt** (Cài đặt): Switch của nền tảng; bật: track `but-chi`, thumb `chu`; tắt: track `kep`, thumb `but-chi`.
 
 ### Tấm Entry (signature)
-Tấm giấy góc vuông `tam`, padding `lg`, bốn góc dán, bóng thấp. Thân là Reflection (tối đa 6 dòng); không có Reflection thì Tag là thân và chú thích không lặp Tag. Dòng cuối **trong** tấm, cách thân `md`, là chú thích bút chì (giờ · thời lượng · Tag) và, cuối dòng đầu của nó, các nét cường độ — nằm trong tấm để không lơ lửng giữa hai tấm, lẫn sang tấm bên dưới. Toàn tấm là một vùng bấm với nhãn screen reader gộp đủ Reflection, chú thích, cường độ và trạng thái Comfort; dòng chú thích ẩn khỏi screen reader để không đọc lặp. Nhấn: nhấc khỏi trang (hiện là trạng thái tức thời, chưa có chuyển động theo thời gian).
+Tấm giấy góc vuông `tam`, padding `lg`, bốn góc dán, bóng thấp. Có ảnh thì ảnh nằm đầu tấm, rộng hết lòng tấm, cách thân `md`, góc vuông, hạ sáng 0.85 (ảnh chụp sáng rực giữa trang đen lúc 2 giờ sáng là chói): Timeline chỉ dán ảnh đầu, cắt 4:3 cho nhịp đều; màn một lần khóc dán mọi ảnh theo đúng tỉ lệ. Thân là Reflection (tối đa 6 dòng); không có Reflection thì Tag là thân và chú thích không lặp Tag. Dòng cuối **trong** tấm, cách thân `md`, là chú thích bút chì (giờ · thời lượng · Tag · "n ảnh" · "ghi âm") và, cuối dòng đầu của nó, các nét cường độ — nằm trong tấm để không lơ lửng giữa hai tấm, lẫn sang tấm bên dưới. Toàn tấm là một vùng bấm với nhãn screen reader gộp đủ Reflection, chú thích, cường độ và trạng thái Comfort; dòng chú thích ẩn khỏi screen reader để không đọc lặp. Nhấn: nhấc khỏi trang (hiện là trạng thái tức thời, chưa có chuyển động theo thời gian).
 
 ### Nét cường độ
 Cường độ 1–5 là đúng n nét bút chì đếm tay (`but-chi`, rộng 2, cao 12–15, nghiêng -4° đến 5°). Không vẽ ô trống cho mức chưa đạt, không cột, không thang.
@@ -226,7 +234,10 @@ Ba trạng thái: không có gì (chưa xin Comfort) / mẩu `kep` ghi "có mộ
 Chỉ đặt **giữa** hai đêm, không trước đêm đầu. Cao 10, thân `po-luya`, mép trên 1px cùng tông ở 0.22, chìa quá lề `sm` mỗi bên, nghiêng -0.8°. Không khung, để không bị đọc thành ô nhập.
 
 ### Lời từ người lạ (màn một lần khóc, "Lời bạn đã viết")
-Bản đầy đủ của mẩu kẹp: tấm `kep` góc vuông, padding `lg`, bóng "nằm trên trang" với elevation 6, thân `than` màu `chu` (đọc được, không viết tay), dòng phụ ("đã dịch tự động", "đã cảm ơn", Tag · trạng thái) bằng `chu-thich` màu `but-chi`. Không nghiêng — lời dài nghiêng thì khó đọc. Màn một lần khóc mở bằng tiêu đề là ngày, rồi tấm Entry đầy đủ Reflection (Timeline cắt ở 6 dòng), rồi nhãn mục "Lời từ người lạ".
+Bản đầy đủ của mẩu kẹp: tấm `kep` góc vuông, padding `lg`, bóng "nằm trên trang" với elevation 6, thân `than` màu `chu` (đọc được, không viết tay), dòng phụ ("đã dịch tự động", "đã cảm ơn", Tag · trạng thái) bằng `chu-thich` màu `but-chi`. Không nghiêng — lời dài nghiêng thì khó đọc. Màn một lần khóc mở bằng tiêu đề là ngày, rồi tấm Entry đầy đủ Reflection và mọi ảnh (Timeline cắt ở 6 dòng, một ảnh), rồi dải Nghe lại nếu có ghi âm, rồi nhãn mục "Lời từ người lạ".
+
+### Nghe lại (ghi âm của một lần khóc)
+Dải giấy `tam` cao 56, góc vuông, bóng "nằm trên trang", **không** góc dán — để khỏi lẫn với nút chính ngay bên dưới ở màn ghi. Trái sang phải: icon play / pause 24 màu `chu`, nhãn `nut` "Nghe lại" / "Dừng", thời gian `chu-thich` màu `but-chi` sát phải ("0:42"; đang phát thì "0:12 / 0:42"). Nhấn: nhấc khỏi trang. Nằm **ngoài** tấm Entry: tấm là một vùng đọc gộp cho screen reader, nút bên trong sẽ bị nuốt. Screen reader đọc "Nghe lại ghi âm, dài 42 giây".
 
 ### Màn hotline
 Tiêu đề, một câu "gọi cấp cứu nếu đang nguy hiểm", rồi từng nước (nhãn mục `ngay`). Mỗi đường dây là một tấm `tam` có bóng: tên (`than`), giờ trực (`phu`), nút "Gọi …" hổ phách cao 64, link trang web gạch chân. Trong mỗi nước: cấp cứu, rồi số trực 24 giờ, rồi số có giờ trực.

@@ -1,12 +1,43 @@
+import {
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from 'expo-audio';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { insertEntry } from '@/db';
 import { MAX_ENTRY_TAGS, TAG_IDS, TAG_LABEL_VI, type TagId } from '@/tags';
 import { album, butChi, space, text, touch } from '@/theme';
-import { ChanMan, DongLoi, gio, NET, nhanNgay, NutChinh, Pill, THOI_LUONG } from '@/ui';
+import {
+  ChanMan,
+  DongLoi,
+  GocDan,
+  gio,
+  NET,
+  NgheLai,
+  nhanNgay,
+  NutChinh,
+  phutGiay,
+  Pill,
+  THOI_LUONG,
+} from '@/ui';
 
 /** Lùi thời điểm — thay cho date picker, không thêm dependency. */
 const LUI = [
@@ -18,12 +49,36 @@ const LUI = [
 
 const CUONG_DO = [1, 2, 3, 4, 5];
 
+/** Giới hạn đính kèm mỗi lần khóc — chỉ app ép, DB không có CHECK (docs/db.md). */
+const TOI_DA_ANH = 3;
+const GHI_AM_TOI_DA_GIAY = 5 * 60;
+
 export default function GhiEntry() {
   const [luiPhut, setLuiPhut] = useState(0);
   const [durationMin, setDurationMin] = useState<number | null>(null);
   const [intensity, setIntensity] = useState(3);
   const [tags, setTags] = useState<TagId[]>([]);
   const [reflection, setReflection] = useState('');
+  // uri tạm trong cache — Lưu mới chép vào máy, bỏ ngang thì không để lại gì.
+  const [anh, setAnh] = useState<string[]>([]);
+  const [ghiAm, setGhiAm] = useState<string | null>(null);
+  const [dangGhi, setDangGhi] = useState(false);
+  const [loi, setLoi] = useState<string | null>(null);
+
+  const bao = (msg: string) => {
+    setLoi(msg);
+    AccessibilityInfo.announceForAccessibility(msg);
+  };
+
+  // Dừng tay hay tự dừng ở 5 phút đều về đây.
+  const mayGhi = useAudioRecorder(RecordingPresets.HIGH_QUALITY, (st) => {
+    if (!st.isFinished) return;
+    setDangGhi(false);
+    void setAudioModeAsync({ allowsRecording: false });
+    if (st.url && !st.hasError) setGhiAm(st.url);
+    else bao('Ghi âm bị ngắt giữa chừng. Thử ghi lại.');
+  });
+  const trangThaiGhi = useAudioRecorderState(mayGhi);
 
   // Chặn bấm Lưu hai lần liên tiếp trước khi kịp rời màn — mỗi lần bấm là một Entry.
   const daLuu = useRef(false);
@@ -35,17 +90,81 @@ export default function GhiEntry() {
   const doiTag = (t: TagId) =>
     setTags((cu) => (cu.includes(t) ? cu.filter((x) => x !== t) : [...cu, t]));
 
-  const luu = () => {
+  const hoiBo = (cauHoi: string, bo: () => void) =>
+    Alert.alert(cauHoi, undefined, [
+      { text: 'Giữ lại', style: 'cancel' },
+      { text: 'Bỏ', style: 'destructive', onPress: bo },
+    ]);
+
+  // Camera ghi thẳng vào cache của app nên ảnh thường không vào thư viện máy — riêng tư hơn
+  // chụp bằng app camera rồi chọn lại.
+  async function layAnh(camera: boolean) {
+    setLoi(null);
+    const conLai = TOI_DA_ANH - anh.length;
+    try {
+      if (camera && !(await ImagePicker.requestCameraPermissionsAsync()).granted) {
+        return bao('Tearnote chưa được dùng camera. Có thể cho phép trong Cài đặt của máy.');
+      }
+      const kq = camera
+        ? await ImagePicker.launchCameraAsync()
+        : await ImagePicker.launchImageLibraryAsync({
+            allowsMultipleSelection: conLai > 1,
+            selectionLimit: conLai,
+          });
+      if (!kq.canceled) setAnh((cu) => [...cu, ...kq.assets.map((a) => a.uri)].slice(0, TOI_DA_ANH));
+    } catch {
+      bao(camera ? 'Chưa mở được camera.' : 'Chưa mở được thư viện ảnh.');
+    }
+  }
+
+  async function batDauGhi() {
+    setLoi(null);
+    // Ẩn nút Ghi âm ngay: bấm hai lần thì lần sau chuẩn bị máy ghi lần nữa và ném lỗi.
+    setDangGhi(true);
+    try {
+      if (!(await requestRecordingPermissionsAsync()).granted) {
+        setDangGhi(false);
+        return bao('Tearnote chưa được dùng micro. Có thể cho phép trong Cài đặt của máy.');
+      }
+      // iOS không cho ghi nếu phiên âm thanh chưa bật ghi; Android bỏ qua cờ này.
+      await setAudioModeAsync({ allowsRecording: true });
+      await mayGhi.prepareToRecordAsync();
+      mayGhi.record({ forDuration: GHI_AM_TOI_DA_GIAY });
+      AccessibilityInfo.announceForAccessibility('Đang ghi âm');
+    } catch {
+      setDangGhi(false);
+      bao('Chưa ghi âm được. Thử lại.');
+    }
+  }
+
+  const luu = async () => {
     if (daLuu.current) return;
     daLuu.current = true;
-    insertEntry({
-      occurredAt: Date.now() - luiPhut * 60_000,
-      durationMin,
-      intensity,
-      tags,
-      reflection: reflection.trim() === '' ? null : reflection.trim(),
-    });
-    router.back();
+    try {
+      // Bấm Lưu khi còn đang ghi: dừng rồi lưu luôn đoạn đó, đừng bắt người ta bấm Dừng trước.
+      let am = ghiAm;
+      if (dangGhi) {
+        await mayGhi.stop();
+        am = mayGhi.uri;
+      }
+      insertEntry(
+        {
+          occurredAt: Date.now() - luiPhut * 60_000,
+          durationMin,
+          intensity,
+          tags,
+          reflection: reflection.trim() === '' ? null : reflection.trim(),
+        },
+        [
+          ...anh.map((uri) => ({ kind: 'image' as const, uri })),
+          ...(am ? [{ kind: 'audio' as const, uri: am }] : []),
+        ],
+      );
+      router.back();
+    } catch {
+      daLuu.current = false;
+      bao('Chưa lưu được ảnh hoặc ghi âm. Bấm Lưu lại lần nữa, hoặc bỏ bớt rồi lưu.');
+    }
   };
 
   return (
@@ -153,8 +272,65 @@ export default function GhiEntry() {
             style={styles.oNhap}
           />
 
+          <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
+            Kèm ảnh hay ghi âm?
+          </Text>
+          <Text style={styles.phu}>
+            Tối đa {TOI_DA_ANH} ảnh và một đoạn ghi âm {GHI_AM_TOI_DA_GIAY / 60} phút. Chỉ nằm trong
+            máy.
+          </Text>
+          {anh.length > 0 && (
+            <View style={styles.hang}>
+              {anh.map((uri, i) => (
+                <Pressable
+                  key={uri}
+                  onPress={() =>
+                    hoiBo('Bỏ ảnh này?', () => setAnh((cu) => cu.filter((x) => x !== uri)))
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ảnh ${i + 1}`}
+                  accessibilityHint="Bấm để bỏ ảnh này"
+                >
+                  <Image source={{ uri }} resizeMethod="resize" style={styles.anhNho} />
+                  {/* Sau ảnh để góc dán đè lên mép ảnh, như ảnh thật giữ trong album. */}
+                  <GocDan co={10} />
+                </Pressable>
+              ))}
+            </View>
+          )}
+          {dangGhi ? (
+            <>
+              <Text style={[butChi.chuThich, styles.giayGhi]}>
+                Đang ghi · {phutGiay(trangThaiGhi.durationMillis / 1000)} /{' '}
+                {phutGiay(GHI_AM_TOI_DA_GIAY)}
+              </Text>
+              <DongLoi
+                nhan="Dừng ghi"
+                onPress={() => void mayGhi.stop().catch(() => bao('Chưa dừng được. Thử lại.'))}
+              />
+            </>
+          ) : ghiAm ? (
+            <View style={styles.ghiAm}>
+              <NgheLai uri={ghiAm} />
+              <DongLoi
+                nhan="Bỏ ghi âm"
+                onPress={() => hoiBo('Bỏ đoạn ghi âm này?', () => setGhiAm(null))}
+              />
+            </View>
+          ) : null}
+          <View style={styles.hangLoi}>
+            {anh.length < TOI_DA_ANH && (
+              <>
+                <DongLoi nhan="Chụp ảnh" onPress={() => void layAnh(true)} />
+                <DongLoi nhan="Chọn ảnh" onPress={() => void layAnh(false)} />
+              </>
+            )}
+            {!dangGhi && !ghiAm && <DongLoi nhan="Ghi âm" onPress={() => void batDauGhi()} />}
+          </View>
+          {loi ? <Text style={styles.loi}>{loi}</Text> : null}
+
           <View style={styles.nutLuu}>
-            <NutChinh nhan="Lưu lại" onPress={luu} />
+            <NutChinh nhan="Lưu lại" onPress={() => void luu()} />
           </View>
           <DongLoi nhan="Thôi, không ghi nữa" onPress={() => router.back()} />
         </ScrollView>
@@ -189,5 +365,10 @@ const styles = StyleSheet.create({
     minHeight: 120,
     marginTop: space.md,
   },
+  anhNho: { width: 96, height: 96, opacity: 0.85 },
+  giayGhi: { color: album.chu, marginTop: space.md },
+  ghiAm: { marginTop: space.md },
+  hangLoi: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.lg },
+  loi: { ...text.than, color: album.chu, marginTop: space.md },
   nutLuu: { marginTop: space.xl },
 });

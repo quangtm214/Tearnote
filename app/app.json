@@ -26,7 +26,21 @@
           "imageWidth": 76
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Tearnote dùng micro để bạn ghi âm kèm một lần khóc. Đoạn ghi âm chỉ nằm trong máy.",
+          "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Tearnote mở thư viện ảnh để bạn chọn ảnh kèm một lần khóc. Ảnh chỉ nằm trong máy.",
+          "cameraPermission": "Tearnote dùng camera để bạn chụp ảnh kèm một lần khóc. Ảnh chỉ nằm trong máy."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

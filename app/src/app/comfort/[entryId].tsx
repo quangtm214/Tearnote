@@ -5,16 +5,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   getEntry,
+  listAttachments,
   listReceivedComforts,
   markThanked,
   nhanComfortBat,
   saveReceivedComfort,
+  type Attachment,
   type Entry,
   type ReceivedComfort,
 } from '@/db';
 import { ensureSession, supabase } from '@/supabase';
 import { album, butChi, space, text, touch } from '@/theme';
-import { bong, ChanMan, DongLoi, nhanNgay, NutChinh, TamEntry } from '@/ui';
+import { bong, ChanMan, DongLoi, NgheLai, nhanNgay, NutChinh, TamEntry } from '@/ui';
 
 type ComfortRow = { comfort_id: string; body: string; translated: boolean };
 
@@ -24,6 +26,7 @@ type ComfortRow = { comfort_id: string; body: string; translated: boolean };
 export default function EntryComfortScreen() {
   const { entryId } = useLocalSearchParams<{ entryId: string }>();
   const [entry, setEntry] = useState<Entry | null>(null);
+  const [dk, setDk] = useState<Attachment[]>([]);
   const [ds, setDs] = useState<ReceivedComfort[]>([]);
   const [dangXin, setDangXin] = useState(false);
   const [choNhan, setChoNhan] = useState(true);
@@ -32,6 +35,7 @@ export default function EntryComfortScreen() {
   const nap = useCallback(() => {
     if (!entryId) return;
     setEntry(getEntry(entryId));
+    setDk(listAttachments(entryId));
     setDs(listReceivedComforts(entryId));
     setChoNhan(nhanComfortBat());
   }, [entryId]);
@@ -103,6 +107,7 @@ export default function EntryComfortScreen() {
   }
 
   const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
+  const ghiAm = dk.find((d) => d.kind === 'audio');
 
   if (!entryId || !entry) {
     return (
@@ -125,7 +130,9 @@ export default function EntryComfortScreen() {
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
           {nhanNgay(entry.occurredAt)}
         </Text>
-        <TamEntry e={entry} />
+        <TamEntry e={entry} dk={dk} />
+        {/* Nằm ngoài tấm: tấm là một vùng đọc gộp cho screen reader, nút bên trong sẽ bị nuốt mất. */}
+        {ghiAm ? <NgheLai uri={ghiAm.uri} /> : null}
 
         <Text style={[butChi.ngay, s.nhom]} accessibilityRole="header">
           Lời từ người lạ
