@@ -4,9 +4,10 @@ import { AccessibilityInfo, ScrollView, StyleSheet, Switch, Text, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { datNhanComfort, nhanComfortBat } from '@/db';
+import { datNgonNgu, LANGS, ngonNgu, t, TEN_GOC } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, butChi, space, text } from '@/theme';
-import { ChanMan, DongLoi } from '@/ui';
+import { ChanMan, DongLoi, Pill } from '@/ui';
 
 export default function CaiDat() {
   const [nhan, setNhan] = useState(true);
@@ -33,40 +34,38 @@ export default function CaiDat() {
     // signOut luôn xoá session trên máy, kể cả khi mất mạng (lỗi chỉ là server chưa thu hồi token).
     await supabase.auth.signOut();
     setEmail(null);
-    AccessibilityInfo.announceForAccessibility('Đã đăng xuất.');
+    AccessibilityInfo.announceForAccessibility(t.caiDat.daDangXuat);
   }
 
   return (
     <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          Cài đặt
+          {t.caiDat.tieuDe}
         </Text>
 
         <View style={s.hang}>
           <View style={s.trai}>
-            <Text style={s.nhan}>Nhận lời từ người lạ</Text>
-            <Text style={s.phu}>
-              Tắt thì không nhận thêm lời nào từ người lạ. Việc ghi lại vẫn như cũ.
-            </Text>
+            <Text style={s.nhan}>{t.caiDat.nhanLoi}</Text>
+            <Text style={s.phu}>{t.caiDat.nhanLoiPhu}</Text>
           </View>
           <Switch
             value={nhan}
             onValueChange={doiNhan}
             trackColor={{ false: album.kep, true: album.butChi }}
             thumbColor={nhan ? album.chu : album.butChi}
-            accessibilityLabel="Nhận lời từ người lạ"
+            accessibilityLabel={t.caiDat.nhanLoi}
           />
         </View>
 
         <DongLoi
-          nhan="Lời bạn đã viết"
-          phu="Xem lại, hoặc thu hồi lời đã viết."
+          nhan={t.chung.loiDaViet}
+          phu={t.caiDat.loiDaVietPhu}
           onPress={() => router.push('/comfort/cua-toi')}
         />
         <DongLoi
-          nhan="Viết một lời cho người lạ"
-          phu="Cần đăng nhập. Tối đa 5 lời trong 24 giờ."
+          nhan={t.chung.vietLoi}
+          phu={t.caiDat.vietLoiPhu}
           onPress={() => router.push('/comfort/write')}
         />
 
@@ -74,23 +73,27 @@ export default function CaiDat() {
           <>
             <View style={s.hang}>
               <View style={s.trai}>
-                <Text style={s.nhan}>Tài khoản</Text>
+                <Text style={s.nhan}>{t.caiDat.taiKhoan}</Text>
                 <Text style={s.phu}>{email}</Text>
               </View>
             </View>
-            <DongLoi
-              nhan="Đăng xuất"
-              phu="Những lần khóc vẫn nằm nguyên trên máy."
-              onPress={dangXuat}
-            />
+            <DongLoi nhan={t.caiDat.dangXuat} phu={t.caiDat.dangXuatPhu} onPress={dangXuat} />
           </>
         ) : (
           <DongLoi
-            nhan="Đăng nhập"
-            phu="Chưa đăng nhập. Chỉ cần khi viết lời cho người lạ."
+            nhan={t.chung.dangNhap}
+            phu={t.caiDat.dangNhapPhu}
             onPress={() => router.push('/login')}
           />
         )}
+
+        {/* Đổi là dựng lại cả cây giao diện ở ngôn ngữ mới (_layout gốc), không cần mở lại app. */}
+        <Text style={[s.nhan, s.mucNgonNgu]}>{t.caiDat.ngonNgu}</Text>
+        <View style={s.hangNgonNgu} accessibilityRole="radiogroup" accessibilityLabel={t.caiDat.ngonNgu}>
+          {LANGS.map((l) => (
+            <Pill key={l} nhan={TEN_GOC[l]} mot chon={l === ngonNgu()} onPress={() => datNgonNgu(l)} />
+          ))}
+        </View>
       </ScrollView>
       <ChanMan />
     </SafeAreaView>
@@ -105,4 +108,6 @@ const s = StyleSheet.create({
   trai: { flex: 1 },
   nhan: { ...text.nut, color: album.chu },
   phu: { ...text.phu, color: album.butChi, marginTop: space.xs, maxWidth: 320 },
+  mucNgonNgu: { marginTop: space.lg },
+  hangNgonNgu: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.sm },
 });

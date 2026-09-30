@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LANGS, ngonNgu, nhanTag, t, TEN_GOC, type Lang } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
-import { MAX_COMFORT_TAGS, TAG_IDS, TAG_LABEL_VI, type TagId } from '@/tags';
+import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
 import { album, butChi, space, text } from '@/theme';
 import { ChanMan, DongLoi, NutChinh, Pill } from '@/ui';
 
@@ -22,12 +23,14 @@ const TOI_DA = 500;
 
 /**
  * Viết Comfort. Hai luật quan trọng nhất KHÔNG nằm ở đây mà ở DB:
- * "chỉ tài khoản thật" và "tối đa 5 / 24h" do RLS ép (docs/db.md). App chỉ dịch lỗi ra tiếng Việt.
+ * "chỉ tài khoản thật" và "tối đa 5 / 24h" do RLS ép (docs/db.md). App chỉ dịch lỗi ra lời.
  */
 export default function WriteComfortScreen() {
   const [choDuyenQuyen, setChoDuyenQuyen] = useState(true);
   const [body, setBody] = useState('');
   const [tags, setTags] = useState<TagId[]>([]);
+  // source_lang: batch dịch từ đây. Mặc định ngôn ngữ app, nhưng người viết có thể viết tiếng khác.
+  const [nguon, setNguon] = useState<Lang>(ngonNgu);
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
   const [hetPhien, setHetPhien] = useState(false);
@@ -60,13 +63,13 @@ export default function WriteComfortScreen() {
   const doDai = [...body.trim()].length;
   const guiDuoc = doDai >= TOI_THIEU && doDai <= TOI_DA && tags.length > 0 && !dangGui;
 
-  function doiTag(t: TagId) {
+  function doiTag(tag: TagId) {
     setTags((truoc) =>
-      truoc.includes(t)
-        ? truoc.filter((x) => x !== t)
+      truoc.includes(tag)
+        ? truoc.filter((x) => x !== tag)
         : truoc.length >= MAX_COMFORT_TAGS
           ? truoc
-          : [...truoc, t],
+          : [...truoc, tag],
     );
   }
 
@@ -86,7 +89,7 @@ export default function WriteComfortScreen() {
       const user = data.session?.user;
       if (!user) {
         setHetPhien(true);
-        bao('Phiên đăng nhập đã hết. Đăng nhập lại rồi gửi — chữ bạn gõ vẫn còn đây.');
+        bao(t.viet.hetPhien);
         return;
       }
 
@@ -94,7 +97,7 @@ export default function WriteComfortScreen() {
       const { error } = await supabase.from('comforts').insert({
         author_id: user.id,
         body: body.trim(),
-        source_lang: 'vi',
+        source_lang: nguon,
         tags,
       });
 
@@ -103,23 +106,19 @@ export default function WriteComfortScreen() {
         // lý do hay gặp nhất, nhưng tài khoản anonymous hoặc session hết hạn cũng trả
         // đúng mã này — hỏi lại để khỏi hiện một câu sai.
         if (error.code === '42501' && (await isRealAccount())) {
-          bao('Bạn đã gửi đủ 5 lời trong 24 giờ qua. Chưa gửi thêm được.');
+          bao(t.viet.hetLuot);
         } else if (error.code === '42501') {
           setHetPhien(true);
-          bao('Phiên đăng nhập đã hết. Đăng nhập lại rồi gửi — chữ bạn gõ vẫn còn đây.');
+          bao(t.viet.hetPhien);
         } else {
           // supabase-js trả lỗi mạng qua `error` với code rỗng; có code là server từ chối.
-          bao(
-            error.code
-              ? 'Chưa gửi được. Lời vẫn còn đây — thử gửi lại sau một lát.'
-              : 'Không kết nối được. Kiểm tra mạng rồi thử lại.',
-          );
+          bao(error.code ? t.viet.loiGui : t.chung.loiMang);
         }
         return;
       }
       setXong(true);
     } catch {
-      bao('Không kết nối được. Kiểm tra mạng rồi thử lại.');
+      bao(t.chung.loiMang);
     } finally {
       setDangGui(false);
     }
@@ -129,7 +128,7 @@ export default function WriteComfortScreen() {
     return (
       <SafeAreaView style={s.man} edges={['top', 'bottom']}>
         <View style={s.giua}>
-          <ActivityIndicator color={album.butChi} accessibilityLabel="Đang tải" />
+          <ActivityIndicator color={album.butChi} accessibilityLabel={t.chung.dangTai} />
         </View>
         <ChanMan />
       </SafeAreaView>
@@ -141,13 +140,10 @@ export default function WriteComfortScreen() {
       <SafeAreaView style={s.man} edges={['top', 'bottom']}>
         <View style={s.noiDungXong}>
           <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            Đã nhận lời của bạn
+            {t.viet.xongTieuDe}
           </Text>
-          <Text style={s.giaiThich}>
-            Lời này sẽ được duyệt trước, rồi mới tới tay một người lạ. Muốn rút lại thì vào Cài đặt
-            → Lời bạn đã viết.
-          </Text>
-          <NutChinh nhan="Xong" onPress={thoat} />
+          <Text style={s.giaiThich}>{t.viet.xongPhu}</Text>
+          <NutChinh nhan={t.viet.xong} onPress={thoat} />
         </View>
         <ChanMan />
       </SafeAreaView>
@@ -159,69 +155,75 @@ export default function WriteComfortScreen() {
       <KeyboardAvoidingView style={s.man} behavior="padding">
         <ScrollView contentContainerStyle={s.noiDung} keyboardShouldPersistTaps="handled">
           <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            Viết một lời cho người lạ
+            {t.chung.vietLoi}
           </Text>
-          <Text style={s.giaiThich}>
-            Lời này sẽ tới một người lạ vừa khóc vì chuyện tương tự. Hai bên không biết nhau.
-          </Text>
-          <Text style={s.phu}>
-            Kể điều từng giúp bạn, không cần khuyên. Đừng để lại tên, số điện thoại hay mạng xã
-            hội.
-          </Text>
+          <Text style={s.giaiThich}>{t.viet.moDau}</Text>
+          <Text style={s.phu}>{t.viet.goiY}</Text>
 
           <TextInput
             style={s.oVanBan}
             value={body}
             onChangeText={setBody}
-            accessibilityLabel="Lời cho người lạ"
+            accessibilityLabel={t.viet.oNhap}
             multiline
             textAlignVertical="top"
             maxLength={TOI_DA}
-            placeholder="Viết điều bạn từng muốn nghe."
+            placeholder={t.viet.oNhapGoiY}
             placeholderTextColor={album.butChi}
             selectionColor={album.butChi}
             editable={!dangGui}
           />
-          <Text style={s.dem} accessibilityLabel={`${doDai} trên ${TOI_DA} ký tự`}>
+          <Text style={s.dem} accessibilityLabel={t.viet.demA11y(doDai, TOI_DA)}>
             {doDai}/{TOI_DA}
-            {doDai < TOI_THIEU ? ` · còn thiếu ${TOI_THIEU - doDai} ký tự` : ''}
+            {doDai < TOI_THIEU ? t.viet.conThieu(TOI_THIEU - doDai) : ''}
           </Text>
 
           <Text style={[butChi.ngay, s.nhan]} accessibilityRole="header">
-            Lời này dành cho chuyện gì?
+            {t.viet.vietBang}
           </Text>
-          <Text style={s.phu}>
-            Chọn 1 hoặc {MAX_COMFORT_TAGS}. Lời hợp với bất kỳ ai đang buồn thì chọn “
-            {TAG_LABEL_VI.unknown}”.
+          <View style={s.hangTag} accessibilityRole="radiogroup">
+            {LANGS.map((l) => (
+              <Pill
+                key={l}
+                nhan={TEN_GOC[l]}
+                mot
+                chon={nguon === l}
+                tat={dangGui}
+                onPress={() => setNguon(l)}
+              />
+            ))}
+          </View>
+
+          <Text style={[butChi.ngay, s.nhan]} accessibilityRole="header">
+            {t.viet.danhCho}
           </Text>
+          <Text style={s.phu}>{t.viet.chonTag(MAX_COMFORT_TAGS, nhanTag('unknown'))}</Text>
           <View style={s.hangTag}>
-            {TAG_IDS.map((t) => {
-              const chon = tags.includes(t);
+            {TAG_IDS.map((tag) => {
+              const chon = tags.includes(tag);
               return (
                 <Pill
-                  key={t}
-                  nhan={TAG_LABEL_VI[t]}
+                  key={tag}
+                  nhan={nhanTag(tag)}
                   chon={chon}
                   tat={dangGui || (!chon && tags.length >= MAX_COMFORT_TAGS)}
-                  onPress={() => doiTag(t)}
+                  onPress={() => doiTag(tag)}
                 />
               );
             })}
           </View>
 
           {/* Đồng ý rõ ràng trước khi lời vào pool — overview.md §6. */}
-          <Text style={[s.phu, s.dongY]}>
-            Bấm Gửi là bạn đồng ý: lời này được duyệt, dịch sang tiếng Anh và tiếng Nhật, rồi gửi
-            ẩn danh tới người lạ. Thu hồi được trong Cài đặt → Lời bạn đã viết; ai đã nhận thì vẫn
-            giữ bản của họ.
-          </Text>
+          <Text style={[s.phu, s.dongY]}>{t.viet.dongY(LANGS.filter((l) => l !== nguon))}</Text>
 
           {loi ? <Text style={s.loi}>{loi}</Text> : null}
-          {hetPhien ? <DongLoi nhan="Đăng nhập lại" onPress={() => router.push('/login')} /> : null}
+          {hetPhien ? (
+            <DongLoi nhan={t.viet.dangNhapLai} onPress={() => router.push('/login')} />
+          ) : null}
 
-          <NutChinh nhan="Gửi" onPress={gui} tat={!guiDuoc && !dangGui} dangChay={dangGui} />
+          <NutChinh nhan={t.viet.gui} onPress={gui} tat={!guiDuoc && !dangGui} dangChay={dangGui} />
 
-          <DongLoi nhan="Quay lại" onPress={thoat} />
+          <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
         </ScrollView>
         <ChanMan />
       </KeyboardAvoidingView>

@@ -26,14 +26,16 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 khoá react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
 | Visual world | "Album ảnh trang đen": `album` + `butChi` trong `app/src/theme.ts` | Chọn qua `/impeccable` (thay world một-bit — bị bỏ vì lạnh, retro, khó đọc); hướng chi tiết ở `.impeccable/surfaces/`. Đã phủ mọi màn; mảnh dùng chung ở `app/src/ui.tsx`, world cũ đã xoá |
 | Lưới / heatmap | Chỉ bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục (DESIGN.md) | Nhìn cả năm một lượt mới thấy mùa nào dày. Màu = tổng cường độ trong ngày, ngưỡng cố định ở `app/src/lich.ts` để màu cùng nghĩa giữa các năm |
-| Từ vựng trên UI | "lần khóc" thay "Entry", "lời từ/cho người lạ" thay "Comfort" (PRODUCT.md) | Screen reader đọc chữ Anh sai giữa câu Việt; các khái niệm khác vốn đã Việt hoá trên UI |
-| Nhãn Tag tiếng Việt | Cột `vi` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL_VI` (test kiểm) | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau — đổi nhãn là đổi contract |
+| Từ vựng trên UI | "lần khóc" thay "Entry", "lời từ/cho người lạ" thay "Comfort"; bản en/ja ("a cry", "words from/for a stranger"; "泣いたこと", "見知らぬ人から/へのことば") cũng ở PRODUCT.md | Screen reader đọc chữ Anh sai giữa câu Việt; các khái niệm khác vốn đã Việt hoá trên UI |
+| Nhãn Tag | Cột `vi` / `en` / `ja` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL` trong `app/src/tags.ts` (test kiểm); en/ja dịch theo nghĩa cột vi | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau, kể cả khi khác ngôn ngữ — đổi nhãn là đổi contract |
+| Đa ngôn ngữ | Từ điển TS tự dựng ở `app/src/i18n/` (`vi.ts` là khuôn; `en.ts` / `ja.ts` thiếu khoá thì tsc đỏ), không thư viện. Mặc định theo ngôn ngữ máy (`I18nManager` / Intl của RN), máy dùng tiếng khác ⇒ `en`; đổi được ở Cài đặt (`settings.ngon_ngu`). Đổi = ghi đè `t` tại chỗ rồi đổi `key` của Stack ở `_layout` gốc | Không thêm dependency (không i18next, không expo-localization); ba ngôn ngữ không cần plural rules. Đổi `key` dựng lại mọi màn mà vẫn giữ màn đang đứng. iOS chưa kiểm: lệch ngôn ngữ máy thì thay bằng expo-localization |
+| `source_lang` khi viết lời | Người viết chọn ở màn viết ("Bạn viết bằng tiếng gì?"), mặc định là ngôn ngữ app | Dùng app tiếng Nhật vẫn có thể viết tiếng Việt; `source_lang` sai là batch dịch sai nguồn |
 | Điều hướng | `Tabs` của `expo-router/js-tabs`, thanh tự dựng; tab = Nhật ký · Lịch · Cài đặt (`app/src/app/(tabs)/`), "Viết lời" là nút mở màn viết. Icon: `@expo/vector-icons` (MaterialCommunityIcons) | Thanh mặc định cao cố định 49, nhãn dưới 14 — vỡ luật chữ của DESIGN.md. Viết lời giữ nguyên luồng đăng nhập / Gửi / Xong nên không làm tab |
 | Dropdown / select | Tự dựng bằng `Modal` của RN core, không thêm `@react-native-picker/picker` | Không thêm dependency; style được theo world album |
 | Slider (chọn cường độ) | Tự dựng bằng Gesture Responder của RN core trong `app/src/app/new.tsx`, không thêm `@react-native-community/slider`; màu đoạn dùng lại `album.lich[1..5]` | Không thêm dependency; slider có sẵn không tô thanh nhiều nấc màu được |
 | Icon SVG tự vẽ | `react-native-svg` (cài bằng `npx expo install`); icon là component `.tsx` dùng `Svg`/`Path` ngay trong source, không thêm `react-native-svg-transformer` | RN không tự vẽ SVG; Expo Go có sẵn native của gói này. Viết path trong `.tsx` thì không phải sửa metro config |
 | Ảnh & ghi âm trong lần khóc | `expo-image-picker` (thư viện + chụp trong app), `expo-audio`, `expo-file-system`; tối đa 3 ảnh + 1 ghi âm ≤ 5 phút; Timeline dán ảnh đầu lên tấm | Chụp trong app thì ảnh thường không vào thư viện máy. File nằm cache tới lúc Lưu mới chép vào `attachments/`, `path` lưu tương đối (docs/db.md) |
-| Font | `expo-font` + Patrick Hand (OFL) cho tiêu đề/chú thích tiếng Việt; Reflection và nút bấm là font hệ thống. Yomogi nằm sẵn trong `assets/fonts` cho tiếng Nhật, chưa nạp | Yomogi rộng cố định với chữ Latin nên tách chữ có dấu ("l ần") |
+| Font | `expo-font` + Patrick Hand (OFL) cho tiêu đề/chú thích tiếng Việt và tiếng Anh, Yomogi cho tiếng Nhật — Yomogi (~4MB) chỉ nạp khi app ở tiếng Nhật; Reflection và nút bấm là font hệ thống | Yomogi rộng cố định với chữ Latin nên tách chữ có dấu ("l ần"); Patrick Hand không có kana |
 | Theo dõi bug / thay đổi | Google Sheet `TearNote-Bug-Change`: tab Bug → `/check-bug`, tab Change → `/check-change` (`.claude/skills/`) | Mỗi mục một nhánh + PR (`fix/bug-<ID>` commit `fix(bug-<ID>): ...`; `change/<ID>` commit `<type>(change-<ID>): ...`); Claude ghi sheet qua Zapier, user xác nhận |
 | `@react-native/jest-preset` ghim đúng version RN | `0.86.3`, không để `^` | `legacy-peer-deps` cho npm tự lấy 0.87.1 và jest chết ngay. Nâng RN thì nâng cả gói này |
 
@@ -122,6 +124,12 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
 
 * **Contract Tag nằm ở ba chỗ**: `docs/tags.md` ⇄ enum `tag` trong `supabase/migrations/0001_init.sql`
   ⇄ `app/src/tags.ts`. Lệch một chỗ thì `app/src/tags.test.ts` đỏ — đó là việc của nó.
+* **Danh sách ngôn ngữ nằm ở ba chỗ**: enum `lang` trong migration ⇄ `LANGS` trong
+  `app/src/i18n/index.ts` ⇄ một file từ điển mỗi ngôn ngữ. Lệch enum ⇄ `LANGS` thì
+  `app/src/i18n/i18n.test.ts` đỏ; thiếu khoá từ điển hay thiếu `Record<Lang, …>` thì tsc đỏ.
+* **Đừng chép `t.…` hay trải `...butChi.x` ra hằng số cấp module.** Đổi ngôn ngữ là ghi đè `t` /
+  `butChi` tại chỗ rồi dựng lại cây — bản đã chép kẹt ở ngôn ngữ cũ. Và thay object, đừng sửa bên
+  trong: RN đóng băng style đã truyền qua prop (bản dev ném lỗi).
 * **Luật pool nằm trong `request_comfort()`, không nằm trong app.** Đổi cách chọn Comfort thì viết
   migration, đừng sửa client.
 * **`received_comforts.entry_id` chỉ tồn tại trên máy.** Server không biết Comfort nào thuộc Entry

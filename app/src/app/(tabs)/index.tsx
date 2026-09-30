@@ -12,6 +12,7 @@ import {
   type Attachment,
   type Entry,
 } from '@/db';
+import { t } from '@/i18n';
 import { album, butChi, space } from '@/theme';
 import { ChanMan, GocDan, nhanNgay, NutChinh, TamEntry, type TrangThai } from '@/ui';
 
@@ -66,15 +67,13 @@ export default function Timeline() {
     <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView ref={cuon} contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          Những lần đã khóc
+          {t.timeline.tieuDe}
         </Text>
 
         {nhom.length === 0 ? (
           <View style={s.khungCho}>
             <GocDan />
-            <Text style={[butChi.chuThich, s.chuCho]}>
-              Chưa có gì ở đây. Khi nào muốn ghi thì ghi, không thì thôi.
-            </Text>
+            <Text style={[butChi.chuThich, s.chuCho]}>{t.timeline.trong}</Text>
           </View>
         ) : (
           nhom.map((ngayNhom, i) => {
@@ -114,7 +113,7 @@ export default function Timeline() {
       </ScrollView>
 
       <ChanMan>
-        <NutChinh nhan="Ghi lại nhật ký" onPress={() => router.push('/new')} />
+        <NutChinh nhan={t.timeline.ghi} onPress={() => router.push('/new')} />
       </ChanMan>
     </SafeAreaView>
   );

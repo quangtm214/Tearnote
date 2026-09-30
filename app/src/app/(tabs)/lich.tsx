@@ -4,6 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { listEntries, type Entry } from '@/db';
+import { t } from '@/i18n';
 import { mucMau, NGUONG, tongTheoNgay } from '@/lich';
 import { album, butChi, space, text, touch } from '@/theme';
 import { bong, ChanMan } from '@/ui';
@@ -12,9 +13,8 @@ const NGAY = Array.from({ length: 31 }, (_, i) => i + 1);
 /** "1–2" … "10+", suy từ NGUONG để chú thích không lệch ngưỡng. */
 const NHAN_MUC = NGUONG.map((n, i) => (i === NGUONG.length - 1 ? `${n}+` : `${n}–${NGUONG[i + 1] - 1}`));
 /** Cùng các mức, viết thành lời cho screen reader — không đoán được giọng đọc xử lý "–" và "+". */
-const DOC_MUC = NGUONG.map((n, i) =>
-  i === NGUONG.length - 1 ? `từ ${n} trở lên` : `${n} đến ${NGUONG[i + 1] - 1}`,
-);
+const docMuc = () =>
+  NGUONG.map((n, i) => (i === NGUONG.length - 1 ? t.lich.muc(n) : t.lich.muc(n, NGUONG[i + 1] - 1)));
 
 /**
  * Bảng cường độ cả năm: 12 cột tháng × 31 hàng ngày, màu theo tổng cường độ trong ngày.
@@ -37,13 +37,13 @@ export default function Lich() {
     <SafeAreaView style={s.man} edges={['top']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          Lịch
+          {t.lich.tieuDe}
         </Text>
 
         <Pressable
           onPress={() => setMoChon(true)}
           accessibilityRole="button"
-          accessibilityLabel={`Năm ${nam}, chọn năm khác`}
+          accessibilityLabel={t.lich.chonNam(nam)}
           style={({ pressed }) => [s.chonNam, pressed && s.nhan]}
         >
           <Text style={s.chuNam}>{nam} ▾</Text>
@@ -51,9 +51,9 @@ export default function Lich() {
 
         <View style={s.bang}>
           <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-            <Text style={[s.nhanCot, s.nhanHangRong]}> </Text>
+            <Text style={[butChi.chuThich, s.nhanCot, s.nhanHangRong]}> </Text>
             {NGAY.map((d) => (
-              <Text key={d} style={s.nhanHang}>
+              <Text key={d} style={[butChi.chuThich, s.nhanHang]}>
                 {d}
               </Text>
             ))}
@@ -69,12 +69,12 @@ export default function Lich() {
                 accessible
                 accessibilityLabel={
                   coKhoc.length
-                    ? `Tháng ${m + 1}: khóc ${coKhoc.length} ngày. Ngày nặng nhất, cường độ cộng lại là ${Math.max(...coKhoc)}.`
-                    : `Tháng ${m + 1}: không có ngày nào khóc.`
+                    ? t.lich.thang(m + 1, coKhoc.length, Math.max(...coKhoc))
+                    : t.lich.thangTrong(m + 1)
                 }
               >
-                <Text style={s.nhanCot} numberOfLines={1}>
-                  T{m + 1}
+                <Text style={[butChi.chuThich, s.nhanCot]} numberOfLines={1}>
+                  {t.lich.cot(m + 1)}
                 </Text>
                 {thang.map((t, d) => (
                   // Ngày không tồn tại (30/2…) không tô gì, khác ô trống của ngày có thật.
@@ -88,7 +88,7 @@ export default function Lich() {
         <View
           style={s.chuGiai}
           accessible
-          accessibilityLabel={`Màu đậm dần theo tổng cường độ trong ngày: ${DOC_MUC.join(', ')}`}
+          accessibilityLabel={t.lich.chuGiai(docMuc())}
         >
           {NHAN_MUC.map((nhan, i) => (
             <View key={nhan} style={s.oGiai}>
@@ -107,7 +107,7 @@ export default function Lich() {
             style={StyleSheet.absoluteFill}
             onPress={() => setMoChon(false)}
             accessibilityRole="button"
-            accessibilityLabel="Đóng"
+            accessibilityLabel={t.lich.dong}
           />
           <View style={s.tamChon}>
             <ScrollView>
@@ -148,10 +148,10 @@ const s = StyleSheet.create({
 
   bang: { flexDirection: 'row', gap: KHE },
   cot: { flex: 1, gap: KHE },
-  nhanCot: { ...butChi.chuThich, fontSize: 14, lineHeight: 20, color: album.butChi, textAlign: 'center' },
+  // Đi sau butChi.chuThich trong mảng style: butChi đổi họ chữ theo ngôn ngữ, không trải vào đây được.
+  nhanCot: { fontSize: 14, lineHeight: 20, color: album.butChi, textAlign: 'center' },
   nhanHangRong: { width: 20 },
   nhanHang: {
-    ...butChi.chuThich,
     fontSize: 14,
     lineHeight: O,
     height: O,

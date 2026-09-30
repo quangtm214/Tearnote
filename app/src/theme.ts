@@ -1,5 +1,8 @@
+import type { Lang } from './i18n';
+
 /**
- * Token hệ thống của Tearnote. Chỉ hằng số — không component, không context, không hook.
+ * Token hệ thống của Tearnote. Chỉ hằng số — không component, không context, không hook. Ngoại lệ
+ * duy nhất: họ chữ tay của `butChi` đổi theo ngôn ngữ (`datChuTay`).
  *
  * Bối cảnh chi phối mọi giá trị dưới đây: người dùng mở app lúc 2 giờ sáng, vừa khóc xong,
  * cầm máy bằng một tay, trong bóng tối, mắt nhoè. Nền tối là mặc định duy nhất, không có light mode.
@@ -45,20 +48,33 @@ export const album = {
 } as const;
 
 /**
- * Chữ viết tay Patrick Hand (nạp ở _layout) cho tiêu đề và chú thích tiếng Việt. Reflection và
- * nút bấm vẫn là font hệ thống để đọc qua mắt nhoè. Không dùng Yomogi cho tiếng Việt: chữ Latin
- * của nó rộng cố định nên tách chữ có dấu ("l ần"). Yomogi (assets/fonts) để dành cho tiếng Nhật
- * khi có i18n — chưa nạp.
+ * Chữ viết tay (nạp ở _layout) cho tiêu đề và chú thích. Reflection và nút bấm vẫn là font hệ
+ * thống để đọc qua mắt nhoè. Patrick Hand cho tiếng Việt và tiếng Anh; Yomogi cho tiếng Nhật vì
+ * Patrick Hand không có kana. Không dùng Yomogi cho tiếng Việt: chữ Latin của nó rộng cố định nên
+ * tách chữ có dấu ("l ần").
  */
-export const butChi = {
-  tieuDe: { fontFamily: 'PatrickHand', fontSize: 34, lineHeight: 46 },
-  ngay: { fontFamily: 'PatrickHand', fontSize: 22, lineHeight: 33 },
-  chuThich: { fontFamily: 'PatrickHand', fontSize: 19, lineHeight: 29 },
-} as const;
+const CHU_TAY: Record<Lang, string> = { vi: 'PatrickHand', en: 'PatrickHand', ja: 'Yomogi' };
+
+const taoButChi = (fontFamily: string) => ({
+  tieuDe: { fontFamily, fontSize: 34, lineHeight: 46 },
+  ngay: { fontFamily, fontSize: 22, lineHeight: 33 },
+  chuThich: { fontFamily, fontSize: 19, lineHeight: 29 },
+});
+
+export const butChi = taoButChi('PatrickHand');
+
+/**
+ * Chỉ i18n gọi, ngay trước khi dựng lại cây giao diện. Thay cả ba object chứ không sửa bên trong:
+ * RN đóng băng style đã truyền qua prop (bản dev ném lỗi khi sửa). Vì vậy đừng trải `...butChi.x`
+ * vào StyleSheet cấp module — bản trải giữ họ chữ cũ; dùng mảng style `[butChi.x, s.y]`.
+ */
+export function datChuTay(lang: Lang) {
+  Object.assign(butChi, taoButChi(CHU_TAY[lang]));
+}
 
 /**
  * Thang cỡ chữ. Font hệ thống, đúng mặc định của React Native, không khai báo family ở đâu cả.
- * (Nếu sau này thêm font: cần một sans humanist hỗ trợ đủ dấu tiếng Việt và kana tiếng Nhật
+ * (Nếu sau này thêm font cho chữ thân: cần một sans humanist hỗ trợ đủ dấu tiếng Việt và kana tiếng Nhật
  * trong CÙNG một family — ví dụ Noto Sans / Noto Sans JP. Đừng thêm trước khi có màn hình thật
  * để đo, và đừng dùng hai family cho ba ngôn ngữ vì nhịp chữ sẽ lệch giữa các locale.)
  *

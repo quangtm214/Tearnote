@@ -3,15 +3,16 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HOTLINES_FALLBACK, type Hotline } from '@/hotlines';
+import { ngonNgu, t, type Lang } from '@/i18n';
 import { album, butChi, space, text, touch } from '@/theme';
 import { bong, DongLoi, NutDen } from '@/ui';
 
 /** Màn này phải chạy khi máy bay bật: chỉ đọc danh sách đóng gói sẵn, không gọi mạng. */
-const TEN_NUOC: Record<string, string> = {
-  VN: 'Việt Nam',
-  JP: 'Nhật Bản',
-  US: 'Mỹ',
-  GB: 'Anh',
+const TEN_NUOC: Record<string, Record<Lang, string>> = {
+  VN: { vi: 'Việt Nam', en: 'Vietnam', ja: 'ベトナム' },
+  JP: { vi: 'Nhật Bản', en: 'Japan', ja: '日本' },
+  US: { vi: 'Mỹ', en: 'United States', ja: 'アメリカ' },
+  GB: { vi: 'Anh', en: 'United Kingdom', ja: 'イギリス' },
 };
 
 const nhomTheoNuoc = (ds: Hotline[]): [string, Hotline[]][] => {
@@ -36,31 +37,30 @@ const mo = (url: string) => Linking.openURL(url).catch(() => {});
  */
 export default function Help() {
   const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
+  const l = ngonNgu();
 
   return (
     <SafeAreaView style={s.man} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          Cần trợ giúp ngay
+          {t.chung.canTroGiup}
         </Text>
-        <Text style={s.moDau}>
-          Nếu bạn hoặc ai đó đang gặp nguy hiểm ngay lúc này, gọi cấp cứu.
-        </Text>
+        <Text style={s.moDau}>{t.troGiup.moDau}</Text>
 
         {nhomTheoNuoc(HOTLINES_FALLBACK).map(([nuoc, ds]) => (
           <View key={nuoc}>
             <Text style={[butChi.ngay, s.nuoc]} accessibilityRole="header">
-              {TEN_NUOC[nuoc] ?? nuoc}
+              {TEN_NUOC[nuoc]?.[l] ?? nuoc}
             </Text>
             {ds.map(({ name, hours, phone, url }) => (
-              <View key={name} style={s.tam}>
-                <Text style={s.ten}>{name}</Text>
-                {hours ? <Text style={s.phu}>{hours}</Text> : null}
+              <View key={name.vi} style={s.tam}>
+                <Text style={s.ten}>{name[l]}</Text>
+                {hours ? <Text style={s.phu}>{hours[l]}</Text> : null}
                 {phone ? (
                   <View style={s.nutGoi}>
                     <NutDen
-                      nhan={`Gọi ${phone}`}
-                      accessibilityLabel={`Gọi ${name}, số ${docSo(phone)}`}
+                      nhan={t.troGiup.goi(phone)}
+                      accessibilityLabel={t.troGiup.goiA11y(name[l], docSo(phone))}
                       onPress={() => mo(`tel:${phone.replace(/\s/g, '')}`)}
                     />
                   </View>
@@ -69,7 +69,7 @@ export default function Help() {
                   <Pressable
                     style={({ pressed }) => [s.web, pressed && s.nhan]}
                     accessibilityRole="link"
-                    accessibilityLabel={`Mở trang web ${name}`}
+                    accessibilityLabel={t.troGiup.moWeb(name[l])}
                     onPress={() => mo(url)}
                   >
                     <Text style={s.chuWeb}>{url.replace(/^https?:\/\//, '')}</Text>
@@ -80,11 +80,8 @@ export default function Help() {
           </View>
         ))}
 
-        <Text style={[s.phu, s.cuoi]}>
-          Danh sách có sẵn trong máy, mở được cả khi không có mạng. Số nào không gọi được thì thử
-          số khác.
-        </Text>
-        <DongLoi nhan="Quay lại" onPress={thoat} />
+        <Text style={[s.phu, s.cuoi]}>{t.troGiup.cuoi}</Text>
+        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
       </ScrollView>
     </SafeAreaView>
   );

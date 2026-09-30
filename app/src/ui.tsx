@@ -6,7 +6,7 @@ import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'rea
 import Svg, { ClipPath, Defs, Path } from 'react-native-svg';
 
 import type { Attachment, Entry } from './db';
-import { nhanTags } from './tags';
+import { nhanTags, t } from './i18n';
 import { album, butChi, space, text, touch } from './theme';
 
 /**
@@ -60,33 +60,35 @@ export function Giot({ n }: { n: number }) {
 }
 
 /**
- * Thời lượng ước lượng, bỏ qua được (null). Người dùng chọn một khoảng chứ không đo, nên
- * tấm Entry hiện lại đúng nhãn đã chọn — không khẳng định "60 phút" khi họ chỉ nói "lâu hơn".
+ * Thời lượng ước lượng (phút), bỏ qua được (null). Người dùng chọn một khoảng chứ không đo, nên
+ * tấm Entry hiện lại đúng nhãn đã chọn (`t.thoiLuong`) — không khẳng định "60 phút" khi họ chỉ nói
+ * "lâu hơn".
  */
-export const THOI_LUONG: { nhan: string; phut: number | null }[] = [
-  { nhan: 'Không nhớ', phut: null },
-  { nhan: 'Vài phút', phut: 5 },
-  { nhan: '15 phút', phut: 15 },
-  { nhan: 'Nửa tiếng', phut: 30 },
-  { nhan: 'Hơn nửa tiếng', phut: 60 },
-];
+export const THOI_LUONG = [null, 5, 15, 30, 60];
 
-const nhanThoiLuong = (phut: number) =>
-  THOI_LUONG.find((t) => t.phut === phut)?.nhan.toLowerCase() ?? `${phut} phút`;
+let dinhDang:
+  | { locale: string; gio: Intl.DateTimeFormat; namNay: Intl.DateTimeFormat; namKhac: Intl.DateTimeFormat }
+  | undefined;
 
-export const gio = new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+/** Formatter theo ngôn ngữ đang dùng; tạo lại khi đổi ngôn ngữ, không tạo mỗi lần gọi. */
+function dd() {
+  if (dinhDang?.locale !== t.locale) {
+    const ngay = { weekday: 'long', day: 'numeric', month: 'long' } as const;
+    dinhDang = {
+      locale: t.locale,
+      gio: new Intl.DateTimeFormat(t.locale, { hour: '2-digit', minute: '2-digit', hour12: false }),
+      namNay: new Intl.DateTimeFormat(t.locale, ngay),
+      namKhac: new Intl.DateTimeFormat(t.locale, { ...ngay, year: 'numeric' }),
+    };
+  }
+  return dinhDang;
+}
 
-const ngayNamNay = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
-const ngayNamKhac = new Intl.DateTimeFormat('vi-VN', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+export const nhanGio = (ms: number) => dd().gio.format(ms);
 
 /** "Thứ Bảy, 26 tháng 9"; khác năm nay thì thêm năm, để hai đêm ở hai năm không trùng tên. */
 export const nhanNgay = (ms: number) =>
-  (new Date(ms).getFullYear() === new Date().getFullYear() ? ngayNamNay : ngayNamKhac).format(ms);
+  (new Date(ms).getFullYear() === new Date().getFullYear() ? dd().namNay : dd().namKhac).format(ms);
 
 /** Trạng thái Comfort của một tấm: chưa xin thì không có gì kẹp vào. */
 export type TrangThai = 'kep' | 'camOn' | undefined;
@@ -110,13 +112,13 @@ export function TamEntry({
   const anh = dk.filter((d) => d.kind === 'image').map((d) => d.uri);
   // Không có Reflection thì Tag đã là thân tấm — chú thích không lặp lại.
   const phan = [
-    gio.format(e.occurredAt),
-    e.durationMin !== null && nhanThoiLuong(e.durationMin),
+    nhanGio(e.occurredAt),
+    e.durationMin !== null && t.thoiLuong(e.durationMin).toLowerCase(),
     e.reflection && nhanTag,
-    anh.length > 0 && `${anh.length} ảnh`,
-    dk.some((d) => d.kind === 'audio') && 'ghi âm',
+    anh.length > 0 && t.tam.anh(anh.length),
+    dk.some((d) => d.kind === 'audio') && t.tam.ghiAm,
   ].filter(Boolean);
-  const nhanComfort = tt === 'kep' ? 'có một lời kẹp ở đây' : tt === 'camOn' ? 'đã cảm ơn' : null;
+  const nhanComfort = tt === 'kep' ? t.tam.kep : tt === 'camOn' ? t.chung.daCamOn : null;
   return (
     <View style={[s.oTam, nhanComfort ? s.duoiKep : null]}>
       <Pressable
@@ -126,8 +128,8 @@ export function TamEntry({
         accessibilityLabel={[
           e.reflection || nhanTag,
           ...phan,
-          `cường độ ${e.intensity} trên 5`,
-          tt === 'kep' ? 'có lời từ người lạ' : tt === 'camOn' ? 'có lời từ người lạ, đã cảm ơn' : null,
+          t.chung.cuongDo(e.intensity),
+          tt === 'kep' ? t.tam.coLoi : tt === 'camOn' ? t.tam.coLoiCamOn : null,
         ]
           .filter(Boolean)
           .join(', ')}
@@ -192,13 +194,12 @@ export function NgheLai({ uri }: { uri: string }) {
     player.play();
   }
 
-  const nhan = st.playing ? 'Dừng' : 'Nghe lại';
-  const dai = Math.round(st.duration);
+  const nhan = st.playing ? t.tam.dung : t.tam.nghe;
   return (
     <Pressable
       onPress={bam}
       accessibilityRole="button"
-      accessibilityLabel={`${nhan} ghi âm, dài ${dai >= 60 ? `${Math.floor(dai / 60)} phút ` : ''}${dai % 60} giây`}
+      accessibilityLabel={t.tam.ngheA11y(nhan, Math.round(st.duration))}
       style={({ pressed }) => [s.nghe, pressed && s.nhac]}
     >
       <MaterialCommunityIcons name={st.playing ? 'pause' : 'play'} size={24} color={album.chu} />
@@ -267,8 +268,8 @@ export function ChanMan({ children }: { children?: ReactNode }) {
     <View style={s.chanMan}>
       {children}
       <NutDen
-        nhan="Cần trợ giúp ngay"
-        accessibilityHint="Số đường dây nóng, mở được cả khi không có mạng"
+        nhan={t.chung.canTroGiup}
+        accessibilityHint={t.chung.troGiupGoiY}
         onPress={() => router.push('/help')}
       />
     </View>

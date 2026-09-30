@@ -30,18 +30,22 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Tearnote dùng micro để bạn ghi âm kèm một lần khóc. Đoạn ghi âm chỉ nằm trong máy.",
+          "microphonePermission": "Tearnote uses the microphone so you can add a voice note to a cry. The recording stays on your phone.",
           "enableBackgroundPlayback": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Tearnote mở thư viện ảnh để bạn chọn ảnh kèm một lần khóc. Ảnh chỉ nằm trong máy.",
-          "cameraPermission": "Tearnote dùng camera để bạn chụp ảnh kèm một lần khóc. Ảnh chỉ nằm trong máy."
+          "photosPermission": "Tearnote opens your photo library so you can add photos to a cry. Photos stay on your phone.",
+          "cameraPermission": "Tearnote uses the camera so you can take a photo for a cry. Photos stay on your phone."
         }
       ]
     ],
+    "locales": {
+      "vi": "./locales/vi.json",
+      "ja": "./locales/ja.json"
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

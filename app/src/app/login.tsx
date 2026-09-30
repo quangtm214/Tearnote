@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { t } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, butChi, space, text, touch } from '@/theme';
 import { ChanMan, DongLoi, NutChinh } from '@/ui';
@@ -38,7 +39,7 @@ export default function LoginScreen() {
     // Đã có session thật thì màn này hết việc — trả người dùng về chỗ họ đến.
     if (tao === 'xong') return thoat();
     if (tao !== 'xacMinh') return;
-    const msg = 'Đã gửi thư xác minh tới email của bạn. Xác minh xong thì đăng nhập ở đây.';
+    const msg = t.dangNhap.daGuiXacMinh;
     if (emailMoi) setEmail(emailMoi);
     setLoi(null);
     setThongBao(msg);
@@ -51,17 +52,17 @@ export default function LoginScreen() {
     setThongBao(null);
 
     if (!email.includes('@') || matKhau.length < 6) {
-      baoLoi('Cần một email hợp lệ và mật khẩu ít nhất 6 ký tự.');
+      baoLoi(t.chung.loiEmail);
       return;
     }
 
     setDangChay(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password: matKhau });
-      if (error) return baoLoi('Không đăng nhập được. Kiểm tra lại email, mật khẩu và kết nối mạng.');
+      if (error) return baoLoi(t.dangNhap.loi);
       thoat();
     } catch {
-      baoLoi('Không kết nối được. Kiểm tra mạng rồi thử lại.');
+      baoLoi(t.chung.loiMang);
     } finally {
       setDangChay(false);
     }
@@ -72,42 +73,39 @@ export default function LoginScreen() {
       <KeyboardAvoidingView style={s.man} behavior="padding">
         <ScrollView contentContainerStyle={s.noiDung} keyboardShouldPersistTaps="handled">
           <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            Đăng nhập
+            {t.chung.dangNhap}
           </Text>
 
-          <Text style={s.giaiThich}>
-            Viết cho người lạ thì cần đăng nhập, để giữ an toàn cho người đọc. Người đọc không bao
-            giờ thấy email của bạn. Ghi lại những lần khóc thì không cần.
-          </Text>
+          <Text style={s.giaiThich}>{t.dangNhap.giaiThich}</Text>
 
-          <Text style={s.nhan}>Email</Text>
+          <Text style={s.nhan}>{t.chung.email}</Text>
           <TextInput
             style={s.o}
             value={email}
             onChangeText={setEmail}
-            accessibilityLabel="Email"
+            accessibilityLabel={t.chung.email}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
             textContentType="emailAddress"
             autoComplete="email"
-            placeholder="ban@vidu.com"
+            placeholder={t.chung.emailMau}
             placeholderTextColor={album.butChi}
             selectionColor={album.butChi}
             editable={!dangChay}
           />
 
-          <Text style={s.nhan}>Mật khẩu</Text>
+          <Text style={s.nhan}>{t.chung.matKhau}</Text>
           <TextInput
             style={s.o}
             value={matKhau}
             onChangeText={setMatKhau}
-            accessibilityLabel="Mật khẩu"
+            accessibilityLabel={t.chung.matKhau}
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry
             autoComplete="password"
-            placeholder="Ít nhất 6 ký tự"
+            placeholder={t.chung.matKhauGoiY}
             placeholderTextColor={album.butChi}
             selectionColor={album.butChi}
             editable={!dangChay}
@@ -116,10 +114,10 @@ export default function LoginScreen() {
           {loi ? <Text style={s.loi}>{loi}</Text> : null}
           {thongBao ? <Text style={s.loi}>{thongBao}</Text> : null}
 
-          <NutChinh nhan="Đăng nhập" onPress={dangNhap} dangChay={dangChay} />
-          <DongLoi nhan="Tạo tài khoản mới" onPress={() => router.push('/register')} />
+          <NutChinh nhan={t.chung.dangNhap} onPress={dangNhap} dangChay={dangChay} />
+          <DongLoi nhan={t.dangNhap.taoMoi} onPress={() => router.push('/register')} />
 
-          <DongLoi nhan="Để sau" onPress={thoat} />
+          <DongLoi nhan={t.dangNhap.deSau} onPress={thoat} />
         </ScrollView>
         <ChanMan />
       </KeyboardAvoidingView>

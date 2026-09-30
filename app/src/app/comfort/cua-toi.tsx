@@ -3,8 +3,9 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { nhanTags, t } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
-import { nhanTags, type TagId } from '@/tags';
+import type { TagId } from '@/tags';
 import { album, butChi, space, text, touch } from '@/theme';
 import { bong, ChanMan, DongLoi } from '@/ui';
 
@@ -22,13 +23,6 @@ type ComfortCuaToi = {
   status: 'pending' | 'approved' | 'rejected' | 'retracted';
 };
 
-const NHAN_TRANG_THAI: Record<ComfortCuaToi['status'], string> = {
-  pending: 'Đang chờ duyệt',
-  approved: 'Đã duyệt',
-  rejected: 'Không được gửi đi',
-  retracted: 'Đã thu hồi',
-};
-
 export default function ComfortCuaToi() {
   // null = đang tải; 'chuaDangNhap' tách khỏi danh sách rỗng — RLS trả [] cho cả hai.
   const [ds, setDs] = useState<ComfortCuaToi[] | 'chuaDangNhap' | null>(null);
@@ -43,7 +37,7 @@ export default function ComfortCuaToi() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      setLoi('Chưa lấy được danh sách. Kiểm tra mạng rồi thử lại.');
+      setLoi(t.cuaToi.loiTai);
       setDs([]);
       return;
     }
@@ -60,15 +54,10 @@ export default function ComfortCuaToi() {
 
   // Thu hồi không hoàn tác được (RLS chỉ cho đổi sang 'retracted'), nên hỏi lại một lần.
   function hoiThuHoi(id: string) {
-    Alert.alert(
-      'Thu hồi lời này?',
-      'Lời này sẽ không tới tay thêm ai nữa. Ai đã nhận thì vẫn giữ được. ' +
-        'Thu hồi rồi không mở lại được.',
-      [
-        { text: 'Giữ lại', style: 'cancel' },
-        { text: 'Thu hồi', style: 'destructive', onPress: () => void thuHoi(id) },
-      ],
-    );
+    Alert.alert(t.cuaToi.hoiThuHoi, t.cuaToi.hoiThuHoiPhu, [
+      { text: t.chung.giuLai, style: 'cancel' },
+      { text: t.cuaToi.thuHoi, style: 'destructive', onPress: () => void thuHoi(id) },
+    ]);
   }
 
   async function thuHoi(id: string) {
@@ -77,7 +66,7 @@ export default function ComfortCuaToi() {
     const { error } = await supabase.from('comforts').update({ status: 'retracted' }).eq('id', id);
     setDangThuHoi(null);
     if (error) {
-      setLoi('Chưa thu hồi được. Kiểm tra mạng rồi thử lại.');
+      setLoi(t.cuaToi.loiThuHoi);
       return;
     }
     await nap();
@@ -89,24 +78,24 @@ export default function ComfortCuaToi() {
     <SafeAreaView style={s.man} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={s.cuon}>
         <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          Lời bạn đã viết
+          {t.chung.loiDaViet}
         </Text>
 
         {ds === null ? (
-          <ActivityIndicator color={album.butChi} accessibilityLabel="Đang tải" />
+          <ActivityIndicator color={album.butChi} accessibilityLabel={t.chung.dangTai} />
         ) : ds === 'chuaDangNhap' ? (
           <>
-            <Text style={s.giaiThich}>Lời bạn viết được giữ theo tài khoản.</Text>
-            <DongLoi nhan="Đăng nhập để xem" onPress={() => router.push('/login')} />
+            <Text style={s.giaiThich}>{t.cuaToi.theoTaiKhoan}</Text>
+            <DongLoi nhan={t.cuaToi.dangNhapXem} onPress={() => router.push('/login')} />
           </>
         ) : ds.length === 0 && !loi ? (
-          <Text style={s.giaiThich}>Chưa có lời nào.</Text>
+          <Text style={s.giaiThich}>{t.cuaToi.trong}</Text>
         ) : (
           ds.map((c) => (
             <View key={c.id} style={s.kep}>
               <Text style={s.than}>{c.body}</Text>
               <Text style={[butChi.chuThich, s.phu]}>
-                {nhanTags(c.tags)} · {NHAN_TRANG_THAI[c.status]}
+                {nhanTags(c.tags)} · {t.cuaToi.trangThai[c.status]}
               </Text>
               {/* Thu hồi rồi thì thôi; bị từ chối cũng không còn trong pool để mà thu. */}
               {c.status === 'pending' || c.status === 'approved' ? (
@@ -115,10 +104,10 @@ export default function ComfortCuaToi() {
                   onPress={() => hoiThuHoi(c.id)}
                   disabled={dangThuHoi === c.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`Thu hồi lời: ${c.body.slice(0, 40)}`}
-                  accessibilityHint="Không hoàn tác được">
+                  accessibilityLabel={t.cuaToi.thuHoiA11y(c.body.slice(0, 40))}
+                  accessibilityHint={t.cuaToi.khongHoanTac}>
                   <Text style={s.chuThuHoi}>
-                    {dangThuHoi === c.id ? 'Đang thu hồi…' : 'Thu hồi'}
+                    {dangThuHoi === c.id ? t.cuaToi.dangThuHoi : t.cuaToi.thuHoi}
                   </Text>
                 </Pressable>
               ) : null}
@@ -129,11 +118,11 @@ export default function ComfortCuaToi() {
         {loi ? (
           <>
             <Text style={s.loi}>{loi}</Text>
-            <DongLoi nhan="Thử lại" onPress={() => void nap()} />
+            <DongLoi nhan={t.cuaToi.thuLai} onPress={() => void nap()} />
           </>
         ) : null}
 
-        <DongLoi nhan="Quay lại" onPress={thoat} />
+        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
       </ScrollView>
       <ChanMan />
     </SafeAreaView>

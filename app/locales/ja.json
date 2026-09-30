@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSMicrophoneUsageDescription": "泣いたことの記録に録音を添えるため、マイクを使います。録音はこの端末の中だけに保存されます。",
+    "NSPhotoLibraryUsageDescription": "泣いたことの記録に写真を添えるため、写真ライブラリを開きます。写真はこの端末の中だけに保存されます。",
+    "NSCameraUsageDescription": "泣いたことの記録に添える写真を撮るため、カメラを使います。写真はこの端末の中だけに保存されます。"
+  }
+}

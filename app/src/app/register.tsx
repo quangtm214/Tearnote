@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { t } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, butChi, space, text, touch } from '@/theme';
 import { ChanMan, DongLoi, NutChinh } from '@/ui';
@@ -39,9 +40,9 @@ export default function RegisterScreen() {
     setLoi(null);
 
     if (!email.includes('@') || matKhau.length < 6) {
-      return baoLoi('Cần một email hợp lệ và mật khẩu ít nhất 6 ký tự.');
+      return baoLoi(t.chung.loiEmail);
     }
-    if (matKhau !== nhapLai) return baoLoi('Hai lần nhập mật khẩu chưa khớp.');
+    if (matKhau !== nhapLai) return baoLoi(t.taoTaiKhoan.khongKhop);
 
     setDangChay(true);
     try {
@@ -52,7 +53,7 @@ export default function RegisterScreen() {
 
       if (phien.session?.user.is_anonymous === true) {
         const { data, error } = await supabase.auth.updateUser({ email, password: matKhau });
-        if (error) return baoLoi(LOI_TAO);
+        if (error) return baoLoi(t.taoTaiKhoan.loiTao);
         // updateUser không bao giờ trả session. Còn chờ xác minh thì email mới nằm ở new_email;
         // đã đổi ngay (dự án tắt xác minh) thì làm mới JWT để claim is_anonymous hết là true —
         // không thì RLS vẫn coi đây là tài khoản ẩn danh và chặn viết.
@@ -62,11 +63,11 @@ export default function RegisterScreen() {
       }
 
       const { data, error } = await supabase.auth.signUp({ email, password: matKhau });
-      if (error) return baoLoi(LOI_TAO);
+      if (error) return baoLoi(t.taoTaiKhoan.loiTao);
       // Không có session trả về = dự án đang bật xác minh email.
       veDangNhap(data.session ? 'xong' : 'xacMinh');
     } catch {
-      baoLoi('Không kết nối được. Kiểm tra mạng rồi thử lại.');
+      baoLoi(t.chung.loiMang);
     } finally {
       setDangChay(false);
     }
@@ -77,53 +78,51 @@ export default function RegisterScreen() {
       <KeyboardAvoidingView style={s.man} behavior="padding">
         <ScrollView contentContainerStyle={s.noiDung} keyboardShouldPersistTaps="handled">
           <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            Tạo tài khoản
+            {t.taoTaiKhoan.tieuDe}
           </Text>
 
-          <Text style={s.giaiThich}>
-            Tài khoản chỉ để viết cho người lạ. Người đọc không bao giờ thấy email của bạn.
-          </Text>
+          <Text style={s.giaiThich}>{t.taoTaiKhoan.giaiThich}</Text>
 
-          <Text style={s.nhan}>Email</Text>
+          <Text style={s.nhan}>{t.chung.email}</Text>
           <TextInput
             style={s.o}
             value={email}
             onChangeText={setEmail}
-            accessibilityLabel="Email"
+            accessibilityLabel={t.chung.email}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
             textContentType="emailAddress"
             autoComplete="email"
-            placeholder="ban@vidu.com"
+            placeholder={t.chung.emailMau}
             placeholderTextColor={album.butChi}
             selectionColor={album.butChi}
             editable={!dangChay}
           />
 
-          <Text style={s.nhan}>Mật khẩu</Text>
+          <Text style={s.nhan}>{t.chung.matKhau}</Text>
           <TextInput
             style={s.o}
             value={matKhau}
             onChangeText={setMatKhau}
-            accessibilityLabel="Mật khẩu"
+            accessibilityLabel={t.chung.matKhau}
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry
             textContentType="newPassword"
             autoComplete="new-password"
-            placeholder="Ít nhất 6 ký tự"
+            placeholder={t.chung.matKhauGoiY}
             placeholderTextColor={album.butChi}
             selectionColor={album.butChi}
             editable={!dangChay}
           />
 
-          <Text style={s.nhan}>Nhập lại mật khẩu</Text>
+          <Text style={s.nhan}>{t.taoTaiKhoan.nhapLai}</Text>
           <TextInput
             style={s.o}
             value={nhapLai}
             onChangeText={setNhapLai}
-            accessibilityLabel="Nhập lại mật khẩu"
+            accessibilityLabel={t.taoTaiKhoan.nhapLai}
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry
@@ -135,17 +134,14 @@ export default function RegisterScreen() {
 
           {loi ? <Text style={s.loi}>{loi}</Text> : null}
 
-          <NutChinh nhan="Tạo tài khoản" onPress={tao} dangChay={dangChay} />
-          <DongLoi nhan="Đã có tài khoản? Đăng nhập" onPress={() => router.back()} />
+          <NutChinh nhan={t.taoTaiKhoan.tieuDe} onPress={tao} dangChay={dangChay} />
+          <DongLoi nhan={t.taoTaiKhoan.daCo} onPress={() => router.back()} />
         </ScrollView>
         <ChanMan />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const LOI_TAO =
-  'Không tạo được tài khoản. Có thể email này đã có tài khoản — thử Đăng nhập. Hoặc kiểm tra mạng.';
 
 const s = StyleSheet.create({
   man: { flex: 1, backgroundColor: album.trang },
