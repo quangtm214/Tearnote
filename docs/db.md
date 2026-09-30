@@ -218,8 +218,10 @@ Nguồn sự thật. Tồn tại kể cả khi không có mạng, không có tà
 | `id` | text | PK | |
 | `entry_id` | text | not null, FK → `entries` cascade | |
 | `kind` | text | not null, `image` \| `audio` | |
-| `path` | text | not null | Đường dẫn file trên máy |
+| `path` | text | not null | Tương đối so với thư mục document của app: `attachments/<id>.<đuôi>`. Không lưu đường dẫn tuyệt đối — iOS đổi đường dẫn container sau mỗi lần cập nhật app |
 | `remote` | text | | Đường dẫn Storage, `null` nếu chưa sync |
+
+Tối đa 3 ảnh và 1 ghi âm ≤ 5 phút mỗi Entry — chỉ app ép (`app/src/app/new.tsx`), không có CHECK: SQLite không đếm qua bảng được trong CHECK. File từ picker / máy ghi âm nằm trong cache cho tới lúc bấm Lưu; Lưu mới chép vào `attachments/` rồi ghi Entry và các dòng này trong một transaction. Thứ tự ảnh = thứ tự thêm (`rowid`); ảnh đầu là ảnh dán lên tấm ở Timeline.
 
 ## `settings`
 

@@ -1,9 +1,11 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path } from 'react-native-svg';
 
-import type { Entry } from './db';
+import type { Attachment, Entry } from './db';
 import { nhanTags } from './tags';
 import { album, butChi, space, text, touch } from './theme';
 
@@ -90,16 +92,29 @@ export const nhanNgay = (ms: number) =>
 export type TrangThai = 'kep' | 'camOn' | undefined;
 
 /**
- * Tấm Entry. Có `onPress` (Timeline) thì bấm được và cắt ở 6 dòng; không có (màn xem một Entry)
- * thì là tấm để đọc, hiện đủ Reflection.
+ * Tấm Entry. Có `onPress` (Timeline) thì bấm được, cắt ở 6 dòng và chỉ dán ảnh đầu; không có
+ * (màn xem một Entry) thì là tấm để đọc, hiện đủ Reflection và mọi ảnh.
  */
-export function TamEntry({ e, tt, onPress }: { e: Entry; tt?: TrangThai; onPress?: () => void }) {
+export function TamEntry({
+  e,
+  dk = [],
+  tt,
+  onPress,
+}: {
+  e: Entry;
+  dk?: Attachment[];
+  tt?: TrangThai;
+  onPress?: () => void;
+}) {
   const nhanTag = nhanTags(e.tags);
+  const anh = dk.filter((d) => d.kind === 'image').map((d) => d.uri);
   // Không có Reflection thì Tag đã là thân tấm — chú thích không lặp lại.
   const phan = [
     gio.format(e.occurredAt),
     e.durationMin !== null && nhanThoiLuong(e.durationMin),
     e.reflection && nhanTag,
+    anh.length > 0 && `${anh.length} ảnh`,
+    dk.some((d) => d.kind === 'audio') && 'ghi âm',
   ].filter(Boolean);
   const nhanComfort = tt === 'kep' ? 'có một lời kẹp ở đây' : tt === 'camOn' ? 'đã cảm ơn' : null;
   return (
@@ -119,6 +134,9 @@ export function TamEntry({ e, tt, onPress }: { e: Entry; tt?: TrangThai; onPress
         style={({ pressed }) => [s.tam, pressed && onPress && s.nhac]}
       >
         <GocDan />
+        {(onPress ? anh.slice(0, 1) : anh).map((uri) => (
+          <AnhTrenTam key={uri} uri={uri} du={!onPress} />
+        ))}
         <Text style={s.than} numberOfLines={onPress ? 6 : undefined}>
           {e.reflection || nhanTag}
         </Text>
@@ -139,6 +157,57 @@ export function TamEntry({ e, tt, onPress }: { e: Entry; tt?: TrangThai; onPress
         )}
       </Pressable>
     </View>
+  );
+}
+
+/**
+ * Ảnh dán trên tấm. Timeline cắt 4:3 cho nhịp đều; tấm để đọc (`du`) giữ đúng tỉ lệ ảnh.
+ * `resize` để Android giải mã ảnh ở cỡ hiển thị, không phải ảnh gốc 12MP.
+ */
+function AnhTrenTam({ uri, du }: { uri: string; du: boolean }) {
+  const [tiLe, setTiLe] = useState(4 / 3);
+  return (
+    <Image
+      source={{ uri }}
+      resizeMethod="resize"
+      onLoad={du ? (ev) => setTiLe(ev.nativeEvent.source.width / ev.nativeEvent.source.height) : undefined}
+      style={[s.anh, { aspectRatio: tiLe }]}
+    />
+  );
+}
+
+/** Giây → "4:05". */
+export const phutGiay = (giay: number) =>
+  `${Math.floor(giay / 60)}:${String(Math.floor(giay % 60)).padStart(2, '0')}`;
+
+/** Nghe lại một đoạn ghi âm: một dải giấy, bấm để nghe / dừng. */
+export function NgheLai({ uri }: { uri: string }) {
+  const player = useAudioPlayer(uri);
+  const st = useAudioPlayerStatus(player);
+
+  async function bam() {
+    if (st.playing) return player.pause();
+    // Nghe hết thì máy phát đứng ở cuối — tua về đầu mới phát lại được.
+    if (st.duration > 0 && st.currentTime >= st.duration - 0.1) await player.seekTo(0);
+    player.play();
+  }
+
+  const nhan = st.playing ? 'Dừng' : 'Nghe lại';
+  const dai = Math.round(st.duration);
+  return (
+    <Pressable
+      onPress={bam}
+      accessibilityRole="button"
+      accessibilityLabel={`${nhan} ghi âm, dài ${dai >= 60 ? `${Math.floor(dai / 60)} phút ` : ''}${dai % 60} giây`}
+      style={({ pressed }) => [s.nghe, pressed && s.nhac]}
+    >
+      <MaterialCommunityIcons name={st.playing ? 'pause' : 'play'} size={24} color={album.chu} />
+      <Text style={s.chuNghe}>{nhan}</Text>
+      <Text style={[butChi.chuThich, s.giayNghe]} importantForAccessibility="no">
+        {st.playing ? `${phutGiay(st.currentTime)} / ` : ''}
+        {phutGiay(st.duration)}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -279,6 +348,8 @@ const s = StyleSheet.create({
     elevation: 10,
   },
   than: { ...text.than, color: album.chu },
+  // Hạ sáng một chút: ảnh chụp sáng rực giữa trang đen lúc 2 giờ sáng là chói.
+  anh: { width: '100%', marginBottom: space.md, opacity: 0.85, backgroundColor: album.trang },
   // Mẩu giấy người lạ kẹp vào: chờm qua góc dán dưới phải, hơi nghiêng, bóng riêng.
   kep: {
     ...bong,
@@ -318,6 +389,19 @@ const s = StyleSheet.create({
   },
   nhat: { opacity: 0.35 },
   chuNutChinh: { ...text.nut, color: album.chu, textAlign: 'center' },
+
+  // Dải giấy trơn, không góc dán — để khỏi lẫn với nút chính ngay bên dưới ở màn ghi.
+  nghe: {
+    ...bong,
+    minHeight: touch.chinh,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    backgroundColor: album.tam,
+  },
+  chuNghe: { ...text.nut, color: album.chu, flex: 1 },
+  giayNghe: { color: album.butChi },
 
   chanMan: {
     paddingHorizontal: space.man,

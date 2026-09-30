@@ -1,3 +1,4 @@
+import { Directory, File, Paths } from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
 import { normalizeTags, type TagId } from './tags';
 
@@ -81,19 +82,60 @@ const UUID_V4 = `select lower(hex(randomblob(4))) || '-' || lower(hex(randomblob
   || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1)
   || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6))) as id`;
 
-export function insertEntry(e: Omit<Entry, 'id'>): string {
-  const id = db.getFirstSync<{ id: string }>(UUID_V4)!.id;
-  db.runSync(
-    `insert into entries (id, occurred_at, duration_min, intensity, tags, reflection)
-     values (?, ?, ?, ?, ?, ?)`,
-    id,
-    e.occurredAt,
-    e.durationMin,
-    e.intensity,
-    JSON.stringify(normalizeTags(e.tags)),
-    e.reflection,
-  );
+const moiId = () => db.getFirstSync<{ id: string }>(UUID_V4)!.id;
+
+/** Ảnh / ghi âm của một Entry. `uri` là file:// dùng thẳng được cho Image và máy phát. */
+export type Attachment = { kind: 'image' | 'audio'; uri: string };
+
+/**
+ * `dinhKem` đến từ cache của picker / máy ghi âm — OS dọn cache lúc nào cũng được, nên chép vào
+ * thư mục document trước rồi mới ghi DB. Chép hỏng thì ném lỗi, chưa có dòng nào vào DB.
+ * `path` lưu tương đối: iOS đổi đường dẫn container sau mỗi lần cập nhật app.
+ */
+export function insertEntry(e: Omit<Entry, 'id'>, dinhKem: Attachment[] = []): string {
+  const id = moiId();
+  const thuMuc = new Directory(Paths.document, 'attachments');
+  if (dinhKem.length) thuMuc.create({ idempotent: true });
+  const tep = dinhKem.map((d) => {
+    const nguon = new File(d.uri);
+    const aid = moiId();
+    const ten = aid + nguon.extension;
+    nguon.copySync(new File(thuMuc, ten));
+    return { aid, kind: d.kind, path: `attachments/${ten}` };
+  });
+
+  db.withTransactionSync(() => {
+    db.runSync(
+      `insert into entries (id, occurred_at, duration_min, intensity, tags, reflection)
+       values (?, ?, ?, ?, ?, ?)`,
+      id,
+      e.occurredAt,
+      e.durationMin,
+      e.intensity,
+      JSON.stringify(normalizeTags(e.tags)),
+      e.reflection,
+    );
+    for (const t of tep) {
+      db.runSync(
+        `insert into attachments (id, entry_id, kind, path) values (?, ?, ?, ?)`,
+        t.aid,
+        id,
+        t.kind,
+        t.path,
+      );
+    }
+  });
   return id;
+}
+
+/** Theo thứ tự lúc thêm — ảnh đầu tiên là ảnh dán lên tấm ở Timeline. */
+export function listAttachments(entryId: string): Attachment[] {
+  return db
+    .getAllSync<{ kind: Attachment['kind']; path: string }>(
+      `select kind, path from attachments where entry_id = ? order by rowid`,
+      entryId,
+    )
+    .map((r) => ({ kind: r.kind, uri: new File(Paths.document, r.path).uri }));
 }
 
 export function listEntries(): Entry[] {

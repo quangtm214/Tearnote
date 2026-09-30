@@ -3,7 +3,15 @@ import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getSetting, listEntries, listReceivedComforts, setSetting, type Entry } from '@/db';
+import {
+  getSetting,
+  listAttachments,
+  listEntries,
+  listReceivedComforts,
+  setSetting,
+  type Attachment,
+  type Entry,
+} from '@/db';
 import { album, butChi, space } from '@/theme';
 import { ChanMan, GocDan, nhanNgay, NutChinh, TamEntry, type TrangThai } from '@/ui';
 
@@ -17,6 +25,7 @@ const KHOA_DUNG = 'timeline_dung';
 export default function Timeline() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [trangThai, setTrangThai] = useState<Record<string, TrangThai>>({});
+  const [dinhKem, setDinhKem] = useState<Record<string, Attachment[]>>({});
   const [dung, setDung] = useState<string | null>(null);
   const cuon = useRef<ScrollView>(null);
   const daCuon = useRef(false);
@@ -25,12 +34,15 @@ export default function Timeline() {
     useCallback(() => {
       const es = listEntries();
       const tt: Record<string, TrangThai> = {};
+      const dk: Record<string, Attachment[]> = {};
       for (const e of es) {
         const cs = listReceivedComforts(e.id);
         if (cs.length) tt[e.id] = cs.every((c) => c.thanked) ? 'camOn' : 'kep';
+        dk[e.id] = listAttachments(e.id);
       }
       setEntries(es);
       setTrangThai(tt);
+      setDinhKem(dk);
       setDung(getSetting(KHOA_DUNG));
     }, []),
   );
@@ -87,7 +99,13 @@ export default function Timeline() {
                   {nhanNgay(ngayNhom[0].occurredAt)}
                 </Text>
                 {ngayNhom.map((e) => (
-                  <TamEntry key={e.id} e={e} tt={trangThai[e.id]} onPress={() => moEntry(e.id)} />
+                  <TamEntry
+                    key={e.id}
+                    e={e}
+                    dk={dinhKem[e.id]}
+                    tt={trangThai[e.id]}
+                    onPress={() => moEntry(e.id)}
+                  />
                 ))}
               </View>
             );
