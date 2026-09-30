@@ -130,6 +130,9 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
 * **Đừng chép `t.…` hay trải `...butChi.x` ra hằng số cấp module.** Đổi ngôn ngữ là ghi đè `t` /
   `butChi` tại chỗ rồi dựng lại cây — bản đã chép kẹt ở ngôn ngữ cũ. Và thay object, đừng sửa bên
   trong: RN đóng băng style đã truyền qua prop (bản dev ném lỗi).
+* **Chữ UI mới vào cả ba từ điển, không viết thẳng vào JSX.** Nhánh tách từ trước khi có i18n hay
+  mang chữ Việt cứng vào — `i18n.test.ts` quét `app/src/app/` và `ui.tsx` rồi đỏ. Chữ Anh cứng thì
+  test không bắt được: tự soát khi merge.
 * **Luật pool nằm trong `request_comfort()`, không nằm trong app.** Đổi cách chọn Comfort thì viết
   migration, đừng sửa client.
 * **`received_comforts.entry_id` chỉ tồn tại trên máy.** Server không biết Comfort nào thuộc Entry

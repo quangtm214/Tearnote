@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, readFileSync } from 'fs';
+import { join, relative } from 'path';
 
 import { butChi } from '../theme';
 import { chonNgonNgu, datNgonNgu, LANGS, ngonNgu, t } from './index';
@@ -34,6 +34,30 @@ describe('contract ngôn ngữ', () => {
     const block = sql.match(/create type lang as enum \(([^)]*)\);/)![1];
     const fromSql = [...block.matchAll(/'([a-z]+)'/g)].map((m) => m[1]);
     expect([...fromSql].sort()).toEqual([...LANGS].sort());
+  });
+
+  it('màn hình không viết cứng chữ Việt — chữ UI phải nằm trong từ điển', () => {
+    // Nhánh tách từ trước khi có i18n hay mang chữ Việt thẳng vào JSX: người dùng en/ja sẽ thấy tiếng
+    // Việt mà tsc không báo. Bỏ qua comment và dữ liệu `Record<Lang, …>` (dòng có `vi: `).
+    const src = join(__dirname, '..');
+    const files = [
+      join(src, 'ui.tsx'),
+      ...readdirSync(join(src, 'app'), { recursive: true })
+        .map(String)
+        .filter((f) => f.endsWith('.tsx'))
+        .map((f) => join(src, 'app', f)),
+    ];
+    const chuViet = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/iu;
+    const vietCung = files.flatMap((f) =>
+      readFileSync(f, 'utf8')
+        // Xoá block comment nhưng giữ dòng trống, để số dòng báo ra vẫn đúng.
+        .replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ''))
+        .split(/\r?\n/)
+        .map((dong, i) => ({ dong: dong.replace(/\/\/.*$/, ''), so: i + 1 }))
+        .filter(({ dong }) => chuViet.test(dong) && !/\bvi: /.test(dong))
+        .map(({ dong, so }) => `${relative(src, f)}:${so}: ${dong.trim()}`),
+    );
+    expect(vietCung).toEqual([]);
   });
 });
 
