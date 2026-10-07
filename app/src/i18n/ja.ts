@@ -19,10 +19,10 @@ const ja: TuDien = {
     loiMang: '接続できませんでした。ネットワークを確認して、もう一度お試しください。',
     dangTai: '読み込み中',
     giuLai: '残す',
-    canTroGiup: 'すぐに助けが必要なとき',
+    canTroGiup: '助けが必要なとき',
     troGiupGoiY: '相談窓口の電話番号。オフラインでも開けます',
     daCamOn: 'お礼済み',
-    daDich: '自動翻訳',
+    daDich: '自動翻訳済み',
     cuongDo: (n) => `強さは5段階中${n}`,
     dangNhap: 'ログイン',
     loiDaViet: '書いたことば',
@@ -32,9 +32,11 @@ const ja: TuDien = {
     matKhau: 'パスワード',
     matKhauGoiY: '6文字以上',
     loiEmail: '正しいメールアドレスと、6文字以上のパスワードを入力してください。',
+    thoat: '戻る',
+    xoa: '削除する',
   },
 
-  tab: { index: '日記', viet: '書く', lich: 'カレンダー', settings: '設定' },
+  tab: { index: '日記', viet: '見知らぬ人へ', lich: 'カレンダー', settings: '設定' },
 
   tam: {
     anh: (n) => `写真${n}枚`,
@@ -43,7 +45,7 @@ const ja: TuDien = {
     coLoi: '見知らぬ人からのことばあり',
     coLoiCamOn: '見知らぬ人からのことばあり、お礼済み',
     nghe: '聞く',
-    dung: '止める',
+    dung: '一時停止',
     ngheA11y: (nhan, giay) =>
       `${nhan}、録音、${giay >= 60 ? `${Math.floor(giay / 60)}分` : ''}${giay % 60}秒`,
   },
@@ -70,13 +72,13 @@ const ja: TuDien = {
     ghiNgat: '録音が途中で止まりました。もう一度録音してください。',
     bo: '削除',
     chuaCoCamera: 'Tearnoteはまだカメラを使えません。端末の設定で許可できます。',
-    loiCamera: 'カメラを開けませんでした。',
-    loiThuVien: '写真を開けませんでした。',
+    loiCamera: 'カメラを開けませんでした。もう一度お試しください。',
+    loiThuVien: '写真を開けませんでした。もう一度お試しください。',
     chuaCoMic: 'Tearnoteはまだマイクを使えません。端末の設定で許可できます。',
     dangGhiAm: '録音中',
     loiGhiAm: '録音できませんでした。もう一度お試しください。',
     loiLuu: '写真か録音を保存できませんでした。もう一度「保存する」を押すか、減らしてから保存してください。',
-    tieuDe: 'さっきは、どうでしたか？',
+    tieuDe: 'さっきは、\nどうでしたか？',
     moDau: '全部書かなくても大丈夫です。いつでも保存できます。',
     lucNao: 'いつ？',
     baoLau: 'どのくらい続いた？',
@@ -89,7 +91,7 @@ const ja: TuDien = {
     ghiThemGoiY: '何を書いてもかまいません。読めるのは自分だけです。',
     kem: '写真や録音も残す？',
     kemGioiHan: (anh, phut) =>
-      `写真は${anh}枚まで、録音は${phut}分までのものを1つ。この端末の中だけに保存されます。`,
+      `写真は${anh}枚まで、録音は1つ（${phut}分まで）。この端末の中だけに保存されます。`,
     boAnhHoi: 'この写真を削除しますか？',
     anhSo: (i) => `写真${i}`,
     boAnhGoiY: 'タップするとこの写真を削除します',
@@ -103,11 +105,14 @@ const ja: TuDien = {
     ghiAm: '録音する',
     luu: '保存する',
     thoi: 'やっぱり書かない',
+    thoatHoi: '保存せずに戻りますか？',
+    thoatPhu: '保存していない文章、写真、録音は消えます。',
+    ghiTiep: '続ける',
+    daLuu: '保存しました。',
   },
 
   lich: {
     tieuDe: 'カレンダー',
-    chonNam: (nam) => `${nam}年、ほかの年を選ぶ`,
     // "10月" không vừa ô 22 ở cỡ 14; 12 cột số là đủ hiểu, nhãn đọc cho screen reader vẫn có "月".
     cot: (thang) => String(thang),
     thang: (thang, soNgay, max) =>
@@ -115,7 +120,9 @@ const ja: TuDien = {
     thangTrong: (thang) => `${thang}月：泣いた日はありません。`,
     muc: (tu, den) => (den === undefined ? `${tu}以上` : `${tu}から${den}`),
     chuGiai: (muc) => `1日の強さの合計が大きいほど、色が濃くなります：${muc.join('、')}`,
-    dong: '閉じる',
+    namTruoc: '前の年',
+    namSau: '次の年',
+    tenChuGiai: '1日の強さの合計',
   },
 
   caiDat: {
@@ -144,6 +151,12 @@ const ja: TuDien = {
     camOn: 'ありがとう',
     xin: '見知らぬ人からことばを受け取る',
     daTat: '見知らぬ人からのことばをオフにしています。設定で変更できます。',
+    dangTim: 'ことばを探しています…',
+    xoa: 'この記録を削除する',
+    xoaHoi: 'この記録を削除しますか？',
+    xoaPhu: (coLoi: boolean) =>
+      `文章、写真、録音がこの端末から削除されます。元に戻せません。${coLoi ? 'はさまれていた見知らぬ人からのことばも消えます。' : ''}`,
+    daXoa: '削除しました。',
   },
 
   viet: {
@@ -151,12 +164,13 @@ const ja: TuDien = {
       'ログインの有効期限が切れました。もう一度ログインしてから送ってください。書いた文章は残っています。',
     hetLuot: 'この24時間で5件送りました。今はこれ以上送れません。',
     loiGui: '送れませんでした。文章は残っています。少ししてから、もう一度お試しください。',
-    xongTieuDe: 'ことばを受け取りました',
+    tieuDe: '見知らぬ人への\nことばを書く',
+    xongTieuDe: 'ことばを\n預かりました',
     xongPhu: '確認を経てから、見知らぬ人に届きます。取り下げるときは「設定 → 書いたことば」から。',
     xong: '完了',
     moDau:
       'このことばは、似たようなことで泣いたばかりの見知らぬ人に届きます。お互いに相手が誰かはわかりません。',
-    goiY: 'アドバイスはいりません。自分の助けになったことを。名前、電話番号、SNSは書かないでください。',
+    goiY: 'アドバイスはしなくて大丈夫です。自分の助けになったことを。名前、電話番号、SNSのアカウントは書かないでください。',
     oNhap: '見知らぬ人へのことば',
     oNhapGoiY: 'あのとき聞きたかったことばを。',
     demA11y: (n, max) => `${max}文字中${n}文字`,
@@ -168,6 +182,10 @@ const ja: TuDien = {
       `「送る」を押すと、このことばが確認を経て${noi(khac.map((l) => TEN[l]))}に翻訳され、匿名で見知らぬ人に届くことに同意したことになります。「設定 → 書いたことば」から取り下げられますが、すでに受け取った人の手元には残ります。`,
     dangNhapLai: 'もう一度ログイン',
     gui: '送る',
+    thoatHoi: '送らずに戻りますか？',
+    thoatPhu: 'いま書いていることばは消えます。',
+    vietTiep: '書き続ける',
+    canTag: '上から1つ以上選んでください。',
   },
 
   cuaToi: {
@@ -189,7 +207,8 @@ const ja: TuDien = {
     thuHoiA11y: (dau) => `取り下げる：${dau}`,
     khongHoanTac: '元に戻せません',
     dangThuHoi: '取り下げ中…',
-    thuLai: 'もう一度',
+    thuLai: 'もう一度試す',
+    daThuHoi: '取り下げました。',
   },
 
   dangNhap: {
@@ -209,11 +228,11 @@ const ja: TuDien = {
     giaiThich:
       'アカウントは、見知らぬ人へ書くためだけのものです。読む人にメールアドレスが見えることはありません。',
     nhapLai: 'パスワード（確認）',
-    daCo: 'アカウントをお持ちならログイン',
+    daCo: 'アカウントをお持ちの方はログイン',
   },
 
   troGiup: {
-    moDau: 'あなたや誰かが今まさに危険な状態なら、救急に電話してください。',
+    moDau: '自分や誰かが今まさに危険な状態なら、救急に電話してください。',
     goi: (so) => `${so} に電話`,
     goiA11y: (ten, so) => `${ten}に電話、番号 ${so}`,
     moWeb: (ten) => `${ten}のウェブサイトを開く`,

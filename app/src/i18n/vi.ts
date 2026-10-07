@@ -32,6 +32,8 @@ const vi = {
     matKhau: 'Mật khẩu',
     matKhauGoiY: 'Ít nhất 6 ký tự',
     loiEmail: 'Cần một email hợp lệ và mật khẩu ít nhất 6 ký tự.',
+    thoat: 'Thoát',
+    xoa: 'Xoá',
   },
 
   tab: { index: 'Nhật ký', viet: 'Viết lời', lich: 'Lịch', settings: 'Cài đặt' },
@@ -44,9 +46,9 @@ const vi = {
     coLoi: 'có lời từ người lạ',
     coLoiCamOn: 'có lời từ người lạ, đã cảm ơn',
     nghe: 'Nghe lại',
-    dung: 'Dừng',
+    dung: 'Tạm dừng',
     ngheA11y: (nhan: string, giay: number) =>
-      `${nhan} ghi âm, dài ${giay >= 60 ? `${Math.floor(giay / 60)} phút ` : ''}${giay % 60} giây`,
+      `${nhan} đoạn ghi âm, dài ${giay >= 60 ? `${Math.floor(giay / 60)} phút ` : ''}${giay % 60} giây`,
   },
 
   /** Nhãn thời lượng đã chọn; giá trị lạ (không có trong THOI_LUONG) thì ghi số phút. */
@@ -73,14 +75,14 @@ const vi = {
     ghiNgat: 'Ghi âm bị ngắt giữa chừng. Thử ghi lại.',
     bo: 'Bỏ',
     chuaCoCamera: 'Tearnote chưa được dùng camera. Có thể cho phép trong Cài đặt của máy.',
-    loiCamera: 'Chưa mở được camera.',
-    loiThuVien: 'Chưa mở được thư viện ảnh.',
+    loiCamera: 'Chưa mở được camera. Thử lại.',
+    loiThuVien: 'Chưa mở được thư viện ảnh. Thử lại.',
     chuaCoMic: 'Tearnote chưa được dùng micro. Có thể cho phép trong Cài đặt của máy.',
     dangGhiAm: 'Đang ghi âm',
     loiGhiAm: 'Chưa ghi âm được. Thử lại.',
     loiLuu: 'Chưa lưu được ảnh hoặc ghi âm. Bấm Lưu lại lần nữa, hoặc bỏ bớt rồi lưu.',
     tieuDe: 'Lúc nãy thế nào?',
-    moDau: 'Không cần điền hết. Bấm Lưu lúc nào cũng được.',
+    moDau: 'Không cần điền hết. Bấm Lưu lại lúc nào cũng được.',
     lucNao: 'Lúc nào?',
     baoLau: 'Kéo dài bao lâu?',
     nangDenDau: 'Nặng đến đâu?',
@@ -97,7 +99,7 @@ const vi = {
     boAnhHoi: 'Bỏ ảnh này?',
     anhSo: (i: number) => `Ảnh ${i}`,
     boAnhGoiY: 'Bấm để bỏ ảnh này',
-    dangGhi: (da: string, toiDa: string) => `Đang ghi · ${da} / ${toiDa}`,
+    dangGhi: (da: string, toiDa: string) => `Đang ghi âm · ${da} / ${toiDa}`,
     dungGhi: 'Dừng ghi',
     loiDung: 'Chưa dừng được. Thử lại.',
     boGhiAm: 'Bỏ ghi âm',
@@ -107,11 +109,14 @@ const vi = {
     ghiAm: 'Ghi âm',
     luu: 'Lưu lại',
     thoi: 'Thôi, không ghi nữa',
+    thoatHoi: 'Thoát mà chưa lưu?',
+    thoatPhu: 'Chữ, ảnh và ghi âm chưa lưu sẽ mất.',
+    ghiTiep: 'Ghi tiếp',
+    daLuu: 'Đã lưu.',
   },
 
   lich: {
     tieuDe: 'Lịch',
-    chonNam: (nam: number) => `Năm ${nam}, chọn năm khác`,
     /** Nhãn cột tháng: ô rộng ~22, không được quá 3 ký tự hẹp. */
     cot: (thang: number) => `T${thang}`,
     thang: (thang: number, soNgay: number, max: number) =>
@@ -119,7 +124,9 @@ const vi = {
     thangTrong: (thang: number) => `Tháng ${thang}: không có ngày nào khóc.`,
     muc: (tu: number, den?: number) => (den === undefined ? `từ ${tu} trở lên` : `${tu} đến ${den}`),
     chuGiai: (muc: string[]) => `Màu đậm dần theo tổng cường độ trong ngày: ${muc.join(', ')}`,
-    dong: 'Đóng',
+    namTruoc: 'Năm trước',
+    namSau: 'Năm sau',
+    tenChuGiai: 'Tổng cường độ trong ngày',
   },
 
   caiDat: {
@@ -149,18 +156,25 @@ const vi = {
     camOn: 'Cảm ơn',
     xin: 'Nhận một lời từ người lạ',
     daTat: 'Bạn đã tắt nhận lời từ người lạ. Có thể đổi trong Cài đặt.',
+    dangTim: 'Đang tìm một lời…',
+    xoa: 'Xoá lần khóc này',
+    xoaHoi: 'Xoá lần khóc này?',
+    xoaPhu: (coLoi: boolean) =>
+      `Chữ, ảnh và ghi âm sẽ bị xoá khỏi máy, không lấy lại được.${coLoi ? ' Lời từ người lạ kẹp ở đây cũng mất theo.' : ''}`,
+    daXoa: 'Đã xoá.',
   },
 
   viet: {
-    hetPhien: 'Phiên đăng nhập đã hết. Đăng nhập lại rồi gửi — chữ bạn gõ vẫn còn đây.',
+    hetPhien: 'Phiên đăng nhập đã hết hạn. Đăng nhập lại rồi gửi — chữ bạn gõ vẫn còn đây.',
     hetLuot: 'Bạn đã gửi đủ 5 lời trong 24 giờ qua. Chưa gửi thêm được.',
     loiGui: 'Chưa gửi được. Lời vẫn còn đây — thử gửi lại sau một lát.',
+    tieuDe: 'Viết một lời cho người lạ',
     xongTieuDe: 'Đã nhận lời của bạn',
     xongPhu:
-      'Lời này sẽ được duyệt trước, rồi mới tới tay một người lạ. Muốn rút lại thì vào Cài đặt → Lời bạn đã viết.',
+      'Lời này sẽ được duyệt trước, rồi mới tới tay một người lạ. Muốn thu hồi thì vào Cài đặt → Lời bạn đã viết.',
     xong: 'Xong',
     moDau: 'Lời này sẽ tới một người lạ vừa khóc vì chuyện tương tự. Hai bên không biết nhau.',
-    goiY: 'Kể điều từng giúp bạn, không cần khuyên. Đừng để lại tên, số điện thoại hay mạng xã hội.',
+    goiY: 'Kể điều từng giúp bạn, không cần khuyên. Đừng để lại tên, số điện thoại hay tài khoản mạng xã hội.',
     oNhap: 'Lời cho người lạ',
     oNhapGoiY: 'Viết điều bạn từng muốn nghe.',
     demA11y: (n: number, max: number) => `${n} trên ${max} ký tự`,
@@ -174,6 +188,10 @@ const vi = {
       `Bấm Gửi là bạn đồng ý: lời này được duyệt, dịch sang ${noi(khac.map((l) => TEN[l]))}, rồi gửi ẩn danh tới người lạ. Thu hồi được trong Cài đặt → Lời bạn đã viết; ai đã nhận thì vẫn giữ bản của họ.`,
     dangNhapLai: 'Đăng nhập lại',
     gui: 'Gửi',
+    thoatHoi: 'Thoát mà chưa gửi?',
+    thoatPhu: 'Lời bạn đang viết sẽ mất.',
+    vietTiep: 'Viết tiếp',
+    canTag: 'Chọn ít nhất một chuyện ở trên.',
   },
 
   /** Lời mình đã viết (comfort/cua-toi.tsx). */
@@ -197,6 +215,7 @@ const vi = {
     khongHoanTac: 'Không hoàn tác được',
     dangThuHoi: 'Đang thu hồi…',
     thuLai: 'Thử lại',
+    daThuHoi: 'Đã thu hồi.',
   },
 
   dangNhap: {

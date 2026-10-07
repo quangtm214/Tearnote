@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  deleteEntry,
   getEntry,
   listAttachments,
   listReceivedComforts,
@@ -16,8 +17,19 @@ import {
 } from '@/db';
 import { ngonNgu, t } from '@/i18n';
 import { ensureSession, supabase } from '@/supabase';
-import { album, butChi, space, text, touch } from '@/theme';
-import { bong, ChanMan, DongLoi, NgheLai, nhanNgay, NutChinh, TamEntry } from '@/ui';
+import { album, butChi, space, text } from '@/theme';
+import {
+  ChanMan,
+  DongLoi,
+  HopThoai,
+  NgheLai,
+  nhanNgay,
+  NutChinh,
+  NutPhu,
+  TamEntry,
+  TamLoi,
+  type YeuCauHoi,
+} from '@/ui';
 
 type ComfortRow = { comfort_id: string; body: string; translated: boolean };
 
@@ -32,6 +44,7 @@ export default function EntryComfortScreen() {
   const [dangXin, setDangXin] = useState(false);
   const [choNhan, setChoNhan] = useState(true);
   const [thongBao, setThongBao] = useState<string | null>(null);
+  const [hoi, setHoi] = useState<YeuCauHoi | null>(null);
 
   const nap = useCallback(() => {
     if (!entryId) return;
@@ -53,6 +66,7 @@ export default function EntryComfortScreen() {
     if (!entry || dangXin) return;
     setThongBao(null);
     setDangXin(true);
+    AccessibilityInfo.announceForAccessibility(t.lanKhoc.dangTim);
     try {
       await ensureSession();
       // Lời trả về bằng ngôn ngữ app; pool chỉ gồm lời đã có bản ngôn ngữ đó (docs/db.md).
@@ -96,11 +110,26 @@ export default function EntryComfortScreen() {
     // và supabase-js trả { error } chứ không throw nên try/catch ở đây là thừa.
     markThanked(comfortId);
     nap();
+    AccessibilityInfo.announceForAccessibility(t.chung.daCamOn);
     await supabase.from('deliveries').update({ thanked: true }).eq('comfort_id', comfortId);
   }
 
   const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
   const ghiAm = dk.find((d) => d.kind === 'audio');
+
+  // Xoá thật, không thùng rác, không hoàn tác: câu phụ nói rõ mất những gì.
+  const hoiXoa = () =>
+    entry &&
+    setHoi({
+      cauHoi: t.lanKhoc.xoaHoi,
+      phu: t.lanKhoc.xoaPhu(ds.length > 0),
+      nhanBo: t.chung.xoa,
+      bo: () => {
+        deleteEntry(entry.id);
+        AccessibilityInfo.announceForAccessibility(t.lanKhoc.daXoa);
+        thoat();
+      },
+    });
 
   if (!entryId || !entry) {
     return (
@@ -110,7 +139,7 @@ export default function EntryComfortScreen() {
             {t.lanKhoc.khongThay}
           </Text>
           <Text style={s.giaiThich}>{t.lanKhoc.khongThayPhu}</Text>
-          <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+          <DongLoi icon="arrow-left" nhan={t.chung.quayLai} onPress={thoat} />
         </View>
         <ChanMan />
       </SafeAreaView>
@@ -136,20 +165,15 @@ export default function EntryComfortScreen() {
         ) : (
           ds.map((c) => (
             // Mẩu giấy người lạ kẹp vào trang — cùng tông `kep` với mẩu nhỏ trên Timeline.
-            <View key={c.comfortId} style={s.kep}>
+            <TamLoi key={c.comfortId}>
               <Text style={s.than}>{c.body}</Text>
               {c.translated ? <Text style={[butChi.chuThich, s.phu]}>{t.chung.daDich}</Text> : null}
               {c.thanked ? (
                 <Text style={[butChi.chuThich, s.phu]}>{t.chung.daCamOn}</Text>
               ) : (
-                <Pressable
-                  style={({ pressed }) => [s.nutCamOn, pressed && s.mo]}
-                  onPress={() => camOn(c.comfortId)}
-                  accessibilityRole="button">
-                  <Text style={s.chuCamOn}>{t.lanKhoc.camOn}</Text>
-                </Pressable>
+                <NutPhu nhan={t.lanKhoc.camOn} onPress={() => void camOn(c.comfortId)} />
               )}
-            </View>
+            </TamLoi>
           ))
         )}
 
@@ -158,7 +182,7 @@ export default function EntryComfortScreen() {
         {/* Mỗi Entry một Comfort (ADR 0007), và công tắc tắt nhận thì không còn nút xin ở đâu cả. */}
         {ds.length === 0 && choNhan ? (
           <View style={s.nutXin}>
-            <NutChinh nhan={t.lanKhoc.xin} onPress={xin} dangChay={dangXin} />
+            <NutChinh nhan={t.lanKhoc.xin} onPress={xin} dangChay={dangXin} nhanDangChay={t.lanKhoc.dangTim} />
           </View>
         ) : null}
 
@@ -166,9 +190,13 @@ export default function EntryComfortScreen() {
           <Text style={[s.giaiThich, s.nutXin]}>{t.lanKhoc.daTat}</Text>
         ) : null}
 
-        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+        <View style={s.xoa}>
+          <DongLoi icon="trash-can-outline" nhan={t.lanKhoc.xoa} onPress={hoiXoa} />
+        </View>
+        <DongLoi icon="arrow-left" nhan={t.chung.quayLai} onPress={thoat} />
       </ScrollView>
       <ChanMan />
+      <HopThoai hoi={hoi} onDong={() => setHoi(null)} />
     </SafeAreaView>
   );
 }
@@ -195,21 +223,12 @@ const s = StyleSheet.create({
   man: { flex: 1, backgroundColor: album.trang },
   cuon: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl },
   tieuDe: { color: album.chu, marginBottom: space.lg },
-  nhom: { color: album.butChi, marginTop: space.lg, marginBottom: space.md },
+  // Đáy `lg` để chiếc kẹp nhô 16 trên mẩu lời không chạm nhãn mục.
+  nhom: { color: album.butChi, marginTop: space.lg, marginBottom: space.lg },
   giaiThich: { ...text.than, color: album.butChi },
-  kep: {
-    ...bong,
-    elevation: 6,
-    backgroundColor: album.kep,
-    padding: space.lg,
-    marginBottom: space.lg,
-    gap: space.sm,
-  },
   than: { ...text.than, color: album.chu },
   phu: { color: album.butChi },
-  nutCamOn: { minHeight: touch.toiThieu, alignSelf: 'flex-start', justifyContent: 'center' },
-  chuCamOn: { ...text.nut, color: album.chu },
-  mo: { opacity: 0.6 },
   thongBao: { ...text.than, color: album.chu, marginTop: space.md },
   nutXin: { marginTop: space.lg },
+  xoa: { marginTop: space.lg },
 });

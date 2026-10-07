@@ -40,6 +40,9 @@ export function chonNgonNgu(daLuu: string | null, may: string): Lang {
 const localeMay = () =>
   I18nManager.getConstants().localeIdentifier ?? Intl.DateTimeFormat().resolvedOptions().locale;
 
+/** Vùng của máy: "vi_VN" → "VN", "en-GB" → "GB", "en" → undefined. Màn hotline đưa nước này lên đầu. */
+export const vungMay = () => localeMay().split(/[-_]/)[1]?.toUpperCase();
+
 let hienTai: Lang = 'vi';
 let khiDoi: ((l: Lang) => void) | undefined;
 

@@ -26,6 +26,10 @@ export type Hotline = {
 const CA_NGAY: Chu = { vi: '24 giờ, mọi ngày', en: '24 hours, every day', ja: '24時間・毎日' };
 const CAP_CUU: Chu = { vi: 'Cấp cứu', en: 'Emergency', ja: '救急' };
 
+/** Nước lên đầu màn hotline: vùng của máy nếu có trong danh sách, không thì theo ngôn ngữ app. */
+export const nuocDau = (vung: string | undefined, lang: Lang): string =>
+  vung && HOTLINES_FALLBACK.some((h) => h.country === vung) ? vung : ({ vi: 'VN', ja: 'JP', en: 'US' } as const)[lang];
+
 export const HOTLINES_FALLBACK: Hotline[] = [
   { country: 'VN', name: CAP_CUU, phone: '115', hours: CA_NGAY },
   {
@@ -43,7 +47,7 @@ export const HOTLINES_FALLBACK: Hotline[] = [
     name: {
       vi: 'Đường dây nóng Ngày Mai (sức khoẻ tâm thần)',
       en: 'Ngày Mai Hotline (mental health)',
-      ja: 'Ngày Mai ホットライン（メンタルヘルス）',
+      ja: 'Ngày Mai（心の健康相談）',
     },
     phone: '096 306 1414',
     hours: {

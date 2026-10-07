@@ -43,9 +43,11 @@ const en: TuDien = {
     matKhau: 'Password',
     matKhauGoiY: 'At least 6 characters',
     loiEmail: 'Enter a valid email and a password of at least 6 characters.',
+    thoat: 'Leave',
+    xoa: 'Delete',
   },
 
-  tab: { index: 'Journal', viet: 'Write', lich: 'Calendar', settings: 'Settings' },
+  tab: { index: 'Journal', viet: 'For strangers', lich: 'Calendar', settings: 'Settings' },
 
   tam: {
     anh: (n) => dem(n, 'photo', 'photos'),
@@ -61,7 +63,7 @@ const en: TuDien = {
 
   thoiLuong: (phut) =>
     phut === null
-      ? 'Not sure'
+      ? "Can't remember"
       : phut === 5
         ? 'A few minutes'
         : phut === 30
@@ -82,8 +84,8 @@ const en: TuDien = {
     ghiNgat: 'The recording stopped partway. Try again.',
     bo: 'Remove',
     chuaCoCamera: "Tearnote can't use the camera yet. You can allow it in your phone's Settings.",
-    loiCamera: "Couldn't open the camera.",
-    loiThuVien: "Couldn't open your photos.",
+    loiCamera: "Couldn't open the camera. Try again.",
+    loiThuVien: "Couldn't open your photos. Try again.",
     chuaCoMic: "Tearnote can't use the microphone yet. You can allow it in your phone's Settings.",
     dangGhiAm: 'Recording',
     loiGhiAm: "Couldn't record. Try again.",
@@ -98,7 +100,7 @@ const en: TuDien = {
     viChuyenGi: 'What was it about?',
     toiDaTag: (n) => `Up to ${n}. Choosing none is fine too.`,
     ghiThem: 'Anything else to write?',
-    ghiThemGoiY: 'Write whatever you want. Only you can read it.',
+    ghiThemGoiY: 'Write anything. Only you can read it.',
     kem: 'Add a photo or voice note?',
     kemGioiHan: (anh, phut) =>
       `Up to ${anh} photos and one ${phut}-minute voice note. They stay on this phone.`,
@@ -115,11 +117,14 @@ const en: TuDien = {
     ghiAm: 'Record',
     luu: 'Save',
     thoi: "Never mind, don't save",
+    thoatHoi: 'Leave without saving?',
+    thoatPhu: 'Unsaved words, photos and voice notes will be lost.',
+    ghiTiep: 'Keep writing',
+    daLuu: 'Saved.',
   },
 
   lich: {
     tieuDe: 'Calendar',
-    chonNam: (nam) => `${nam}, choose another year`,
     // "Jan"… không vừa ô 22 ở máy hẹp; một chữ cái là cách viết quen của bảng cả năm.
     cot: (thang) => 'JFMAMJJASOND'[thang - 1],
     thang: (thang, soNgay, max) =>
@@ -127,7 +132,9 @@ const en: TuDien = {
     thangTrong: (thang) => `${THANG[thang - 1]}: no days with crying.`,
     muc: (tu, den) => (den === undefined ? `${tu} or more` : `${tu} to ${den}`),
     chuGiai: (muc) => `The color deepens with the day's total intensity: ${muc.join(', ')}`,
-    dong: 'Close',
+    namTruoc: 'Previous year',
+    namSau: 'Next year',
+    tenChuGiai: 'Total intensity for the day',
   },
 
   caiDat: {
@@ -136,7 +143,7 @@ const en: TuDien = {
     nhanLoi: 'Receive words from strangers',
     nhanLoiPhu:
       "When off, you won't receive any more words from strangers. Your journal stays the same.",
-    loiDaVietPhu: 'Look back at, or withdraw, what you wrote.',
+    loiDaVietPhu: 'Read them again, or withdraw them.',
     vietLoiPhu: 'Requires signing in. Up to 5 in 24 hours.',
     taiKhoan: 'Account',
     dangXuat: 'Sign out',
@@ -146,9 +153,9 @@ const en: TuDien = {
   },
 
   lanKhoc: {
-    loiNhan: "Couldn't receive any. Try again in a little while.",
+    loiNhan: "Couldn't get any words just now. Try again in a little while.",
     poolRong: (chiVui) =>
-      `There are no words for this${chiVui ? ' joy' : ''} yet. This doesn't count toward your limit.`,
+      `No one has written words for this${chiVui ? ' joy' : ''} yet. This one doesn't count toward your limit.`,
     hetLuot: "You've received 3 in the last 24 hours. You can't receive more yet.",
     khongThay: 'Not found',
     khongThayPhu: 'This cry is no longer on this phone.',
@@ -157,31 +164,42 @@ const en: TuDien = {
     camOn: 'Thank you',
     xin: 'Receive words from a stranger',
     daTat: "You've turned off words from strangers. You can change this in Settings.",
+    dangTim: 'Looking for words…',
+    xoa: 'Delete this cry',
+    xoaHoi: 'Delete this cry?',
+    xoaPhu: (coLoi: boolean) =>
+      `Its words, photos and voice note will be deleted from this phone. This can't be undone.${coLoi ? ' The words from a stranger tucked in here will go too.' : ''}`,
+    daXoa: 'Deleted.',
   },
 
   viet: {
     hetPhien: 'Your sign-in has expired. Sign in again and send — what you typed is still here.',
     hetLuot: "You've sent 5 in the last 24 hours. You can't send more yet.",
     loiGui: "Couldn't send. Your words are still here — try again in a little while.",
+    tieuDe: 'Write words for a stranger',
     xongTieuDe: 'Your words were received',
     xongPhu:
       "They'll be reviewed first, then reach a stranger. To withdraw them, go to Settings → Words you wrote.",
     xong: 'Done',
     moDau:
       'Your words will reach a stranger who just cried over something similar. Neither of you knows who the other is.',
-    goiY: "Share what once helped you — no advice needed. Don't include names, phone numbers or social media.",
+    goiY: "Share what once helped you — no advice needed. Don't include names, phone numbers or social media handles.",
     oNhap: 'Words for a stranger',
     oNhapGoiY: 'Write what you once needed to hear.',
     demA11y: (n, max) => `${n} of ${max} characters`,
     conThieu: (n) => ` · ${dem(n, 'more character', 'more characters')} needed`,
     vietBang: 'What language are you writing in?',
-    danhCho: 'What is it for?',
+    danhCho: 'What situation is it for?',
     chonTag: (max, chung) =>
       `Choose 1 or ${max}. If it fits anyone who is sad, choose “${chung}”.`,
     dongY: (khac) =>
       `By tapping Send, you agree that your words will be reviewed, translated into ${noi(khac.map((l) => TEN[l]))}, and sent anonymously to strangers. You can withdraw them in Settings → Words you wrote; anyone who already received them keeps their copy.`,
     dangNhapLai: 'Sign in again',
     gui: 'Send',
+    thoatHoi: 'Leave without sending?',
+    thoatPhu: "The words you're writing will be lost.",
+    vietTiep: 'Keep writing',
+    canTag: 'Choose at least one situation above.',
   },
 
   cuaToi: {
@@ -204,13 +222,14 @@ const en: TuDien = {
     khongHoanTac: "Can't be undone",
     dangThuHoi: 'Withdrawing…',
     thuLai: 'Try again',
+    daThuHoi: 'Withdrawn.',
   },
 
   dangNhap: {
     daGuiXacMinh: "We've sent a verification email. Once you've verified, sign in here.",
     loi: "Couldn't sign in. Check your email, password and connection.",
     giaiThich:
-      'Writing for strangers requires signing in, to keep readers safe. Readers never see your email. Recording your cries needs no account.',
+      'Writing for strangers requires signing in, to keep readers safe. Readers never see your email. Keeping your journal needs no account.',
     taoMoi: 'Create an account',
     deSau: 'Not now',
   },

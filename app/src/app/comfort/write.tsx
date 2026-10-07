@@ -1,4 +1,5 @@
-import { router, useFocusEffect, type Href } from 'expo-router';
+import { router, useFocusEffect, useNavigation, type Href } from 'expo-router';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import { useCallback, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -7,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +16,7 @@ import { LANGS, ngonNgu, nhanTag, t, TEN_GOC, type Lang } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
 import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
 import { album, butChi, space, text } from '@/theme';
-import { ChanMan, DongLoi, NutChinh, Pill } from '@/ui';
+import { ChanMan, DongLoi, HopThoai, NutChinh, ONhap, Pill, type YeuCauHoi } from '@/ui';
 
 const TOI_THIEU = 20;
 const TOI_DA = 500;
@@ -35,7 +35,21 @@ export default function WriteComfortScreen() {
   const [loi, setLoi] = useState<string | null>(null);
   const [hetPhien, setHetPhien] = useState(false);
   const [xong, setXong] = useState(false);
+  const [hoi, setHoi] = useState<YeuCauHoi | null>(null);
   const daHoi = useRef(false);
+
+  // Lời đang viết mất vì chạm nhầm Back cũng đau như một Reflection: hỏi lại trước khi rời.
+  // Sang màn Đăng nhập (đăng nhập lại) là push, không phải rời, nên không hỏi.
+  const navigation = useNavigation();
+  usePreventRemove(body.trim() !== '' && !xong, ({ data }) =>
+    setHoi({
+      cauHoi: t.viet.thoatHoi,
+      phu: t.viet.thoatPhu,
+      nhanBo: t.chung.thoat,
+      nhanGiu: t.viet.vietTiep,
+      bo: () => navigation.dispatch(data.action),
+    }),
+  );
 
   const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
@@ -155,12 +169,12 @@ export default function WriteComfortScreen() {
       <KeyboardAvoidingView style={s.man} behavior="padding">
         <ScrollView contentContainerStyle={s.noiDung} keyboardShouldPersistTaps="handled">
           <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            {t.chung.vietLoi}
+            {t.viet.tieuDe}
           </Text>
           <Text style={s.giaiThich}>{t.viet.moDau}</Text>
           <Text style={s.phu}>{t.viet.goiY}</Text>
 
-          <TextInput
+          <ONhap
             style={s.oVanBan}
             value={body}
             onChangeText={setBody}
@@ -169,8 +183,6 @@ export default function WriteComfortScreen() {
             textAlignVertical="top"
             maxLength={TOI_DA}
             placeholder={t.viet.oNhapGoiY}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
             editable={!dangGui}
           />
           <Text style={s.dem} accessibilityLabel={t.viet.demA11y(doDai, TOI_DA)}>
@@ -214,19 +226,21 @@ export default function WriteComfortScreen() {
           </View>
 
           {/* Đồng ý rõ ràng trước khi lời vào pool — overview.md §6. */}
+          {doDai >= TOI_THIEU && tags.length === 0 ? <Text style={s.phu}>{t.viet.canTag}</Text> : null}
           <Text style={[s.phu, s.dongY]}>{t.viet.dongY(LANGS.filter((l) => l !== nguon))}</Text>
 
           {loi ? <Text style={s.loi}>{loi}</Text> : null}
           {hetPhien ? (
-            <DongLoi nhan={t.viet.dangNhapLai} onPress={() => router.push('/login')} />
+            <DongLoi nhan={t.viet.dangNhapLai} mui onPress={() => router.push('/login')} />
           ) : null}
 
-          <NutChinh nhan={t.viet.gui} onPress={gui} tat={!guiDuoc && !dangGui} dangChay={dangGui} />
-
-          <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+          <DongLoi icon="arrow-left" nhan={t.chung.quayLai} onPress={thoat} />
         </ScrollView>
-        <ChanMan />
+        <ChanMan>
+          <NutChinh nhan={t.viet.gui} onPress={gui} tat={!guiDuoc && !dangGui} dangChay={dangGui} />
+        </ChanMan>
       </KeyboardAvoidingView>
+      <HopThoai hoi={hoi} onDong={() => setHoi(null)} />
     </SafeAreaView>
   );
 }
@@ -248,13 +262,7 @@ const s = StyleSheet.create({
   nhan: { color: album.butChi, marginTop: space.md },
   phu: { ...text.phu, color: album.butChi },
   dongY: { marginTop: space.md },
-  oVanBan: {
-    ...text.than,
-    color: album.chu,
-    backgroundColor: album.tam,
-    padding: space.md,
-    minHeight: 160,
-  },
+  oVanBan: { minHeight: 160, paddingVertical: space.md - 2 },
   dem: { ...text.phu, color: album.butChi },
   loi: { ...text.than, color: album.chu },
 });

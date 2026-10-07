@@ -1,13 +1,13 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { nhanTags, t } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
 import type { TagId } from '@/tags';
-import { album, butChi, space, text, touch } from '@/theme';
-import { bong, ChanMan, DongLoi } from '@/ui';
+import { album, butChi, space, text } from '@/theme';
+import { ChanMan, DongLoi, HopThoai, NutPhu, TamLoi, type YeuCauHoi } from '@/ui';
 
 /**
  * Lời mình đã viết. overview.md §6 là ràng buộc bắt buộc: người viết phải thu hồi được.
@@ -28,6 +28,7 @@ export default function ComfortCuaToi() {
   const [ds, setDs] = useState<ComfortCuaToi[] | 'chuaDangNhap' | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [dangThuHoi, setDangThuHoi] = useState<string | null>(null);
+  const [hoi, setHoi] = useState<YeuCauHoi | null>(null);
 
   const nap = useCallback(async () => {
     if (!(await isRealAccount())) return setDs('chuaDangNhap');
@@ -54,10 +55,12 @@ export default function ComfortCuaToi() {
 
   // Thu hồi không hoàn tác được (RLS chỉ cho đổi sang 'retracted'), nên hỏi lại một lần.
   function hoiThuHoi(id: string) {
-    Alert.alert(t.cuaToi.hoiThuHoi, t.cuaToi.hoiThuHoiPhu, [
-      { text: t.chung.giuLai, style: 'cancel' },
-      { text: t.cuaToi.thuHoi, style: 'destructive', onPress: () => void thuHoi(id) },
-    ]);
+    setHoi({
+      cauHoi: t.cuaToi.hoiThuHoi,
+      phu: t.cuaToi.hoiThuHoiPhu,
+      nhanBo: t.cuaToi.thuHoi,
+      bo: () => void thuHoi(id),
+    });
   }
 
   async function thuHoi(id: string) {
@@ -69,6 +72,7 @@ export default function ComfortCuaToi() {
       setLoi(t.cuaToi.loiThuHoi);
       return;
     }
+    AccessibilityInfo.announceForAccessibility(t.cuaToi.daThuHoi);
     await nap();
   }
 
@@ -86,45 +90,42 @@ export default function ComfortCuaToi() {
         ) : ds === 'chuaDangNhap' ? (
           <>
             <Text style={s.giaiThich}>{t.cuaToi.theoTaiKhoan}</Text>
-            <DongLoi nhan={t.cuaToi.dangNhapXem} onPress={() => router.push('/login')} />
+            <DongLoi nhan={t.cuaToi.dangNhapXem} mui onPress={() => router.push('/login')} />
           </>
         ) : ds.length === 0 && !loi ? (
           <Text style={s.giaiThich}>{t.cuaToi.trong}</Text>
         ) : (
           ds.map((c) => (
-            <View key={c.id} style={s.kep}>
+            <TamLoi key={c.id}>
               <Text style={s.than}>{c.body}</Text>
               <Text style={[butChi.chuThich, s.phu]}>
                 {nhanTags(c.tags)} · {t.cuaToi.trangThai[c.status]}
               </Text>
               {/* Thu hồi rồi thì thôi; bị từ chối cũng không còn trong pool để mà thu. */}
               {c.status === 'pending' || c.status === 'approved' ? (
-                <Pressable
-                  style={({ pressed }) => [s.nutThuHoi, pressed && s.mo]}
+                <NutPhu
+                  nhan={dangThuHoi === c.id ? t.cuaToi.dangThuHoi : t.cuaToi.thuHoi}
                   onPress={() => hoiThuHoi(c.id)}
-                  disabled={dangThuHoi === c.id}
-                  accessibilityRole="button"
+                  tat={dangThuHoi === c.id}
                   accessibilityLabel={t.cuaToi.thuHoiA11y(c.body.slice(0, 40))}
-                  accessibilityHint={t.cuaToi.khongHoanTac}>
-                  <Text style={s.chuThuHoi}>
-                    {dangThuHoi === c.id ? t.cuaToi.dangThuHoi : t.cuaToi.thuHoi}
-                  </Text>
-                </Pressable>
+                  accessibilityHint={t.cuaToi.khongHoanTac}
+                />
               ) : null}
-            </View>
+            </TamLoi>
           ))
         )}
 
         {loi ? (
           <>
             <Text style={s.loi}>{loi}</Text>
-            <DongLoi nhan={t.cuaToi.thuLai} onPress={() => void nap()} />
+            <DongLoi icon="refresh" nhan={t.cuaToi.thuLai} onPress={() => void nap()} />
           </>
         ) : null}
 
-        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+        <DongLoi icon="arrow-left" nhan={t.chung.quayLai} onPress={thoat} />
       </ScrollView>
       <ChanMan />
+      <HopThoai hoi={hoi} onDong={() => setHoi(null)} />
     </SafeAreaView>
   );
 }
@@ -134,17 +135,7 @@ const s = StyleSheet.create({
   cuon: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl },
   tieuDe: { color: album.chu, marginBottom: space.lg },
   giaiThich: { ...text.than, color: album.butChi },
-  kep: {
-    ...bong,
-    elevation: 6,
-    backgroundColor: album.kep,
-    padding: space.lg,
-    marginBottom: space.lg,
-  },
   than: { ...text.than, color: album.chu },
-  phu: { color: album.butChi, marginTop: space.sm },
+  phu: { color: album.butChi },
   loi: { ...text.than, color: album.chu, marginTop: space.md },
-  nutThuHoi: { minHeight: touch.toiThieu, alignSelf: 'flex-start', justifyContent: 'center' },
-  chuThuHoi: { ...text.nut, color: album.chu },
-  mo: { opacity: 0.6 },
 });

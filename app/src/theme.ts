@@ -32,6 +32,10 @@ export const album = {
   vienMo: 'rgba(228, 220, 207, 0.12)',
   /** Màu duy nhất được nổi: lối trợ giúp (~8:1 trên trang). */
   den: '#E2A55A',
+  /** Tấm Entry đang nhấn: giữa `tam` và `kep` — trên nền đen bóng gần như không thấy, nhấn phải sáng lên. */
+  tamNhac: '#322C27',
+  /** Nền che sau hộp thoại, nền dấu × trên ảnh nhỏ: đen ấm, không #000. */
+  che: 'rgba(10, 8, 7, 0.72)',
   /**
    * Bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục. Ô trống (ngày có thật, không Entry)
    * rồi 5 mức theo `NGUONG` trong `lich.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
@@ -120,4 +124,11 @@ export const touch = {
   /** Nút hotline. To hơn vì lúc cần tới nó là lúc tay run nhất. */
   hotline: 64,
 } as const;
+
+/**
+ * Hình khối (DESIGN.md › Shapes): có góc dán thì vuông (0 — không cần token); thứ ngón tay chạm bo `tay`;
+ * giấy rời (mẩu kẹp, tấm lời, thẻ hotline, hộp thoại) bo `giay`. Hình tròn (đĩa play, con trượt, dấu ×)
+ * là hình, không phải mức bo thứ ba. Không có mức nào ≥ 20 (không viên thuốc).
+ */
+export const bo = { giay: 6, tay: 14 } as const;
 

@@ -6,18 +6,18 @@ import {
   useAudioRecorderState,
 } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router, useNavigation } from 'expo-router';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import { useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,14 +30,19 @@ import {
   bong,
   ChanMan,
   DongLoi,
+  Giot,
   GocDan,
+  HopThoai,
   NgheLai,
   nhanGio,
   nhanNgay,
   NutChinh,
+  NutPhu,
+  ONhap,
   phutGiay,
   Pill,
   THOI_LUONG,
+  type YeuCauHoi,
 } from '@/ui';
 
 /** Lùi thời điểm (phút) — thay cho date picker, không thêm dependency. */
@@ -61,6 +66,7 @@ export default function GhiEntry() {
   const [ghiAm, setGhiAm] = useState<string | null>(null);
   const [dangGhi, setDangGhi] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
+  const [hoi, setHoi] = useState<YeuCauHoi | null>(null);
 
   const bao = (msg: string) => {
     setLoi(msg);
@@ -93,11 +99,25 @@ export default function GhiEntry() {
   const doiTag = (tag: TagId) =>
     setTags((cu) => (cu.includes(tag) ? cu.filter((x) => x !== tag) : [...cu, tag]));
 
-  const hoiBo = (cauHoi: string, bo: () => void) =>
-    Alert.alert(cauHoi, undefined, [
-      { text: t.chung.giuLai, style: 'cancel' },
-      { text: t.ghi.bo, style: 'destructive', onPress: bo },
-    ]);
+  const hoiBo = (cauHoi: string, bo: () => void) => setHoi({ cauHoi, nhanBo: t.ghi.bo, bo });
+
+  // Rời màn (Thôi, Back hệ thống) khi còn chữ, ảnh hay ghi âm chưa lưu thì hỏi lại: ảnh chụp trong app và
+  // đoạn ghi âm không lấy lại được. Cường độ, Tag, thời điểm chọn lại mất vài giây nên không tính.
+  const navigation = useNavigation();
+  const dirty = reflection.trim() !== '' || anh.length > 0 || ghiAm !== null || dangGhi;
+  usePreventRemove(dirty, ({ data }) => {
+    if (daLuu.current) return navigation.dispatch(data.action); // Lưu xong thì đi thẳng
+    setHoi({
+      cauHoi: t.ghi.thoatHoi,
+      phu: t.ghi.thoatPhu,
+      nhanBo: t.chung.thoat,
+      nhanGiu: t.ghi.ghiTiep,
+      bo: async () => {
+        if (dangGhi) await mayGhi.stop().catch(() => {}); // nhả micro trước khi rời
+        navigation.dispatch(data.action);
+      },
+    });
+  });
 
   // Camera ghi thẳng vào cache của app nên ảnh thường không vào thư viện máy — riêng tư hơn
   // chụp bằng app camera rồi chọn lại.
@@ -163,6 +183,7 @@ export default function GhiEntry() {
           ...(am ? [{ kind: 'audio' as const, uri: am }] : []),
         ],
       );
+      AccessibilityInfo.announceForAccessibility(t.ghi.daLuu);
       router.back();
     } catch {
       daLuu.current = false;
@@ -254,6 +275,10 @@ export default function GhiEntry() {
               </View>
               <View style={[styles.con, { left: `${(intensity - 0.5) * 20}%` }]} />
             </View>
+            {/* Đúng hình sẽ nằm trên tấm: kéo tới đâu, giọt đầy tới đó. */}
+            <View style={styles.giotXem} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <Giot n={intensity} />
+            </View>
             <Text style={[butChi.chuThich, styles.mucNac]} importantForAccessibility="no">
               {intensity} / 5
             </Text>
@@ -278,13 +303,11 @@ export default function GhiEntry() {
           <Text style={[butChi.ngay, styles.nhan]} accessibilityRole="header">
             {t.ghi.ghiThem}
           </Text>
-          <TextInput
+          <ONhap
             value={reflection}
             onChangeText={setReflection}
             accessibilityLabel={t.ghi.ghiThem}
             placeholder={t.ghi.ghiThemGoiY}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
             multiline
             textAlignVertical="top"
             style={styles.oNhap}
@@ -295,7 +318,7 @@ export default function GhiEntry() {
           </Text>
           <Text style={styles.phu}>{t.ghi.kemGioiHan(TOI_DA_ANH, GHI_AM_TOI_DA_GIAY / 60)}</Text>
           {anh.length > 0 && (
-            <View style={styles.hang}>
+            <View style={styles.hangAnh}>
               {anh.map((uri, i) => (
                 <Pressable
                   key={uri}
@@ -309,6 +332,10 @@ export default function GhiEntry() {
                   <Image source={{ uri }} resizeMethod="resize" style={styles.anhNho} />
                   {/* Sau ảnh để góc dán đè lên mép ảnh, như ảnh thật giữ trong album. */}
                   <GocDan co={10} />
+                  {/* Dấu × chỉ để thấy "bấm là bỏ"; cả ảnh vẫn là một vùng bấm. */}
+                  <View style={styles.dauX} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+                    <MaterialCommunityIcons name="close" size={16} color={album.chu} />
+                  </View>
                 </Pressable>
               ))}
             </View>
@@ -321,38 +348,58 @@ export default function GhiEntry() {
                   phutGiay(GHI_AM_TOI_DA_GIAY),
                 )}
               </Text>
-              <DongLoi
-                nhan={t.ghi.dungGhi}
-                onPress={() => void mayGhi.stop().catch(() => bao(t.ghi.loiDung))}
-              />
+              <View style={styles.hangNut}>
+                <NutPhu
+                  icon="stop-circle-outline"
+                  nhan={t.ghi.dungGhi}
+                  onPress={() => void mayGhi.stop().catch(() => bao(t.ghi.loiDung))}
+                />
+              </View>
             </>
           ) : ghiAm ? (
             <View style={styles.ghiAm}>
               <NgheLai uri={ghiAm} />
-              <DongLoi
-                nhan={t.ghi.boGhiAm}
-                onPress={() => hoiBo(t.ghi.boGhiAmHoi, () => setGhiAm(null))}
-              />
+              <View style={styles.hangNut}>
+                <NutPhu
+                  icon="close"
+                  nhan={t.ghi.boGhiAm}
+                  onPress={() => hoiBo(t.ghi.boGhiAmHoi, () => setGhiAm(null))}
+                />
+              </View>
             </View>
           ) : null}
-          <View style={styles.hangLoi}>
-            {anh.length < TOI_DA_ANH && (
-              <>
-                <DongLoi nhan={t.ghi.chupAnh} onPress={() => void layAnh(true)} />
-                <DongLoi nhan={t.ghi.chonAnh} onPress={() => void layAnh(false)} />
-              </>
-            )}
-            {!dangGhi && !ghiAm && <DongLoi nhan={t.ghi.ghiAm} onPress={() => void batDauGhi()} />}
+          {/* Luôn đủ ba nút, hết lượt thì mờ chứ không ẩn — vị trí không nhảy. Đang ghi thì không mở camera. */}
+          <View style={styles.hangDinhKem}>
+            <NutPhu
+              icon="camera-outline"
+              nhan={t.ghi.chupAnh}
+              tat={anh.length >= TOI_DA_ANH || dangGhi}
+              onPress={() => void layAnh(true)}
+            />
+            <NutPhu
+              icon="image-outline"
+              nhan={t.ghi.chonAnh}
+              tat={anh.length >= TOI_DA_ANH || dangGhi}
+              onPress={() => void layAnh(false)}
+            />
+            <NutPhu
+              icon="microphone-outline"
+              nhan={t.ghi.ghiAm}
+              tat={dangGhi || ghiAm !== null}
+              onPress={() => void batDauGhi()}
+            />
           </View>
           {loi ? <Text style={styles.loi}>{loi}</Text> : null}
 
-          <View style={styles.nutLuu}>
-            <NutChinh nhan={t.ghi.luu} onPress={() => void luu()} />
+          <View style={styles.thoi}>
+            <DongLoi icon="close" nhan={t.ghi.thoi} onPress={() => router.back()} />
           </View>
-          <DongLoi nhan={t.ghi.thoi} onPress={() => router.back()} />
         </ScrollView>
-        <ChanMan />
+        <ChanMan>
+          <NutChinh nhan={t.ghi.luu} onPress={() => void luu()} />
+        </ChanMan>
       </KeyboardAvoidingView>
+      <HopThoai hoi={hoi} onDong={() => setHoi(null)} />
     </SafeAreaView>
   );
 }
@@ -360,38 +407,49 @@ export default function GhiEntry() {
 const styles = StyleSheet.create({
   man: { flex: 1, backgroundColor: album.trang },
   cuon: { paddingHorizontal: space.man, paddingBottom: space.xl },
-  nuaTren: { minHeight: 200, justifyContent: 'flex-end', paddingBottom: space.lg },
+  nuaTren: { minHeight: 120, justifyContent: 'flex-end', paddingBottom: space.lg },
   tieuDe: { color: album.chu },
   nhan: { color: album.butChi, marginTop: space.lg },
   phu: { ...text.phu, color: album.butChi, marginTop: space.xs },
   hang: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
   truot: { flex: 1, height: touch.toiThieu, justifyContent: 'center' },
   ray: { flexDirection: 'row', gap: 3, height: 8 },
-  doan: { flex: 1 },
-  // Con trượt là một mẩu giấy vuông nằm trên thanh, tâm ở giữa đoạn đang chọn.
+  doan: { flex: 1, borderRadius: 4 },
+  // Con trượt tròn nằm trên thanh, tâm ở giữa đoạn đang chọn; viền màu trang như khoét khỏi thanh.
   con: {
     ...bong,
     position: 'absolute',
-    top: (touch.toiThieu - 22) / 2,
-    width: 22,
-    height: 22,
-    marginLeft: -11,
+    top: (touch.toiThieu - 28) / 2,
+    width: 28,
+    height: 28,
+    marginLeft: -14,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: album.trang,
     backgroundColor: album.chu,
   },
+  giotXem: { alignSelf: 'center', marginLeft: space.sm },
   // Rộng cố định: "1 / 5" hẹp hơn "5 / 5", để chữ co giãn thì thanh bị kéo ngắn dài trong lúc kéo.
   mucNac: { color: album.butChi, alignSelf: 'center', marginLeft: space.sm, minWidth: 40, textAlign: 'right' },
-  oNhap: {
-    ...text.than,
-    color: album.chu,
-    backgroundColor: album.tam,
-    padding: space.md,
-    minHeight: 120,
-    marginTop: space.md,
-  },
+  oNhap: { minHeight: 120, paddingVertical: space.md - 2, marginTop: space.md },
+  // Khe 12 để góc dán của hai ảnh cạnh nhau không chạm nhau.
+  hangAnh: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm + space.xs, marginTop: space.md },
   anhNho: { width: 96, height: 96, opacity: 0.85 },
+  dauX: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: album.che,
+  },
   giayGhi: { color: album.chu, marginTop: space.md },
   ghiAm: { marginTop: space.md },
-  hangLoi: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.lg },
+  hangNut: { marginTop: space.sm },
+  hangDinhKem: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
   loi: { ...text.than, color: album.chu, marginTop: space.md },
-  nutLuu: { marginTop: space.xl },
+  thoi: { marginTop: space.lg },
 });

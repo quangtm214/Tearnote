@@ -1,19 +1,19 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
+  type TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { supabase } from '@/supabase';
-import { album, butChi, space, text, touch } from '@/theme';
-import { ChanMan, DongLoi, NutChinh } from '@/ui';
+import { album, butChi, space, text } from '@/theme';
+import { ChanMan, DongLoi, NutChinh, ONhap } from '@/ui';
 
 /**
  * Tạo tài khoản — mở từ màn Đăng nhập, xong thì quay về đó (dismissTo kèm param `tao`
@@ -25,6 +25,8 @@ export default function RegisterScreen() {
   const [nhapLai, setNhapLai] = useState('');
   const [dangChay, setDangChay] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
+  const matKhauRef = useRef<TextInput>(null);
+  const nhapLaiRef = useRef<TextInput>(null);
 
   const baoLoi = (msg: string) => {
     setLoi(msg);
@@ -84,8 +86,8 @@ export default function RegisterScreen() {
           <Text style={s.giaiThich}>{t.taoTaiKhoan.giaiThich}</Text>
 
           <Text style={s.nhan}>{t.chung.email}</Text>
-          <TextInput
-            style={s.o}
+          {/* Enter đi qua đủ ba ô; ô cuối là tạo tài khoản. */}
+          <ONhap
             value={email}
             onChangeText={setEmail}
             accessibilityLabel={t.chung.email}
@@ -95,14 +97,15 @@ export default function RegisterScreen() {
             textContentType="emailAddress"
             autoComplete="email"
             placeholder={t.chung.emailMau}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => matKhauRef.current?.focus()}
             editable={!dangChay}
           />
 
           <Text style={s.nhan}>{t.chung.matKhau}</Text>
-          <TextInput
-            style={s.o}
+          <ONhap
+            ref={matKhauRef}
             value={matKhau}
             onChangeText={setMatKhau}
             accessibilityLabel={t.chung.matKhau}
@@ -112,14 +115,15 @@ export default function RegisterScreen() {
             textContentType="newPassword"
             autoComplete="new-password"
             placeholder={t.chung.matKhauGoiY}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => nhapLaiRef.current?.focus()}
             editable={!dangChay}
           />
 
           <Text style={s.nhan}>{t.taoTaiKhoan.nhapLai}</Text>
-          <TextInput
-            style={s.o}
+          <ONhap
+            ref={nhapLaiRef}
             value={nhapLai}
             onChangeText={setNhapLai}
             accessibilityLabel={t.taoTaiKhoan.nhapLai}
@@ -128,16 +132,18 @@ export default function RegisterScreen() {
             secureTextEntry
             textContentType="newPassword"
             autoComplete="new-password"
-            selectionColor={album.butChi}
+            returnKeyType="go"
+            onSubmitEditing={() => void tao()}
             editable={!dangChay}
           />
 
           {loi ? <Text style={s.loi}>{loi}</Text> : null}
 
-          <NutChinh nhan={t.taoTaiKhoan.tieuDe} onPress={tao} dangChay={dangChay} />
-          <DongLoi nhan={t.taoTaiKhoan.daCo} onPress={() => router.back()} />
+          <DongLoi nhan={t.taoTaiKhoan.daCo} mui onPress={() => router.back()} />
         </ScrollView>
-        <ChanMan />
+        <ChanMan>
+          <NutChinh nhan={t.taoTaiKhoan.tieuDe} onPress={tao} dangChay={dangChay} />
+        </ChanMan>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -149,12 +155,5 @@ const s = StyleSheet.create({
   tieuDe: { color: album.chu },
   giaiThich: { ...text.than, color: album.butChi },
   nhan: { ...text.phu, color: album.butChi, marginTop: space.sm },
-  o: {
-    ...text.than,
-    color: album.chu,
-    backgroundColor: album.tam,
-    paddingHorizontal: space.md,
-    minHeight: touch.toiThieu,
-  },
   loi: { ...text.than, color: album.chu },
 });

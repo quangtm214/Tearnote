@@ -175,6 +175,23 @@ export function getEntry(id: string): Entry | null {
   return r ? toEntry(r) : null;
 }
 
+/**
+ * Xoá hẳn khi chưa có sync: dòng Entry (attachments, received_comforts đi theo cascade — cần foreign_keys = ON)
+ * rồi file trong attachments/. Để file lại thì "xoá" thành nói dối. Khi làm sync: Entry đã sync thì giữ mộ bia
+ * `deleted_at` (docs/db.md).
+ */
+export function deleteEntry(id: string): void {
+  const tep = db.getAllSync<{ path: string }>(`select path from attachments where entry_id = ?`, id);
+  db.runSync(`delete from entries where id = ?`, id);
+  for (const { path } of tep) {
+    try {
+      new File(Paths.document, path).delete();
+    } catch {
+      // File đã mất thì thôi — dòng DB đã đi rồi.
+    }
+  }
+}
+
 export type ReceivedComfort = {
   comfortId: string;
   entryId: string;

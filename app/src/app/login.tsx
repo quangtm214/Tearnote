@@ -1,19 +1,19 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
+  type TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { supabase } from '@/supabase';
-import { album, butChi, space, text, touch } from '@/theme';
-import { ChanMan, DongLoi, NutChinh } from '@/ui';
+import { album, butChi, space, text } from '@/theme';
+import { ChanMan, DongLoi, NutChinh, ONhap } from '@/ui';
 
 /**
  * Đăng nhập chỉ cần cho hai việc: VIẾT Comfort và bật sync. Nhật ký chạy không cần
@@ -25,6 +25,7 @@ export default function LoginScreen() {
   const [dangChay, setDangChay] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
   const [thongBao, setThongBao] = useState<string | null>(null);
+  const matKhauRef = useRef<TextInput>(null);
   // Do màn Tạo tài khoản gửi về khi xong (register.tsx).
   const { tao, email: emailMoi } = useLocalSearchParams<{ tao?: string; email?: string }>();
 
@@ -79,8 +80,8 @@ export default function LoginScreen() {
           <Text style={s.giaiThich}>{t.dangNhap.giaiThich}</Text>
 
           <Text style={s.nhan}>{t.chung.email}</Text>
-          <TextInput
-            style={s.o}
+          {/* Enter ở ô email sang ô mật khẩu, Enter ở ô mật khẩu là đăng nhập. */}
+          <ONhap
             value={email}
             onChangeText={setEmail}
             accessibilityLabel={t.chung.email}
@@ -90,14 +91,15 @@ export default function LoginScreen() {
             textContentType="emailAddress"
             autoComplete="email"
             placeholder={t.chung.emailMau}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => matKhauRef.current?.focus()}
             editable={!dangChay}
           />
 
           <Text style={s.nhan}>{t.chung.matKhau}</Text>
-          <TextInput
-            style={s.o}
+          <ONhap
+            ref={matKhauRef}
             value={matKhau}
             onChangeText={setMatKhau}
             accessibilityLabel={t.chung.matKhau}
@@ -106,20 +108,20 @@ export default function LoginScreen() {
             secureTextEntry
             autoComplete="password"
             placeholder={t.chung.matKhauGoiY}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
+            returnKeyType="go"
+            onSubmitEditing={() => void dangNhap()}
             editable={!dangChay}
           />
 
           {loi ? <Text style={s.loi}>{loi}</Text> : null}
           {thongBao ? <Text style={s.loi}>{thongBao}</Text> : null}
 
-          <NutChinh nhan={t.chung.dangNhap} onPress={dangNhap} dangChay={dangChay} />
-          <DongLoi nhan={t.dangNhap.taoMoi} onPress={() => router.push('/register')} />
-
-          <DongLoi nhan={t.dangNhap.deSau} onPress={thoat} />
+          <DongLoi nhan={t.dangNhap.taoMoi} mui onPress={() => router.push('/register')} />
+          <DongLoi icon="arrow-left" nhan={t.dangNhap.deSau} onPress={thoat} />
         </ScrollView>
-        <ChanMan />
+        <ChanMan>
+          <NutChinh nhan={t.chung.dangNhap} onPress={dangNhap} dangChay={dangChay} />
+        </ChanMan>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -131,12 +133,5 @@ const s = StyleSheet.create({
   tieuDe: { color: album.chu },
   giaiThich: { ...text.than, color: album.butChi },
   nhan: { ...text.phu, color: album.butChi, marginTop: space.sm },
-  o: {
-    ...text.than,
-    color: album.chu,
-    backgroundColor: album.tam,
-    paddingHorizontal: space.md,
-    minHeight: touch.toiThieu,
-  },
   loi: { ...text.than, color: album.chu },
 });

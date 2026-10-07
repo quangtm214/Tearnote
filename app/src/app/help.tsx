@@ -2,9 +2,9 @@ import { router, type Href } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HOTLINES_FALLBACK, type Hotline } from '@/hotlines';
-import { ngonNgu, t, type Lang } from '@/i18n';
-import { album, butChi, space, text, touch } from '@/theme';
+import { HOTLINES_FALLBACK, nuocDau, type Hotline } from '@/hotlines';
+import { ngonNgu, t, vungMay, type Lang } from '@/i18n';
+import { album, bo, butChi, space, text, touch } from '@/theme';
 import { bong, DongLoi, NutDen } from '@/ui';
 
 /** Màn này phải chạy khi máy bay bật: chỉ đọc danh sách đóng gói sẵn, không gọi mạng. */
@@ -12,7 +12,7 @@ const TEN_NUOC: Record<string, Record<Lang, string>> = {
   VN: { vi: 'Việt Nam', en: 'Vietnam', ja: 'ベトナム' },
   JP: { vi: 'Nhật Bản', en: 'Japan', ja: '日本' },
   US: { vi: 'Mỹ', en: 'United States', ja: 'アメリカ' },
-  GB: { vi: 'Anh', en: 'United Kingdom', ja: 'イギリス' },
+  GB: { vi: 'Vương quốc Anh', en: 'United Kingdom', ja: 'イギリス' },
 };
 
 const nhomTheoNuoc = (ds: Hotline[]): [string, Hotline[]][] => {
@@ -38,6 +38,9 @@ const mo = (url: string) => Linking.openURL(url).catch(() => {});
 export default function Help() {
   const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
   const l = ngonNgu();
+  // Nước của mình lên đầu (người Nhật mở màn này không phải cuộn qua số 115); còn lại giữ thứ tự, vẫn đủ mọi nước.
+  const dau = nuocDau(vungMay(), l);
+  const nhom = nhomTheoNuoc(HOTLINES_FALLBACK);
 
   return (
     <SafeAreaView style={s.man} edges={['top', 'bottom']}>
@@ -47,7 +50,7 @@ export default function Help() {
         </Text>
         <Text style={s.moDau}>{t.troGiup.moDau}</Text>
 
-        {nhomTheoNuoc(HOTLINES_FALLBACK).map(([nuoc, ds]) => (
+        {[...nhom.filter(([n]) => n === dau), ...nhom.filter(([n]) => n !== dau)].map(([nuoc, ds]) => (
           <View key={nuoc}>
             <Text style={[butChi.ngay, s.nuoc]} accessibilityRole="header">
               {TEN_NUOC[nuoc]?.[l] ?? nuoc}
@@ -59,6 +62,7 @@ export default function Help() {
                 {phone ? (
                   <View style={s.nutGoi}>
                     <NutDen
+                      icon="phone-outline"
                       nhan={t.troGiup.goi(phone)}
                       accessibilityLabel={t.troGiup.goiA11y(name[l], docSo(phone))}
                       onPress={() => mo(`tel:${phone.replace(/\s/g, '')}`)}
@@ -81,7 +85,7 @@ export default function Help() {
         ))}
 
         <Text style={[s.phu, s.cuoi]}>{t.troGiup.cuoi}</Text>
-        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+        <DongLoi icon="arrow-left" nhan={t.chung.quayLai} onPress={thoat} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -93,7 +97,7 @@ const s = StyleSheet.create({
   tieuDe: { color: album.chu },
   moDau: { ...text.than, color: album.chu, marginTop: space.sm },
   nuoc: { color: album.butChi, marginTop: space.xl, marginBottom: space.md },
-  tam: { ...bong, backgroundColor: album.tam, padding: space.lg, marginBottom: space.lg },
+  tam: { ...bong, backgroundColor: album.tam, borderRadius: bo.giay, padding: space.lg, marginBottom: space.lg },
   ten: { ...text.than, color: album.chu },
   phu: { ...text.phu, color: album.butChi, marginTop: space.xs },
   nutGoi: { marginTop: space.md },
