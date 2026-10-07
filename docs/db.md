@@ -213,9 +213,11 @@ Nguồn sự thật. Tồn tại kể cả khi không có mạng, không có tà
 | `tags` | text | not null | JSON array các tag id |
 | `reflection` | text | | Không rời khỏi máy trừ khi bật sync |
 | `synced_at` | integer | | `null` = chưa sao lưu lên server |
-| `deleted_at` | integer | | Xoá mềm, để sync biết mà xoá bên kia |
+| `deleted_at` | integer | | Để dành cho sync (chưa làm): Entry đã sync thì xoá = giữ dòng mộ bia với `deleted_at`, nội dung xoá sạch. Hiện chưa dùng |
 
 `synced_at` là **toàn bộ** cơ chế sync: null thì đẩy lên, khác null thì thôi. Không vector clock, không resolve conflict — local luôn thắng, server chỉ là bản sao.
+
+**Xoá một Entry** (`deleteEntry`, `app/src/db.ts`): khi `synced_at` null là xoá thật — `delete from entries` (`attachments`, `received_comforts` đi theo `on delete cascade`, cần `pragma foreign_keys = ON`) rồi xoá các file `attachments/…`. Server không có gì để xoá: Delivery vẫn còn và vẫn tính vào trần 3 / 24h. Schema không đổi ⇒ migration Supabase không đổi (contract ba chỗ vẫn khớp).
 
 ## `attachments`
 

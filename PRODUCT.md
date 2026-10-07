@@ -42,7 +42,7 @@ Các app cùng loại (Tracking My Tears, Cry Tracker, Tear Tales, Ductts, CryAp
 - Pool rỗng và hết lượt 3/24h là hai tình huống khác nhau, hai thông báo khác nhau.
 - Không chẩn đoán: không gắn nhãn "trầm cảm", "rối loạn lo âu".
 - Không có phát hiện khủng hoảng — hệ thống dựa vào việc người dùng tự bấm trợ giúp hoặc tự tắt nhận Comfort.
-- Chưa có: hotline lấy từ server, điều khoản sử dụng (chặn launch), thống kê tần suất / Tag hay gặp. Đã có: Lịch — bảng cường độ cả năm; ảnh (tối đa 3) và ghi âm (≤ 5 phút) trong Entry, chỉ nằm trên máy; giao diện Anh / Việt / Nhật — theo ngôn ngữ máy (máy dùng tiếng khác thì tiếng Anh), đổi được trong Cài đặt.
+- Chưa có: hotline lấy từ server, điều khoản sử dụng (chặn launch), thống kê tần suất / Tag hay gặp, sửa một lần khóc đã ghi. Đã có: Lịch — bảng cường độ cả năm; ảnh (tối đa 3) và ghi âm (≤ 5 phút) trong Entry, chỉ nằm trên máy; giao diện Anh / Việt / Nhật — theo ngôn ngữ máy (máy dùng tiếng khác thì tiếng Anh), đổi được trong Cài đặt; xoá một lần khóc (xoá hẳn khỏi máy cùng ảnh, ghi âm và lời đã nhận).
 
 ## Brand Commitments
 
