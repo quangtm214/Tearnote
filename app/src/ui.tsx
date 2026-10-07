@@ -119,45 +119,58 @@ export function TamEntry({
     dk.some((d) => d.kind === 'audio') && t.tam.ghiAm,
   ].filter(Boolean);
   const nhanComfort = tt === 'kep' ? t.tam.kep : tt === 'camOn' ? t.chung.daCamOn : null;
+  // Mẩu kẹp là ẩn dụ cho người nhìn; screen reader nghe thẳng nghĩa của nó.
+  const nhanDoc = [
+    e.reflection || nhanTag,
+    ...phan,
+    t.chung.cuongDo(e.intensity),
+    tt === 'kep' ? t.tam.coLoi : tt === 'camOn' ? t.tam.coLoiCamOn : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
+  const noiDung = (
+    <>
+      <GocDan />
+      {(onPress ? anh.slice(0, 1) : anh).map((uri) => (
+        <AnhTrenTam key={uri} uri={uri} du={!onPress} />
+      ))}
+      <Text style={s.than} numberOfLines={onPress ? 6 : undefined}>
+        {e.reflection || nhanTag}
+      </Text>
+      {/* Chú thích nằm trong tấm: để ngoài thì giờ và giọt cường độ lơ lửng giữa hai tấm, không rõ
+          của tấm trên hay tấm dưới. Đã đọc trong nhãn của tấm — ẩn khỏi screen reader để không đọc lặp. */}
+      <View
+        style={s.dongChuThich}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+      >
+        <Text style={[butChi.chuThich, s.chuThich]}>{phan.join(' · ')}</Text>
+        <Giot n={e.intensity} />
+      </View>
+      {nhanComfort && (
+        <View style={s.kep}>
+          <Text style={[butChi.chuThich, s.chuKep]}>{nhanComfort}</Text>
+        </View>
+      )}
+    </>
+  );
   return (
     <View style={[s.oTam, nhanComfort ? s.duoiKep : null]}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole={onPress ? 'button' : 'text'}
-        // Mẩu kẹp là ẩn dụ cho người nhìn; screen reader nghe thẳng nghĩa của nó.
-        accessibilityLabel={[
-          e.reflection || nhanTag,
-          ...phan,
-          t.chung.cuongDo(e.intensity),
-          tt === 'kep' ? t.tam.coLoi : tt === 'camOn' ? t.tam.coLoiCamOn : null,
-        ]
-          .filter(Boolean)
-          .join(', ')}
-        style={({ pressed }) => [s.tam, pressed && onPress && s.nhac]}
-      >
-        <GocDan />
-        {(onPress ? anh.slice(0, 1) : anh).map((uri) => (
-          <AnhTrenTam key={uri} uri={uri} du={!onPress} />
-        ))}
-        <Text style={s.than} numberOfLines={onPress ? 6 : undefined}>
-          {e.reflection || nhanTag}
-        </Text>
-        {/* Chú thích nằm trong tấm: để ngoài thì giờ và giọt cường độ lơ lửng giữa hai tấm, không rõ
-            của tấm trên hay tấm dưới. Đã đọc trong nhãn của tấm — ẩn khỏi screen reader để không đọc lặp. */}
-        <View
-          style={s.dongChuThich}
-          importantForAccessibility="no-hide-descendants"
-          accessibilityElementsHidden
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={nhanDoc}
+          style={({ pressed }) => [s.tam, pressed && s.nhac]}
         >
-          <Text style={[butChi.chuThich, s.chuThich]}>{phan.join(' · ')}</Text>
-          <Giot n={e.intensity} />
+          {noiDung}
+        </Pressable>
+      ) : (
+        // Tấm để đọc: Pressable không có onPress vẫn bị TalkBack mời "nhấn đúp để kích hoạt".
+        <View accessible accessibilityRole="text" accessibilityLabel={nhanDoc} style={s.tam}>
+          {noiDung}
         </View>
-        {nhanComfort && (
-          <View style={s.kep}>
-            <Text style={[butChi.chuThich, s.chuKep]}>{nhanComfort}</Text>
-          </View>
-        )}
-      </Pressable>
+      )}
     </View>
   );
 }

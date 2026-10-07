@@ -27,9 +27,11 @@ export default function Timeline() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [trangThai, setTrangThai] = useState<Record<string, TrangThai>>({});
   const [dinhKem, setDinhKem] = useState<Record<string, Attachment[]>>({});
-  const [dung, setDung] = useState<string | null>(null);
   const cuon = useRef<ScrollView>(null);
-  const daCuon = useRef(false);
+  /** Khoá đêm cần cuộn tới ở lần dựng kế tiếp; cuộn xong thì về null. */
+  const cuonToi = useRef<string | null>(null);
+  /** Entry đã hiện ở lần focus trước — null là lần đầu mở màn. */
+  const daThay = useRef<Set<string> | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -41,10 +43,15 @@ export default function Timeline() {
         if (cs.length) tt[e.id] = cs.every((c) => c.thanked) ? 'camOn' : 'kep';
         dk[e.id] = listAttachments(e.id);
       }
+      // Mở app: về đêm của Entry mở gần nhất. Quay về sau khi Lưu: về đêm của lần khóc vừa ghi — không thì
+      // trang đứng ở chỗ cuộn cũ và người vừa ghi không thấy nó đâu.
+      const thay = daThay.current;
+      const toi = thay ? es.find((e) => !thay.has(e.id)) : es.find((e) => e.id === getSetting(KHOA_DUNG));
+      cuonToi.current = toi ? khoaNgay(toi.occurredAt) : null;
+      daThay.current = new Set(es.map((e) => e.id));
       setEntries(es);
       setTrangThai(tt);
       setDinhKem(dk);
-      setDung(getSetting(KHOA_DUNG));
     }, []),
   );
 
@@ -60,8 +67,6 @@ export default function Timeline() {
     if (cuoi && khoaNgay(cuoi[0].occurredAt) === khoaNgay(e.occurredAt)) cuoi.push(e);
     else nhom.push([e]);
   }
-  const eDung = entries.find((e) => e.id === dung);
-  const khoaDung = eDung ? khoaNgay(eDung.occurredAt) : null;
 
   return (
     <SafeAreaView style={s.man} edges={['top']}>
@@ -82,15 +87,13 @@ export default function Timeline() {
               <View
                 key={k}
                 onLayout={(ev) => {
-                  // Chỉ cuộn một lần khi mở app, không giật trang mỗi lần quay về.
-                  if (daCuon.current || k !== khoaDung) return;
-                  daCuon.current = true;
+                  // Chỉ cuộn khi có đích (mở app, vừa Lưu), không giật trang mỗi lần quay về.
+                  if (k !== cuonToi.current) return;
+                  cuonToi.current = null;
                   // Chờ một frame: gọi ngay trong onLayout thì ScrollView native chưa biết chiều
                   // cao nội dung mới và kẹp về 0 — mở lại app vẫn đứng ở đầu trang.
-                  const y = ev.nativeEvent.layout.y;
-                  if (i > 0) {
-                    requestAnimationFrame(() => cuon.current?.scrollTo({ y, animated: false }));
-                  }
+                  const y = i > 0 ? ev.nativeEvent.layout.y : 0;
+                  requestAnimationFrame(() => cuon.current?.scrollTo({ y, animated: false }));
                 }}
               >
                 {i > 0 && <View style={s.poLuya} />}

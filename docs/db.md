@@ -253,12 +253,17 @@ Comfort đã nhận, giữ để xem lại offline. Bản sao, không phải ngu
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
-| `comfort_id` | text | PK | |
-| `entry_id` | text | not null, FK → `entries` cascade | **Chỉ tồn tại ở đây** — server không biết Comfort nào thuộc Entry nào |
+| `comfort_id` | text | PK(2/2), not null | |
+| `entry_id` | text | PK(1/2), not null, FK → `entries` cascade | **Chỉ tồn tại ở đây** — server không biết Comfort nào thuộc Entry nào |
 | `body` | text | not null | Bằng ngôn ngữ app lúc nhận; đổi ngôn ngữ sau đó thì lời cũ giữ nguyên |
 | `translated` | integer | not null, default 0 | Hiện nhãn "đã dịch tự động" |
 | `received_at` | integer | not null | |
 | `thanked` | integer | not null, default 0 | Để UI không cho cảm ơn hai lần |
+
+Khoá là `(entry_id, comfort_id)`, không phải `comfort_id`: server chỉ chặn giao lại trong cùng một danh tính,
+nên máy đổi danh tính (đăng xuất rồi thành anonymous mới, đăng nhập tài khoản khác) vẫn nhận lại được một lời
+đã kẹp ở lần khóc khác. Khoá cũ làm `insert or ignore` nuốt mất lời đó — server đã trừ lượt mà màn hình trống.
+Máy có bảng khoá cũ được chép sang khoá mới khi mở app (`app/src/db.ts`).
 
 ---
 

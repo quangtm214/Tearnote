@@ -49,11 +49,13 @@ export default function Lich() {
           <Text style={s.chuNam}>{nam} ▾</Text>
         </Pressable>
 
+        {/* Nhãn hàng/cột cao đúng một ô 18 nên không theo cỡ chữ hệ thống: ở 200% "10" còn "1", "T10" thành
+            "T…". Screen reader đọc tóm tắt từng tháng, không mất thông tin. */}
         <View style={s.bang}>
           <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-            <Text style={[butChi.chuThich, s.nhanCot, s.nhanHangRong]}> </Text>
+            <Text style={[butChi.chuThich, s.nhanCot, s.nhanHangRong]} allowFontScaling={false}> </Text>
             {NGAY.map((d) => (
-              <Text key={d} style={[butChi.chuThich, s.nhanHang]}>
+              <Text key={d} style={[butChi.chuThich, s.nhanHang]} allowFontScaling={false}>
                 {d}
               </Text>
             ))}
@@ -73,7 +75,7 @@ export default function Lich() {
                     : t.lich.thangTrong(m + 1)
                 }
               >
-                <Text style={[butChi.chuThich, s.nhanCot]} numberOfLines={1}>
+                <Text style={[butChi.chuThich, s.nhanCot]} numberOfLines={1} allowFontScaling={false}>
                   {t.lich.cot(m + 1)}
                 </Text>
                 {thang.map((t, d) => (

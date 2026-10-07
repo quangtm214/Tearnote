@@ -8,10 +8,20 @@ import { normalizeTags, type TagId } from './tags';
  */
 const db = SQLite.openDatabaseSync('tearnote.db');
 
-db.execSync(`
-  pragma journal_mode = WAL;
-  pragma foreign_keys = ON;
+db.execSync(`pragma journal_mode = WAL; pragma foreign_keys = ON;`);
 
+/**
+ * Bản đầu khoá received_comforts chỉ bằng comfort_id. Máy đổi danh tính trên server (đăng xuất, đăng
+ * nhập tài khoản khác) thì server giao lại được đúng lời đã kẹp ở một lần khóc khác — `insert or ignore`
+ * nuốt mất: lượt đã trừ mà màn hình không hiện gì. Bảng cũ thì chép sang khoá (entry_id, comfort_id).
+ */
+const khoaCu = db
+  .getAllSync<{ name: string; pk: number }>(`pragma table_info(received_comforts)`)
+  .some((c) => c.name === 'entry_id' && c.pk === 0);
+
+db.withTransactionSync(() => {
+  if (khoaCu) db.execSync(`alter table received_comforts rename to received_comforts_cu`);
+  db.execSync(`
   create table if not exists entries (
     id           text primary key,
     occurred_at  integer not null,                                 -- epoch ms, lúc khóc
@@ -38,14 +48,23 @@ db.execSync(`
   );
 
   create table if not exists received_comforts (
-    comfort_id  text primary key,
+    comfort_id  text not null,
     entry_id    text not null references entries(id) on delete cascade,
     body        text not null,
     translated  integer not null default 0,
     received_at integer not null,
-    thanked     integer not null default 0
+    thanked     integer not null default 0,
+    primary key (entry_id, comfort_id)
   );
-`);
+  `);
+  if (khoaCu) {
+    db.execSync(`
+      insert into received_comforts (comfort_id, entry_id, body, translated, received_at, thanked)
+        select comfort_id, entry_id, body, translated, received_at, thanked from received_comforts_cu;
+      drop table received_comforts_cu;
+    `);
+  }
+});
 
 export type Entry = {
   id: string;
