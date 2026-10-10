@@ -78,7 +78,7 @@ export function subscribeLanguage(listener: (l: Lang) => void) {
 
 export const tagLabel = (tag: TagId) => TAG_LABEL[current][tag];
 
-/** Vài nhãn có dấu phẩy bên trong, nên nhiều Tag nối bằng dấu riêng của từng tiếng (`noiTag`). */
+/** Vài nhãn có dấu phẩy bên trong, nên nhiều Tag nối bằng dấu riêng của từng tiếng (`tagSeparator`). */
 export const tagLabels = (tags: readonly TagId[]) => tags.map(tagLabel).join(t.tagSeparator);
 
 apply(pickLanguage(getSetting(LANG_SETTING_KEY), deviceLocale()));

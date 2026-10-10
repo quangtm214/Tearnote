@@ -1,11 +1,10 @@
-import { router, type Href } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HOTLINES_FALLBACK, topCountry, type Hotline } from '@/hotlines';
 import { currentLang, t, deviceRegion, type Lang } from '@/i18n';
 import { album, pencil, radius, space, text, touch } from '@/theme';
-import { shadow, LinkRow, HelpButton } from '@/ui';
+import { shadow, LinkRow, HelpButton, leave } from '@/ui';
 
 /** Màn này phải chạy khi máy bay bật: chỉ đọc danh sách đóng gói sẵn, không gọi mạng. */
 const COUNTRY_NAMES: Record<string, Record<Lang, string>> = {
@@ -32,11 +31,10 @@ const spellDigits = (phone: string) => phone.replace(/\D/g, '').split('').join('
 const openUrl = (url: string) => Linking.openURL(url).catch(() => {});
 
 /**
- * Màn này chính là lối trợ giúp, nên mọi nút Gọi đều là `NutDen` — ngoại lệ duy nhất của luật
+ * Màn này chính là lối trợ giúp, nên mọi nút Gọi đều là `HelpButton` — ngoại lệ duy nhất của luật
  * Một Ngọn Đèn (DESIGN.md). Không có chân màn: đây là nơi nút trợ giúp dẫn tới.
  */
 export default function Help() {
-  const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
   const lang = currentLang();
   // Nước của mình lên đầu (người Nhật mở màn này không phải cuộn qua số 115); còn lại giữ thứ tự, vẫn đủ mọi nước.
   const first = topCountry(deviceRegion(), lang);

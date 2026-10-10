@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useState, type ReactNode, type Ref } from 'react';
 import {
   ActivityIndicator,
@@ -25,6 +25,9 @@ import { album, pencil, radius, space, text, touch } from './theme';
  * Chỗ duy nhất cho thứ đã lặp từ lần thứ hai. Đừng đẩy thêm gì vào đây trước khi
  * nó thật sự xuất hiện ở hai màn — file này không phải kho component.
  */
+
+// Rời màn: quay lại, hoặc về trang chủ nếu mở thẳng từ deep link. `'/' as Href` là cách né typed routes sai trên Windows.
+export const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
 /** Bóng mềm, thấp: tấm dán nằm trên trang chứ không bay. */
 export const shadow = {
@@ -73,7 +76,7 @@ export function TearDrop({ level }: { level: number }) {
 
 /**
  * Thời lượng ước lượng (phút), bỏ qua được (null). Người dùng chọn một khoảng chứ không đo, nên
- * tấm Entry hiện lại đúng nhãn đã chọn (`t.thoiLuong`) — không khẳng định "60 phút" khi họ chỉ nói
+ * tấm Entry hiện lại đúng nhãn đã chọn (`t.duration`) — không khẳng định "60 phút" khi họ chỉ nói
  * "lâu hơn".
  */
 export const DURATION_OPTIONS = [null, 5, 15, 30, 60];
@@ -188,7 +191,7 @@ export function EntryCard({
 }
 
 /**
- * Ảnh dán trên tấm. Timeline cắt 4:3 cho nhịp đều; tấm để đọc (`du`) giữ đúng tỉ lệ ảnh.
+ * Ảnh dán trên tấm. Timeline cắt 4:3 cho nhịp đều; tấm để đọc (`full`) giữ đúng tỉ lệ ảnh.
  * `resize` để Android giải mã ảnh ở cỡ hiển thị, không phải ảnh gốc 12MP.
  */
 function CardPhoto({ uri, full }: { uri: string; full: boolean }) {
@@ -243,7 +246,7 @@ export type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 /**
  * Dòng lối: không nền, không viền, cả hàng là vùng bấm; nhấn thì mờ đi. `icon` đứng trước khi lối làm một
- * việc ngay (Quay lại, Đăng xuất…); `mui` là chevron cuối hàng khi lối dẫn sang màn khác.
+ * việc ngay (Quay lại, Đăng xuất…); `chevron` là chevron cuối hàng khi lối dẫn sang màn khác.
  */
 export function LinkRow({
   label,
@@ -314,8 +317,8 @@ export function SecondaryButton({
 }
 
 /**
- * Nút chính: mảnh `tam` bo mềm, không góc dán (góc dán chỉ dành cho thứ được dán). Nhấn thì sáng lên một bậc.
- * `nhanDangChay`: khi chờ lâu (xin lời) thì nói đang làm gì, đừng để một tấm trống với vòng quay.
+ * Nút chính: mảnh `card` bo mềm, không góc dán (góc dán chỉ dành cho thứ được dán). Nhấn thì sáng lên một bậc.
+ * `busyLabel`: khi chờ lâu (xin lời) thì nói đang làm gì, đừng để một tấm trống với vòng quay.
  */
 export function PrimaryButton({
   label,

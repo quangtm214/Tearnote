@@ -34,7 +34,7 @@ export default function RegisterScreen() {
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  // 'xong' = đã có tài khoản thật và session; 'xacMinh' = còn chờ xác minh email.
+  // 'done' = đã có tài khoản thật và session; 'verify' = còn chờ xác minh email.
   const backToLogin = (result: 'done' | 'verify') =>
     router.dismissTo({ pathname: '/login', params: { registered: result, email: email.trim() } });
 

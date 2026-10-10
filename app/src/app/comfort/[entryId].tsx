@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { AccessibilityInfo, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +28,7 @@ import {
   SecondaryButton,
   EntryCard,
   ComfortCard,
+  leave,
   type ConfirmRequest,
 } from '@/ui';
 import { comfortRows } from '@/validation';
@@ -108,13 +109,12 @@ export default function EntryComfortScreen() {
   async function thank(comfortId: string) {
     // Đánh dấu ở máy trước: cảm ơn hụt trên server không đáng để chặn người dùng lúc này,
     // và supabase-js trả { error } chứ không throw nên try/catch ở đây là thừa.
-    markThanked(comfortId);
+    markThanked(entryId, comfortId);
     reload();
     AccessibilityInfo.announceForAccessibility(t.common.thanked);
     await supabase.from('deliveries').update({ thanked: true }).eq('comfort_id', comfortId);
   }
 
-  const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
   const recording = attachments.find((att) => att.kind === 'audio');
 
   // Xoá thật, không thùng rác, không hoàn tác: câu phụ nói rõ mất những gì.
@@ -164,7 +164,7 @@ export default function EntryComfortScreen() {
           <Text style={s.explanation}>{t.entry.noneYet}</Text>
         ) : (
           comforts.map((comfort) => (
-            // Mẩu giấy người lạ kẹp vào trang — cùng tông `kep` với mẩu nhỏ trên Timeline.
+            // Mẩu giấy người lạ kẹp vào trang — cùng tông `album.clip` với mẩu nhỏ trên Timeline.
             <ComfortCard key={comfort.comfortId}>
               <Text style={s.body}>{comfort.body}</Text>
               {comfort.translated ? <Text style={[pencil.note, s.muted]}>{t.common.autoTranslated}</Text> : null}

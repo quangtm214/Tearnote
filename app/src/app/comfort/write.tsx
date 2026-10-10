@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useNavigation, type Href } from 'expo-router';
+import { router, useFocusEffect, useNavigation } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useCallback, useRef, useState } from 'react';
 import {
@@ -17,7 +17,7 @@ import { isRealAccount, supabase } from '@/supabase';
 import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
 import { check, comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH } from '@/validation';
-import { ScreenFooter, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, leave, type ConfirmRequest } from '@/ui';
 
 /**
  * Viết Comfort. Hai luật quan trọng nhất KHÔNG nằm ở đây mà ở DB:
@@ -48,8 +48,6 @@ export default function WriteComfortScreen() {
       onConfirm: () => navigation.dispatch(data.action),
     }),
   );
-
-  const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   // push chứ không replace: đăng nhập xong thì quay về đúng màn này, chữ đã gõ còn nguyên.
   useFocusEffect(
@@ -178,7 +176,6 @@ export default function WriteComfortScreen() {
             accessibilityLabel={t.write.inputLabel}
             multiline
             textAlignVertical="top"
-            maxLength={MAX_COMFORT_LENGTH}
             placeholder={t.write.inputPlaceholder}
             editable={!sending}
           />

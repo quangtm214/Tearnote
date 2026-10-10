@@ -238,6 +238,7 @@ const ja: Dictionary = {
   },
   validation: {
     emailInvalid: 'メールアドレスの形式が正しくないようです。もう一度確かめてください。',
+    passwordRequired: 'パスワードを入力してください。',
     passwordTooShort: 'パスワードは6文字以上にしてください。',
     passwordMismatch: '2つのパスワードが一致しません。',
     bodyTooShort: '少し短いようです。もう少し書き足してください。',

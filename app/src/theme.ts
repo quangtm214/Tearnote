@@ -2,7 +2,7 @@ import type { Lang } from './i18n';
 
 /**
  * Token hệ thống của Tearnote. Chỉ hằng số — không component, không context, không hook. Ngoại lệ
- * duy nhất: họ chữ tay của `butChi` đổi theo ngôn ngữ (`datChuTay`).
+ * duy nhất: họ chữ tay của `pencil` đổi theo ngôn ngữ (`setHandwriting`).
  *
  * Bối cảnh chi phối mọi giá trị dưới đây: người dùng mở app lúc 2 giờ sáng, vừa khóc xong,
  * cầm máy bằng một tay, trong bóng tối, mắt nhoè. Nền tối là mặc định duy nhất, không có light mode.
@@ -32,14 +32,14 @@ export const album = {
   hairline: 'rgba(228, 220, 207, 0.12)',
   /** Màu duy nhất được nổi: lối trợ giúp (~8:1 trên trang). */
   lamp: '#E2A55A',
-  /** Tấm Entry đang nhấn: giữa `tam` và `kep` — trên nền đen bóng gần như không thấy, nhấn phải sáng lên. */
+  /** Tấm Entry đang nhấn: giữa `card` và `clip` — trên nền đen bóng gần như không thấy, nhấn phải sáng lên. */
   cardLifted: '#322C27',
   /** Nền che sau hộp thoại, nền dấu × trên ảnh nhỏ: đen ấm, không #000. */
   scrim: 'rgba(10, 8, 7, 0.72)',
   /**
    * Bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục. Ô trống (ngày có thật, không Entry)
-   * rồi 5 mức theo `NGUONG` trong `lich.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
-   * Thanh chọn cường độ ở màn ghi dùng lại 5 mức này (`lich[1..5]`).
+   * rồi 5 mức theo `THRESHOLDS` trong `calendar.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
+   * Thanh chọn cường độ ở màn ghi dùng lại 5 mức này (`calendar[1..5]`).
    */
   calendar: [
     'rgba(228, 220, 207, 0.06)',
@@ -69,8 +69,8 @@ export const pencil = makePencil('PatrickHand');
 
 /**
  * Chỉ i18n gọi, ngay trước khi dựng lại cây giao diện. Thay cả ba object chứ không sửa bên trong:
- * RN đóng băng style đã truyền qua prop (bản dev ném lỗi khi sửa). Vì vậy đừng trải `...butChi.x`
- * vào StyleSheet cấp module — bản trải giữ họ chữ cũ; dùng mảng style `[butChi.x, s.y]`.
+ * RN đóng băng style đã truyền qua prop (bản dev ném lỗi khi sửa). Vì vậy đừng trải `...pencil.x`
+ * vào StyleSheet cấp module — bản trải giữ họ chữ cũ; dùng mảng style `[pencil.x, s.y]`.
  */
 export function setHandwriting(lang: Lang) {
   Object.assign(pencil, makePencil(HANDWRITING_FONT[lang]));
@@ -84,9 +84,9 @@ export function setHandwriting(lang: Lang) {
  *
  * Thang bắt đầu từ 17 chứ không phải 16, và không có nấc nào dưới 14.
  * Mắt nhoè lúc nửa đêm không đọc được caption 12. lineHeight rộng (~1.5) vì tiếng Việt có dấu
- * chồng hai tầng, dòng sát nhau là dấu dính vào dòng trên. Chỉ 3 weight: font hệ thống Android
+ * chồng hai tầng, dòng sát nhau là dấu dính vào dòng trên. Chỉ 2 weight: font hệ thống Android
  * (Roboto) render '600' không ổn định, nên dừng ở 400 / 500. Tiêu đề và nhãn mục là
- * Patrick Hand (`butChi`).
+ * Patrick Hand (`pencil`).
  */
 export const text = {
   /** Chữ thân: Reflection, nội dung Comfort. Đây là cỡ mặc định của app. */
@@ -126,8 +126,8 @@ export const touch = {
 } as const;
 
 /**
- * Hình khối (DESIGN.md › Shapes): có góc dán thì vuông (0 — không cần token); thứ ngón tay chạm bo `tay`;
- * giấy rời (mẩu kẹp, tấm lời, thẻ hotline, hộp thoại) bo `giay`. Hình tròn (đĩa play, con trượt, dấu ×)
+ * Hình khối (DESIGN.md › Shapes): có góc dán thì vuông (0 — không cần token); thứ ngón tay chạm bo `touch`;
+ * giấy rời (mẩu kẹp, tấm lời, thẻ hotline, hộp thoại) bo `paper`. Hình tròn (đĩa play, con trượt, dấu ×)
  * là hình, không phải mức bo thứ ba. Không có mức nào ≥ 20 (không viên thuốc).
  */
 export const radius = { paper: 6, touch: 14 } as const;

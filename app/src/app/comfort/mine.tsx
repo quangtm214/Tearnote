@@ -1,13 +1,14 @@
-import { router, useFocusEffect, type Href } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { z } from 'zod';
 
 import { tagLabels, t } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
-import type { TagId } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, leave, type ConfirmRequest } from '@/ui';
+import { myComfortRows } from '@/validation';
 
 /**
  * Lời mình đã viết. overview.md §6 là ràng buộc bắt buộc: người viết phải thu hồi được.
@@ -16,15 +17,10 @@ import { ScreenFooter, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, typ
  * policy `comfort_select_own` chỉ trả về dòng của chính mình. Pool của người khác
  * vẫn chỉ vào được qua `request_comfort()`.
  */
-type MyComfort = {
-  id: string;
-  body: string;
-  tags: TagId[];
-  status: 'pending' | 'approved' | 'rejected' | 'retracted';
-};
+type MyComfort = z.infer<typeof myComfortRows>[number];
 
 export default function MyComfortsScreen() {
-  // null = đang tải; 'chuaDangNhap' tách khỏi danh sách rỗng — RLS trả [] cho cả hai.
+  // null = đang tải; 'signedOut' tách khỏi danh sách rỗng — RLS trả [] cho cả hai.
   const [items, setItems] = useState<MyComfort[] | 'signedOut' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retractingId, setRetractingId] = useState<string | null>(null);
@@ -37,13 +33,14 @@ export default function MyComfortsScreen() {
       .select('id, body, tags, status')
       .order('created_at', { ascending: false });
 
-    if (error) {
+    const rows = myComfortRows.safeParse(data);
+    if (error || !rows.success) {
       setError(t.myComforts.loadError);
       setItems([]);
       return;
     }
     setError(null);
-    setItems(data as MyComfort[]);
+    setItems(rows.data);
   }, []);
 
   // Theo focus: đăng nhập xong quay lại đây thì tải lại.
@@ -75,8 +72,6 @@ export default function MyComfortsScreen() {
     AccessibilityInfo.announceForAccessibility(t.myComforts.retracted);
     await load();
   }
-
-  const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>

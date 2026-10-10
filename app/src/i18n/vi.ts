@@ -50,7 +50,7 @@ const vi = {
       `${label} đoạn ghi âm, dài ${seconds >= 60 ? `${Math.floor(seconds / 60)} phút ` : ''}${seconds % 60} giây`,
   },
 
-  /** Nhãn thời lượng đã chọn; giá trị lạ (không có trong THOI_LUONG) thì ghi số phút. */
+  /** Nhãn thời lượng đã chọn; giá trị lạ (không có trong DURATION_OPTIONS) thì ghi số phút. */
   duration: (minutes: number | null) =>
     minutes === null
       ? 'Không nhớ'
@@ -193,7 +193,7 @@ const vi = {
     needTag: 'Chọn ít nhất một chuyện ở trên.',
   },
 
-  /** Lời mình đã viết (comfort/cua-toi.tsx). */
+  /** Lời mình đã viết (comfort/mine.tsx). */
   myComforts: {
     status: {
       pending: 'Đang chờ duyệt',
@@ -245,6 +245,7 @@ const vi = {
   },
   validation: {
     emailInvalid: 'Email này chưa đúng dạng — kiểm tra lại giúp mình nhé.',
+    passwordRequired: 'Nhập mật khẩu.',
     passwordTooShort: 'Mật khẩu cần ít nhất 6 ký tự.',
     passwordMismatch: 'Hai lần nhập mật khẩu chưa khớp.',
     bodyTooShort: 'Lời nhắn còn hơi ngắn — hãy viết thêm một chút.',

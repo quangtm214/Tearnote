@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, LinkRow, PrimaryButton, TextField } from '@/ui';
+import { ScreenFooter, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
 import { check, loginForm } from '@/validation';
 
 /**
@@ -29,8 +29,6 @@ export default function LoginScreen() {
   const passwordRef = useRef<TextInput>(null);
   // Do màn Tạo tài khoản gửi về khi xong (register.tsx).
   const { registered, email: newEmail } = useLocalSearchParams<{ registered?: string; email?: string }>();
-
-  const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
   const reportError = (msg: string) => {
     setError(msg);

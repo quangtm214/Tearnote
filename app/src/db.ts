@@ -236,8 +236,9 @@ export function listReceivedComforts(entryId: string): ReceivedComfort[] {
     }));
 }
 
-export function markThanked(comfortId: string): void {
-  db.runSync(`update received_comforts set thanked = 1 where comfort_id = ?`, comfortId);
+// Khoá (entry_id, comfort_id): một lời có thể tới hai lần khóc, chỉ cảm ơn đúng lần khóc đang xem.
+export function markThanked(entryId: string, comfortId: string): void {
+  db.runSync(`update received_comforts set thanked = 1 where entry_id = ? and comfort_id = ?`, entryId, comfortId);
 }
 
 /**

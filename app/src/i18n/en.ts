@@ -251,6 +251,7 @@ const en: Dictionary = {
   },
   validation: {
     emailInvalid: "That email doesn't look right — please check it.",
+    passwordRequired: 'Enter your password.',
     passwordTooShort: 'Your password needs at least 6 characters.',
     passwordMismatch: "The passwords don't match.",
     bodyTooShort: 'Your words are a little short — add a bit more.',
