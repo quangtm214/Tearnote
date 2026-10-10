@@ -1,5 +1,5 @@
 import type { Entry } from './db';
-import { mucMau, tongTheoNgay } from './lich';
+import { colorLevel, dailyTotals } from './calendar';
 
 const e = (occurredAt: number, intensity: number): Entry => ({
   id: String(occurredAt),
@@ -12,11 +12,11 @@ const e = (occurredAt: number, intensity: number): Entry => ({
 
 describe('lịch cường độ', () => {
   it('đổi tổng ra mức theo ngưỡng cố định', () => {
-    expect([0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 20].map(mucMau)).toEqual([0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+    expect([0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 20].map(colorLevel)).toEqual([0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
   });
 
   it('cộng cường độ các Entry cùng ngày, bỏ Entry khác năm', () => {
-    const t = tongTheoNgay(
+    const totals = dailyTotals(
       [
         e(new Date(2026, 2, 4, 1).getTime(), 1),
         e(new Date(2026, 2, 4, 23).getTime(), 5),
@@ -25,8 +25,8 @@ describe('lịch cường độ', () => {
       ],
       2026,
     );
-    expect(t[2][3]).toBe(6);
-    expect(t[2][4]).toBe(2);
-    expect(t.flat().reduce((a, b) => a + b)).toBe(8);
+    expect(totals[2][3]).toBe(6);
+    expect(totals[2][4]).toBe(2);
+    expect(totals.flat().reduce((a, b) => a + b)).toBe(8);
   });
 });

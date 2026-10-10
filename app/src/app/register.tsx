@@ -12,148 +12,148 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { supabase } from '@/supabase';
-import { album, butChi, space, text } from '@/theme';
-import { ChanMan, DongLoi, NutChinh, ONhap } from '@/ui';
+import { album, pencil, space, text } from '@/theme';
+import { ScreenFooter, LinkRow, PrimaryButton, TextField } from '@/ui';
 
 /**
- * Tạo tài khoản — mở từ màn Đăng nhập, xong thì quay về đó (dismissTo kèm param `tao`
- * để màn Đăng nhập biết báo gì hoặc tự thoát).
+ * Táº¡o tÃ i khoáº£n â€” má»Ÿ tá»« mÃ n ÄÄƒng nháº­p, xong thÃ¬ quay vá» Ä‘Ã³ (dismissTo kÃ¨m param `tao`
+ * Ä‘á»ƒ mÃ n ÄÄƒng nháº­p biáº¿t bÃ¡o gÃ¬ hoáº·c tá»± thoÃ¡t).
  */
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
-  const [matKhau, setMatKhau] = useState('');
-  const [nhapLai, setNhapLai] = useState('');
-  const [dangChay, setDangChay] = useState(false);
-  const [loi, setLoi] = useState<string | null>(null);
-  const matKhauRef = useRef<TextInput>(null);
-  const nhapLaiRef = useRef<TextInput>(null);
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
 
-  const baoLoi = (msg: string) => {
-    setLoi(msg);
+  const reportError = (msg: string) => {
+    setError(msg);
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  // 'xong' = đã có tài khoản thật và session; 'xacMinh' = còn chờ xác minh email.
-  const veDangNhap = (tao: 'xong' | 'xacMinh') =>
-    router.dismissTo({ pathname: '/login', params: { tao, email } });
+  // 'xong' = Ä‘Ã£ cÃ³ tÃ i khoáº£n tháº­t vÃ  session; 'xacMinh' = cÃ²n chá» xÃ¡c minh email.
+  const backToLogin = (result: 'done' | 'verify') =>
+    router.dismissTo({ pathname: '/login', params: { registered: result, email } });
 
-  async function tao() {
-    if (dangChay) return;
-    setLoi(null);
+  async function register() {
+    if (busy) return;
+    setError(null);
 
-    if (!email.includes('@') || matKhau.length < 6) {
-      return baoLoi(t.chung.loiEmail);
+    if (!email.includes('@') || password.length < 6) {
+      return reportError(t.common.emailError);
     }
-    if (matKhau !== nhapLai) return baoLoi(t.taoTaiKhoan.khongKhop);
+    if (password !== confirm) return reportError(t.register.mismatch);
 
-    setDangChay(true);
+    setBusy(true);
     try {
-      // Đăng ký khi đang có session anonymous phải NÂNG CẤP chính user đó, không tạo user mới:
-      // deliveries neo vào user id: tạo mới là mất lịch sử "đã nhận Comfort nào", trần 3/24h
-      // reset, và người dùng nhận lại đúng lời đã đọc. signUp chỉ dùng khi chưa có session.
-      const { data: phien } = await supabase.auth.getSession();
+      // ÄÄƒng kÃ½ khi Ä‘ang cÃ³ session anonymous pháº£i NÃ‚NG Cáº¤P chÃ­nh user Ä‘Ã³, khÃ´ng táº¡o user má»›i:
+      // deliveries neo vÃ o user id: táº¡o má»›i lÃ  máº¥t lá»‹ch sá»­ "Ä‘Ã£ nháº­n Comfort nÃ o", tráº§n 3/24h
+      // reset, vÃ  ngÆ°á»i dÃ¹ng nháº­n láº¡i Ä‘Ãºng lá»i Ä‘Ã£ Ä‘á»c. signUp chá»‰ dÃ¹ng khi chÆ°a cÃ³ session.
+      const { data: sessionData } = await supabase.auth.getSession();
 
-      if (phien.session?.user.is_anonymous === true) {
-        const { data, error } = await supabase.auth.updateUser({ email, password: matKhau });
-        if (error) return baoLoi(t.taoTaiKhoan.loiTao);
-        // updateUser không bao giờ trả session. Còn chờ xác minh thì email mới nằm ở new_email;
-        // đã đổi ngay (dự án tắt xác minh) thì làm mới JWT để claim is_anonymous hết là true —
-        // không thì RLS vẫn coi đây là tài khoản ẩn danh và chặn viết.
-        if (data.user.new_email || !data.user.email) return veDangNhap('xacMinh');
+      if (sessionData.session?.user.is_anonymous === true) {
+        const { data, error } = await supabase.auth.updateUser({ email, password: password });
+        if (error) return reportError(t.register.createError);
+        // updateUser khÃ´ng bao giá» tráº£ session. CÃ²n chá» xÃ¡c minh thÃ¬ email má»›i náº±m á»Ÿ new_email;
+        // Ä‘Ã£ Ä‘á»•i ngay (dá»± Ã¡n táº¯t xÃ¡c minh) thÃ¬ lÃ m má»›i JWT Ä‘á»ƒ claim is_anonymous háº¿t lÃ  true â€”
+        // khÃ´ng thÃ¬ RLS váº«n coi Ä‘Ã¢y lÃ  tÃ i khoáº£n áº©n danh vÃ  cháº·n viáº¿t.
+        if (data.user.new_email || !data.user.email) return backToLogin('verify');
         await supabase.auth.refreshSession();
-        return veDangNhap('xong');
+        return backToLogin('done');
       }
 
-      const { data, error } = await supabase.auth.signUp({ email, password: matKhau });
-      if (error) return baoLoi(t.taoTaiKhoan.loiTao);
-      // Không có session trả về = dự án đang bật xác minh email.
-      veDangNhap(data.session ? 'xong' : 'xacMinh');
+      const { data, error } = await supabase.auth.signUp({ email, password: password });
+      if (error) return reportError(t.register.createError);
+      // KhÃ´ng cÃ³ session tráº£ vá» = dá»± Ã¡n Ä‘ang báº­t xÃ¡c minh email.
+      backToLogin(data.session ? 'done' : 'verify');
     } catch {
-      baoLoi(t.chung.loiMang);
+      reportError(t.common.networkError);
     } finally {
-      setDangChay(false);
+      setBusy(false);
     }
   }
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={s.man} behavior="padding">
-        <ScrollView contentContainerStyle={s.noiDung} keyboardShouldPersistTaps="handled">
-          <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            {t.taoTaiKhoan.tieuDe}
+    <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView style={s.screen} behavior="padding">
+        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+          <Text style={[pencil.title, s.title]} accessibilityRole="header">
+            {t.register.title}
           </Text>
 
-          <Text style={s.giaiThich}>{t.taoTaiKhoan.giaiThich}</Text>
+          <Text style={s.explanation}>{t.register.explanation}</Text>
 
-          <Text style={s.nhan}>{t.chung.email}</Text>
-          {/* Enter đi qua đủ ba ô; ô cuối là tạo tài khoản. */}
-          <ONhap
+          <Text style={s.label}>{t.common.email}</Text>
+          {/* Enter Ä‘i qua Ä‘á»§ ba Ã´; Ã´ cuá»‘i lÃ  táº¡o tÃ i khoáº£n. */}
+          <TextField
             value={email}
             onChangeText={setEmail}
-            accessibilityLabel={t.chung.email}
+            accessibilityLabel={t.common.email}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
             textContentType="emailAddress"
             autoComplete="email"
-            placeholder={t.chung.emailMau}
+            placeholder={t.common.emailPlaceholder}
             returnKeyType="next"
             submitBehavior="submit"
-            onSubmitEditing={() => matKhauRef.current?.focus()}
-            editable={!dangChay}
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            editable={!busy}
           />
 
-          <Text style={s.nhan}>{t.chung.matKhau}</Text>
-          <ONhap
-            ref={matKhauRef}
-            value={matKhau}
-            onChangeText={setMatKhau}
-            accessibilityLabel={t.chung.matKhau}
+          <Text style={s.label}>{t.common.password}</Text>
+          <TextField
+            ref={passwordRef}
+            value={password}
+            onChangeText={setPassword}
+            accessibilityLabel={t.common.password}
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry
             textContentType="newPassword"
             autoComplete="new-password"
-            placeholder={t.chung.matKhauGoiY}
+            placeholder={t.common.passwordHint}
             returnKeyType="next"
             submitBehavior="submit"
-            onSubmitEditing={() => nhapLaiRef.current?.focus()}
-            editable={!dangChay}
+            onSubmitEditing={() => confirmRef.current?.focus()}
+            editable={!busy}
           />
 
-          <Text style={s.nhan}>{t.taoTaiKhoan.nhapLai}</Text>
-          <ONhap
-            ref={nhapLaiRef}
-            value={nhapLai}
-            onChangeText={setNhapLai}
-            accessibilityLabel={t.taoTaiKhoan.nhapLai}
+          <Text style={s.label}>{t.register.confirmPassword}</Text>
+          <TextField
+            ref={confirmRef}
+            value={confirm}
+            onChangeText={setConfirm}
+            accessibilityLabel={t.register.confirmPassword}
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry
             textContentType="newPassword"
             autoComplete="new-password"
             returnKeyType="go"
-            onSubmitEditing={() => void tao()}
-            editable={!dangChay}
+            onSubmitEditing={() => void register()}
+            editable={!busy}
           />
 
-          {loi ? <Text style={s.loi}>{loi}</Text> : null}
+          {error ? <Text style={s.error}>{error}</Text> : null}
 
-          <DongLoi nhan={t.taoTaiKhoan.daCo} mui onPress={() => router.back()} />
+          <LinkRow label={t.register.haveAccount} chevron onPress={() => router.back()} />
         </ScrollView>
-        <ChanMan>
-          <NutChinh nhan={t.taoTaiKhoan.tieuDe} onPress={tao} dangChay={dangChay} />
-        </ChanMan>
+        <ScreenFooter>
+          <PrimaryButton label={t.register.title} onPress={register} busy={busy} />
+        </ScreenFooter>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  man: { flex: 1, backgroundColor: album.trang },
-  noiDung: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl, gap: space.md },
-  tieuDe: { color: album.chu },
-  giaiThich: { ...text.than, color: album.butChi },
-  nhan: { ...text.phu, color: album.butChi, marginTop: space.sm },
-  loi: { ...text.than, color: album.chu },
+  screen: { flex: 1, backgroundColor: album.page },
+  content: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl, gap: space.md },
+  title: { color: album.ink },
+  explanation: { ...text.body, color: album.pencil },
+  label: { ...text.caption, color: album.pencil, marginTop: space.sm },
+  error: { ...text.body, color: album.ink },
 });

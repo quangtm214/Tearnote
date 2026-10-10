@@ -18,8 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Defs, Path } from 'react-native-svg';
 
 import type { Attachment, Entry } from './db';
-import { nhanTags, t } from './i18n';
-import { album, bo, butChi, space, text, touch } from './theme';
+import { tagLabels, t } from './i18n';
+import { album, pencil, radius, space, text, touch } from './theme';
 
 /**
  * Chỗ duy nhất cho thứ đã lặp từ lần thứ hai. Đừng đẩy thêm gì vào đây trước khi
@@ -27,7 +27,7 @@ import { album, bo, butChi, space, text, touch } from './theme';
  */
 
 /** Bóng mềm, thấp: tấm dán nằm trên trang chứ không bay. */
-export const bong = {
+export const shadow = {
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 3 },
   shadowOpacity: 0.45,
@@ -36,37 +36,37 @@ export const bong = {
 };
 
 /** Bốn góc dán ảnh giữ một tấm vào trang. */
-export function GocDan({ co = 14 }: { co?: number }) {
-  const g = { width: 0, height: 0, position: 'absolute' as const, borderColor: 'transparent' };
+export function PhotoCorners({ size = 14 }: { size?: number }) {
+  const base = { width: 0, height: 0, position: 'absolute' as const, borderColor: 'transparent' };
   return (
     <>
-      <View style={[g, { top: -2, left: -2, borderTopWidth: co, borderRightWidth: co, borderTopColor: album.goc }]} />
-      <View style={[g, { top: -2, right: -2, borderTopWidth: co, borderLeftWidth: co, borderTopColor: album.goc }]} />
-      <View style={[g, { bottom: -2, left: -2, borderBottomWidth: co, borderRightWidth: co, borderBottomColor: album.goc }]} />
-      <View style={[g, { bottom: -2, right: -2, borderBottomWidth: co, borderLeftWidth: co, borderBottomColor: album.goc }]} />
+      <View style={[base, { top: -2, left: -2, borderTopWidth: size, borderRightWidth: size, borderTopColor: album.corner }]} />
+      <View style={[base, { top: -2, right: -2, borderTopWidth: size, borderLeftWidth: size, borderTopColor: album.corner }]} />
+      <View style={[base, { bottom: -2, left: -2, borderBottomWidth: size, borderRightWidth: size, borderBottomColor: album.corner }]} />
+      <View style={[base, { bottom: -2, right: -2, borderBottomWidth: size, borderLeftWidth: size, borderBottomColor: album.corner }]} />
     </>
   );
 }
 
 /** Giọt nước mắt vẽ tay (hơi lệch hai bên), khung 20×28: chóp y=1.5, đáy y=26. */
-const GIOT = 'M10 1.5C8.6 5 2.2 11.4 2.2 17.8C2.2 22.3 5.7 26 10 26C14.4 26 17.9 22.3 17.8 17.7C17.7 11.6 11.5 5.1 10 1.5Z';
+const TEAR_PATH = 'M10 1.5C8.6 5 2.2 11.4 2.2 17.8C2.2 22.3 5.7 26 10 26C14.4 26 17.9 22.3 17.8 17.7C17.7 11.6 11.5 5.1 10 1.5Z';
 
 /**
  * Cường độ 1–5 là một giọt nước mắt đầy dần: 1 là đáy giọt, 5 là đầy. Mặt nước gợn nhẹ để đọc
  * thành nước chứ không thành thanh đo. Viền và phần đầy cùng màu bút chì.
  */
-export function Giot({ n }: { n: number }) {
-  const y = 26 - (24.5 * n) / 5;
+export function TearDrop({ level }: { level: number }) {
+  const y = 26 - (24.5 * level) / 5;
   return (
     <Svg width={20} height={28} viewBox="0 0 20 28">
       <Defs>
         {/* id chỉ cần duy nhất trong một <Svg>: trên native mỗi <Svg> giữ defs riêng. */}
-        <ClipPath id="giot">
-          <Path d={GIOT} />
+        <ClipPath id="tear">
+          <Path d={TEAR_PATH} />
         </ClipPath>
       </Defs>
-      <Path d={`M0 ${y}Q5 ${y - 1.5} 10 ${y}T20 ${y}V28H0Z`} fill={album.butChi} clipPath="url(#giot)" />
-      <Path d={GIOT} fill="none" stroke={album.butChi} strokeWidth={1.5} strokeLinejoin="round" />
+      <Path d={`M0 ${y}Q5 ${y - 1.5} 10 ${y}T20 ${y}V28H0Z`} fill={album.pencil} clipPath="url(#tear)" />
+      <Path d={TEAR_PATH} fill="none" stroke={album.pencil} strokeWidth={1.5} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -76,111 +76,111 @@ export function Giot({ n }: { n: number }) {
  * tấm Entry hiện lại đúng nhãn đã chọn (`t.thoiLuong`) — không khẳng định "60 phút" khi họ chỉ nói
  * "lâu hơn".
  */
-export const THOI_LUONG = [null, 5, 15, 30, 60];
+export const DURATION_OPTIONS = [null, 5, 15, 30, 60];
 
-let dinhDang:
-  | { locale: string; gio: Intl.DateTimeFormat; namNay: Intl.DateTimeFormat; namKhac: Intl.DateTimeFormat }
+let formatters:
+  | { locale: string; time: Intl.DateTimeFormat; thisYear: Intl.DateTimeFormat; otherYear: Intl.DateTimeFormat }
   | undefined;
 
 /** Formatter theo ngôn ngữ đang dùng; tạo lại khi đổi ngôn ngữ, không tạo mỗi lần gọi. */
-function dd() {
-  if (dinhDang?.locale !== t.locale) {
-    const ngay = { weekday: 'long', day: 'numeric', month: 'long' } as const;
-    dinhDang = {
+function getFormatters() {
+  if (formatters?.locale !== t.locale) {
+    const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' } as const;
+    formatters = {
       locale: t.locale,
-      gio: new Intl.DateTimeFormat(t.locale, { hour: '2-digit', minute: '2-digit', hour12: false }),
-      namNay: new Intl.DateTimeFormat(t.locale, ngay),
-      namKhac: new Intl.DateTimeFormat(t.locale, { ...ngay, year: 'numeric' }),
+      time: new Intl.DateTimeFormat(t.locale, { hour: '2-digit', minute: '2-digit', hour12: false }),
+      thisYear: new Intl.DateTimeFormat(t.locale, dateOptions),
+      otherYear: new Intl.DateTimeFormat(t.locale, { ...dateOptions, year: 'numeric' }),
     };
   }
-  return dinhDang;
+  return formatters;
 }
 
-export const nhanGio = (ms: number) => dd().gio.format(ms);
+export const formatTime = (ms: number) => getFormatters().time.format(ms);
 
 /** "Thứ Bảy, 26 tháng 9"; khác năm nay thì thêm năm, để hai đêm ở hai năm không trùng tên. */
-export const nhanNgay = (ms: number) =>
-  (new Date(ms).getFullYear() === new Date().getFullYear() ? dd().namNay : dd().namKhac).format(ms);
+export const formatDate = (ms: number) =>
+  (new Date(ms).getFullYear() === new Date().getFullYear() ? getFormatters().thisYear : getFormatters().otherYear).format(ms);
 
 /** Trạng thái Comfort của một tấm: chưa xin thì không có gì kẹp vào. */
-export type TrangThai = 'kep' | 'camOn' | undefined;
+export type ComfortState = 'clipped' | 'thanked' | undefined;
 
 /**
  * Tấm Entry. Có `onPress` (Timeline) thì bấm được, cắt ở 6 dòng và chỉ dán ảnh đầu; không có
  * (màn xem một Entry) thì là tấm để đọc, hiện đủ Reflection và mọi ảnh.
  */
-export function TamEntry({
-  e,
-  dk = [],
-  tt,
+export function EntryCard({
+  entry,
+  attachments = [],
+  comfortState,
   onPress,
 }: {
-  e: Entry;
-  dk?: Attachment[];
-  tt?: TrangThai;
+  entry: Entry;
+  attachments?: Attachment[];
+  comfortState?: ComfortState;
   onPress?: () => void;
 }) {
-  const nhanTag = nhanTags(e.tags);
-  const anh = dk.filter((d) => d.kind === 'image').map((d) => d.uri);
+  const tagText = tagLabels(entry.tags);
+  const photoUris = attachments.filter((a) => a.kind === 'image').map((a) => a.uri);
   // Không có Reflection thì Tag đã là thân tấm — chú thích không lặp lại. Chú thích viết thường hết.
-  const phan = [
-    nhanGio(e.occurredAt),
-    e.durationMin !== null && t.thoiLuong(e.durationMin).toLowerCase(),
-    e.reflection && nhanTag.toLowerCase(),
-    anh.length > 0 && t.tam.anh(anh.length),
-    dk.some((d) => d.kind === 'audio') && t.tam.ghiAm,
+  const parts = [
+    formatTime(entry.occurredAt),
+    entry.durationMin !== null && t.duration(entry.durationMin).toLowerCase(),
+    entry.reflection && tagText.toLowerCase(),
+    photoUris.length > 0 && t.card.photos(photoUris.length),
+    attachments.some((a) => a.kind === 'audio') && t.card.recording,
   ].filter(Boolean);
-  const nhanComfort = tt === 'kep' ? t.tam.kep : tt === 'camOn' ? t.chung.daCamOn : null;
+  const clipLabel = comfortState === 'clipped' ? t.card.clipped : comfortState === 'thanked' ? t.common.thanked : null;
   // Mẩu kẹp là ẩn dụ cho người nhìn; screen reader nghe thẳng nghĩa của nó.
-  const nhanDoc = [
-    e.reflection || nhanTag,
-    ...phan,
-    t.chung.cuongDo(e.intensity),
-    tt === 'kep' ? t.tam.coLoi : tt === 'camOn' ? t.tam.coLoiCamOn : null,
+  const spokenLabel = [
+    entry.reflection || tagText,
+    ...parts,
+    t.common.intensity(entry.intensity),
+    comfortState === 'clipped' ? t.card.hasComfort : comfortState === 'thanked' ? t.card.hasComfortThanked : null,
   ]
     .filter(Boolean)
     .join(', ');
-  const noiDung = (
+  const content = (
     <>
-      <GocDan />
-      {(onPress ? anh.slice(0, 1) : anh).map((uri) => (
-        <AnhTrenTam key={uri} uri={uri} du={!onPress} />
+      <PhotoCorners />
+      {(onPress ? photoUris.slice(0, 1) : photoUris).map((uri) => (
+        <CardPhoto key={uri} uri={uri} full={!onPress} />
       ))}
-      <Text style={s.than} numberOfLines={onPress ? 6 : undefined}>
-        {e.reflection || nhanTag}
+      <Text style={s.body} numberOfLines={onPress ? 6 : undefined}>
+        {entry.reflection || tagText}
       </Text>
       {/* Chú thích nằm trong tấm: để ngoài thì giờ và giọt cường độ lơ lửng giữa hai tấm, không rõ
           của tấm trên hay tấm dưới. Đã đọc trong nhãn của tấm — ẩn khỏi screen reader để không đọc lặp. */}
       <View
-        style={s.dongChuThich}
+        style={s.noteRow}
         importantForAccessibility="no-hide-descendants"
         accessibilityElementsHidden
       >
-        <Text style={[butChi.chuThich, s.chuThich]}>{phan.join(' · ')}</Text>
-        <Giot n={e.intensity} />
+        <Text style={[pencil.note, s.note]}>{parts.join(' · ')}</Text>
+        <TearDrop level={entry.intensity} />
       </View>
-      {nhanComfort && (
-        <View style={s.kep}>
-          <Text style={[butChi.chuThich, s.chuKep]}>{nhanComfort}</Text>
+      {clipLabel && (
+        <View style={s.clip}>
+          <Text style={[pencil.note, s.clipText]}>{clipLabel}</Text>
         </View>
       )}
     </>
   );
   return (
-    <View style={[s.oTam, nhanComfort ? s.duoiKep : null]}>
+    <View style={[s.cardSlot, clipLabel ? s.belowClip : null]}>
       {onPress ? (
         <Pressable
           onPress={onPress}
           accessibilityRole="button"
-          accessibilityLabel={nhanDoc}
-          style={({ pressed }) => [s.tam, pressed && s.nhac]}
+          accessibilityLabel={spokenLabel}
+          style={({ pressed }) => [s.card, pressed && s.lifted]}
         >
-          {noiDung}
+          {content}
         </Pressable>
       ) : (
         // Tấm để đọc: Pressable không có onPress vẫn bị TalkBack mời "nhấn đúp để kích hoạt".
-        <View accessible accessibilityRole="text" accessibilityLabel={nhanDoc} style={s.tam}>
-          {noiDung}
+        <View accessible accessibilityRole="text" accessibilityLabel={spokenLabel} style={s.card}>
+          {content}
         </View>
       )}
     </View>
@@ -191,88 +191,88 @@ export function TamEntry({
  * Ảnh dán trên tấm. Timeline cắt 4:3 cho nhịp đều; tấm để đọc (`du`) giữ đúng tỉ lệ ảnh.
  * `resize` để Android giải mã ảnh ở cỡ hiển thị, không phải ảnh gốc 12MP.
  */
-function AnhTrenTam({ uri, du }: { uri: string; du: boolean }) {
-  const [tiLe, setTiLe] = useState(4 / 3);
+function CardPhoto({ uri, full }: { uri: string; full: boolean }) {
+  const [ratio, setRatio] = useState(4 / 3);
   return (
     <Image
       source={{ uri }}
       resizeMethod="resize"
-      onLoad={du ? (ev) => setTiLe(ev.nativeEvent.source.width / ev.nativeEvent.source.height) : undefined}
-      style={[s.anh, { aspectRatio: tiLe }]}
+      onLoad={full ? (ev) => setRatio(ev.nativeEvent.source.width / ev.nativeEvent.source.height) : undefined}
+      style={[s.photo, { aspectRatio: ratio }]}
     />
   );
 }
 
 /** Giây → "4:05". */
-export const phutGiay = (giay: number) =>
-  `${Math.floor(giay / 60)}:${String(Math.floor(giay % 60)).padStart(2, '0')}`;
+export const formatClock = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 /** Nghe lại một đoạn ghi âm: dải giấy bo mềm với đĩa play tròn, bấm để nghe / tạm dừng. */
-export function NgheLai({ uri }: { uri: string }) {
+export function VoicePlayer({ uri }: { uri: string }) {
   const player = useAudioPlayer(uri);
-  const st = useAudioPlayerStatus(player);
+  const status = useAudioPlayerStatus(player);
 
-  async function bam() {
-    if (st.playing) return player.pause();
+  async function toggle() {
+    if (status.playing) return player.pause();
     // Nghe hết thì máy phát đứng ở cuối — tua về đầu mới phát lại được.
-    if (st.duration > 0 && st.currentTime >= st.duration - 0.1) await player.seekTo(0);
+    if (status.duration > 0 && status.currentTime >= status.duration - 0.1) await player.seekTo(0);
     player.play();
   }
 
-  const nhan = st.playing ? t.tam.dung : t.tam.nghe;
+  const label = status.playing ? t.card.pause : t.card.listen;
   return (
     <Pressable
-      onPress={bam}
+      onPress={toggle}
       accessibilityRole="button"
-      accessibilityLabel={t.tam.ngheA11y(nhan, Math.round(st.duration))}
-      style={({ pressed }) => [s.nghe, pressed && s.nutNhan]}
+      accessibilityLabel={t.card.listenA11y(label, Math.round(status.duration))}
+      style={({ pressed }) => [s.player, pressed && s.pressedButton]}
     >
-      <View style={s.dia}>
-        <MaterialCommunityIcons name={st.playing ? 'pause' : 'play'} size={22} color={album.trang} />
+      <View style={s.disc}>
+        <MaterialCommunityIcons name={status.playing ? 'pause' : 'play'} size={22} color={album.page} />
       </View>
-      <Text style={s.chuNghe}>{nhan}</Text>
-      <Text style={[butChi.chuThich, s.giayNghe]} importantForAccessibility="no">
-        {st.playing ? `${phutGiay(st.currentTime)} / ` : ''}
-        {phutGiay(st.duration)}
+      <Text style={s.playerText}>{label}</Text>
+      <Text style={[pencil.note, s.playerTime]} importantForAccessibility="no">
+        {status.playing ? `${formatClock(status.currentTime)} / ` : ''}
+        {formatClock(status.duration)}
       </Text>
     </Pressable>
   );
 }
 
-export type TenIcon = keyof typeof MaterialCommunityIcons.glyphMap;
+export type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 /**
  * Dòng lối: không nền, không viền, cả hàng là vùng bấm; nhấn thì mờ đi. `icon` đứng trước khi lối làm một
  * việc ngay (Quay lại, Đăng xuất…); `mui` là chevron cuối hàng khi lối dẫn sang màn khác.
  */
-export function DongLoi({
-  nhan,
-  phu,
+export function LinkRow({
+  label,
+  detail,
   icon,
-  mui,
+  chevron,
   onPress,
 }: {
-  nhan: string;
-  phu?: string;
-  icon?: TenIcon;
-  mui?: boolean;
+  label: string;
+  detail?: string;
+  icon?: IconName;
+  chevron?: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={nhan}
-      accessibilityHint={phu}
-      style={({ pressed }) => [s.loi, pressed && s.mo]}
+      accessibilityLabel={label}
+      accessibilityHint={detail}
+      style={({ pressed }) => [s.link, pressed && s.dim]}
     >
-      <View style={s.hangLoi}>
-        {icon ? <MaterialCommunityIcons name={icon} size={24} color={album.chu} /> : null}
-        <View style={s.khoiLoi}>
-          <Text style={s.chuLoi}>{nhan}</Text>
-          {phu ? <Text style={s.phuLoi}>{phu}</Text> : null}
+      <View style={s.linkRow}>
+        {icon ? <MaterialCommunityIcons name={icon} size={24} color={album.ink} /> : null}
+        <View style={s.linkBlock}>
+          <Text style={s.linkText}>{label}</Text>
+          {detail ? <Text style={s.linkDetail}>{detail}</Text> : null}
         </View>
-        {mui ? <MaterialCommunityIcons name="chevron-right" size={24} color={album.butChi} /> : null}
+        {chevron ? <MaterialCommunityIcons name="chevron-right" size={24} color={album.pencil} /> : null}
       </View>
     </Pressable>
   );
@@ -282,33 +282,33 @@ export function DongLoi({
  * Nút phụ: hành động tại chỗ (Chụp ảnh, Ghi âm, Cảm ơn, Thu hồi…). Mảnh tonal bo mềm — thấy được là bấm được
  * mà không tranh với nút chính. Hết lượt thì mờ và tắt, không ẩn, để vị trí không nhảy.
  */
-export function NutPhu({
-  nhan,
+export function SecondaryButton({
+  label,
   onPress,
   icon,
-  tat,
+  disabled,
   accessibilityLabel,
   accessibilityHint,
 }: {
-  nhan: string;
+  label: string;
   onPress: () => void;
-  icon?: TenIcon;
-  tat?: boolean;
+  icon?: IconName;
+  disabled?: boolean;
   accessibilityLabel?: string;
   accessibilityHint?: string;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      disabled={tat}
+      disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? nhan}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: !!tat }}
-      style={({ pressed }) => [s.nutPhu, pressed && s.mo, tat && s.nhat]}
+      accessibilityState={{ disabled: !!disabled }}
+      style={({ pressed }) => [s.secondaryButton, pressed && s.dim, disabled && s.faded]}
     >
-      {icon ? <MaterialCommunityIcons name={icon} size={20} color={album.butChi} /> : null}
-      <Text style={s.chuNutPhu}>{nhan}</Text>
+      {icon ? <MaterialCommunityIcons name={icon} size={20} color={album.pencil} /> : null}
+      <Text style={s.secondaryText}>{label}</Text>
     </Pressable>
   );
 }
@@ -317,40 +317,40 @@ export function NutPhu({
  * Nút chính: mảnh `tam` bo mềm, không góc dán (góc dán chỉ dành cho thứ được dán). Nhấn thì sáng lên một bậc.
  * `nhanDangChay`: khi chờ lâu (xin lời) thì nói đang làm gì, đừng để một tấm trống với vòng quay.
  */
-export function NutChinh({
-  nhan,
+export function PrimaryButton({
+  label,
   onPress,
-  tat,
-  dangChay,
-  nhanDangChay,
+  disabled,
+  busy,
+  busyLabel,
 }: {
-  nhan: string;
+  label: string;
   onPress: () => void;
-  tat?: boolean;
-  dangChay?: boolean;
-  nhanDangChay?: string;
+  disabled?: boolean;
+  busy?: boolean;
+  busyLabel?: string;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      disabled={tat || dangChay}
+      disabled={disabled || busy}
       accessibilityRole="button"
-      accessibilityLabel={dangChay && nhanDangChay ? nhanDangChay : nhan}
-      accessibilityState={{ disabled: !!tat, busy: !!dangChay }}
-      style={({ pressed }) => [s.nutChinh, pressed && s.nutNhan, tat && s.nhat]}
+      accessibilityLabel={busy && busyLabel ? busyLabel : label}
+      accessibilityState={{ disabled: !!disabled, busy: !!busy }}
+      style={({ pressed }) => [s.primaryButton, pressed && s.pressedButton, disabled && s.faded]}
     >
-      {dangChay ? (
-        <View style={s.hangCho}>
-          <ActivityIndicator color={album.chu} />
-          {nhanDangChay ? (
-            <Text style={s.chuNutChinh} maxFontSizeMultiplier={1.6}>
-              {nhanDangChay}
+      {busy ? (
+        <View style={s.waitRow}>
+          <ActivityIndicator color={album.ink} />
+          {busyLabel ? (
+            <Text style={s.primaryText} maxFontSizeMultiplier={1.6}>
+              {busyLabel}
             </Text>
           ) : null}
         </View>
       ) : (
-        <Text style={s.chuNutChinh} maxFontSizeMultiplier={1.6}>
-          {nhan}
+        <Text style={s.primaryText} maxFontSizeMultiplier={1.6}>
+          {label}
         </Text>
       )}
     </Pressable>
@@ -362,14 +362,14 @@ export function NutChinh({
  * thường trực, ở mọi màn, cùng một chỗ. Màn hotline thì không cần chân màn này. Nút chính của màn
  * (Lưu lại, Gửi, Đăng nhập…) cũng nằm ở đây, ngay trên lối trợ giúp.
  */
-export function ChanMan({ children }: { children?: ReactNode }) {
+export function ScreenFooter({ children }: { children?: ReactNode }) {
   return (
-    <View style={s.chanMan}>
+    <View style={s.footer}>
       {children}
-      <NutDen
-        nhan={t.chung.canTroGiup}
+      <HelpButton
+        label={t.common.needHelp}
         icon="lifebuoy"
-        accessibilityHint={t.chung.troGiupGoiY}
+        accessibilityHint={t.common.needHelpHint}
         onPress={() => router.push('/help')}
       />
     </View>
@@ -377,16 +377,16 @@ export function ChanMan({ children }: { children?: ReactNode }) {
 }
 
 /** Lối trợ giúp — chỗ duy nhất có màu `den`: viền khi nghỉ, tô kín khi nhấn. */
-export function NutDen({
-  nhan,
+export function HelpButton({
+  label,
   onPress,
   icon,
   accessibilityLabel,
   accessibilityHint,
 }: {
-  nhan: string;
+  label: string;
   onPress: () => void;
-  icon?: TenIcon;
+  icon?: IconName;
   accessibilityLabel?: string;
   accessibilityHint?: string;
 }) {
@@ -395,17 +395,17 @@ export function NutDen({
       onPress={onPress}
       accessibilityRole="button"
       // Nhãn đặt sẵn để screen reader không đọc ký tự của icon.
-      accessibilityLabel={accessibilityLabel ?? nhan}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
-      style={({ pressed }) => [s.nutDen, pressed && s.denSang]}
+      style={({ pressed }) => [s.helpButton, pressed && s.helpPressed]}
     >
       {({ pressed }) => (
         <>
           {icon ? (
-            <MaterialCommunityIcons name={icon} size={24} color={pressed ? album.trang : album.den} />
+            <MaterialCommunityIcons name={icon} size={24} color={pressed ? album.page : album.lamp} />
           ) : null}
-          <Text style={[s.chuDen, pressed && s.chuTrenDen]} maxFontSizeMultiplier={1.6}>
-            {nhan}
+          <Text style={[s.helpText, pressed && s.helpTextPressed]} maxFontSizeMultiplier={1.6}>
+            {label}
           </Text>
         </>
       )}
@@ -418,32 +418,32 @@ export function NutDen({
  * Chọn thì tô chữ ngà, chữ đổi sang màu trang.
  */
 export function Pill({
-  nhan,
-  chon,
-  tat,
-  mot,
+  label,
+  selected,
+  disabled,
+  single,
   onPress,
 }: {
-  nhan: string;
-  chon: boolean;
-  tat?: boolean;
-  mot?: boolean;
+  label: string;
+  selected: boolean;
+  disabled?: boolean;
+  single?: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      disabled={tat}
-      accessibilityRole={mot ? 'radio' : 'checkbox'}
-      accessibilityState={{ checked: chon, disabled: !!tat }}
+      disabled={disabled}
+      accessibilityRole={single ? 'radio' : 'checkbox'}
+      accessibilityState={{ checked: selected, disabled: !!disabled }}
       style={({ pressed }) => [
         s.pill,
-        chon && s.pillChon,
-        pressed && (chon ? s.chonNhan : s.nutNhan),
-        tat && s.nhat,
+        selected && s.pillSelected,
+        pressed && (selected ? s.pressedSelected : s.pressedButton),
+        disabled && s.faded,
       ]}
     >
-      <Text style={[s.chuPill, chon && s.chuPillChon]}>{nhan}</Text>
+      <Text style={[s.pillText, selected && s.pillTextSelected]}>{label}</Text>
     </Pressable>
   );
 }
@@ -452,21 +452,21 @@ export function Pill({
  * Ô nhập: bo mềm, viền 2px luôn có — trong suốt khi nghỉ, bút chì khi đang gõ (focus thấy được mà
  * không xê dịch chữ). `ref` là prop thường ở React 19.
  */
-export function ONhap({
+export function TextField({
   ref,
   style,
   onFocus,
   onBlur,
-  ...p
+  ...rest
 }: TextInputProps & { ref?: Ref<TextInput> }) {
   const [focus, setFocus] = useState(false);
   return (
     <TextInput
       ref={ref}
-      placeholderTextColor={album.butChi}
-      selectionColor={album.butChi}
+      placeholderTextColor={album.pencil}
+      selectionColor={album.pencil}
       keyboardAppearance="dark"
-      {...p}
+      {...rest}
       onFocus={(e) => {
         setFocus(true);
         onFocus?.(e);
@@ -475,60 +475,60 @@ export function ONhap({
         setFocus(false);
         onBlur?.(e);
       }}
-      style={[s.oNhap, focus && s.oNhapFocus, style]}
+      style={[s.input, focus && s.inputFocus, style]}
     />
   );
 }
 
 /** Một câu hỏi xác nhận: `bo` chạy khi người dùng chọn hành động (nút trên); nút dưới là nút an toàn. */
-export type YeuCauHoi = { cauHoi: string; phu?: string; nhanBo: string; nhanGiu?: string; bo: () => void };
+export type ConfirmRequest = { question: string; detail?: string; confirmLabel: string; keepLabel?: string; onConfirm: () => void };
 
 /**
  * Hộp thoại xác nhận thay `Alert` hệ thống (Alert Android trắng giữa app tối lúc 2 giờ sáng). Tờ giấy neo
  * đáy; nút an toàn ở dưới cùng, đúng chỗ ngón cái; muốn bỏ thì phải với lên. Chạm nền / Back = giữ lại.
  */
-export function HopThoai({ hoi, onDong }: { hoi: YeuCauHoi | null; onDong: () => void }) {
+export function ConfirmDialog({ request, onClose }: { request: ConfirmRequest | null; onClose: () => void }) {
   const insets = useSafeAreaInsets();
   return (
     <Modal
-      visible={!!hoi}
+      visible={!!request}
       transparent
       animationType="fade"
       statusBarTranslucent
       navigationBarTranslucent
-      onRequestClose={onDong}
+      onRequestClose={onClose}
     >
-      <View style={[s.nenHop, { paddingBottom: space.md + insets.bottom }]}>
+      <View style={[s.backdrop, { paddingBottom: space.md + insets.bottom }]}>
         {/* Nền đứng riêng, không bọc tờ giấy: bọc thì screen reader gộp cả tờ, không chạm được từng nút. */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={onDong} accessible={false} />
-        {hoi ? (
-          <View style={s.hop} accessibilityViewIsModal>
-            <ScrollView style={s.cuonHop}>
-              <Text style={[butChi.ngay, s.cauHoi]} accessibilityRole="header">
-                {hoi.cauHoi}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} />
+        {request ? (
+          <View style={s.dialog} accessibilityViewIsModal>
+            <ScrollView style={s.dialogScroll}>
+              <Text style={[pencil.date, s.question]} accessibilityRole="header">
+                {request.question}
               </Text>
-              {hoi.phu ? <Text style={s.phuHop}>{hoi.phu}</Text> : null}
+              {request.detail ? <Text style={s.dialogDetail}>{request.detail}</Text> : null}
             </ScrollView>
             <Pressable
               onPress={() => {
-                const lam = hoi.bo;
-                onDong();
-                lam();
+                const action = request.onConfirm;
+                onClose();
+                action();
               }}
               accessibilityRole="button"
-              style={({ pressed }) => [s.nutHop, s.nutBo, pressed && s.mo]}
+              style={({ pressed }) => [s.dialogButton, s.confirmButton, pressed && s.dim]}
             >
-              <Text style={s.chuNutBo} maxFontSizeMultiplier={1.6}>
-                {hoi.nhanBo}
+              <Text style={s.confirmText} maxFontSizeMultiplier={1.6}>
+                {request.confirmLabel}
               </Text>
             </Pressable>
             <Pressable
-              onPress={onDong}
+              onPress={onClose}
               accessibilityRole="button"
-              style={({ pressed }) => [s.nutHop, s.nutGiu, pressed && s.chonNhan]}
+              style={({ pressed }) => [s.dialogButton, s.keepButton, pressed && s.pressedSelected]}
             >
-              <Text style={s.chuNutGiu} maxFontSizeMultiplier={1.6}>
-                {hoi.nhanGiu ?? t.chung.giuLai}
+              <Text style={s.keepText} maxFontSizeMultiplier={1.6}>
+                {request.keepLabel ?? t.common.keep}
               </Text>
             </Pressable>
           </View>
@@ -539,14 +539,14 @@ export function HopThoai({ hoi, onDong }: { hoi: YeuCauHoi | null; onDong: () =>
 }
 
 /** Lời từ người lạ (đã nhận, hoặc mình đã viết): mẩu giấy rời bo nhẹ, có một chiếc kẹp giữ vào trang. */
-export function TamLoi({ children }: { children: ReactNode }) {
+export function ComfortCard({ children }: { children: ReactNode }) {
   return (
-    <View style={s.tamLoi}>
+    <View style={s.comfortCard}>
       <MaterialCommunityIcons
         name="paperclip"
         size={32}
-        color={album.butChi}
-        style={s.kepGiay}
+        color={album.pencil}
+        style={s.paperclip}
         importantForAccessibility="no"
         accessibilityElementsHidden
       />
@@ -556,41 +556,41 @@ export function TamLoi({ children }: { children: ReactNode }) {
 }
 
 const s = StyleSheet.create({
-  oTam: { marginBottom: space.lg },
-  tam: {
-    ...bong,
-    backgroundColor: album.tam,
+  cardSlot: { marginBottom: space.lg },
+  card: {
+    ...shadow,
+    backgroundColor: album.card,
     paddingHorizontal: space.lg,
     paddingVertical: space.lg,
-    minHeight: touch.toiThieu,
+    minHeight: touch.min,
   },
   // Chạm là nhấc tấm khỏi trang: sáng lên một bậc, nâng lên một chút, bóng đậm và xa hơn.
-  nhac: {
-    backgroundColor: album.tamNhac,
+  lifted: {
+    backgroundColor: album.cardLifted,
     transform: [{ translateY: -3 }],
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.6,
     shadowRadius: 12,
     elevation: 10,
   },
-  than: { ...text.than, color: album.chu },
+  body: { ...text.body, color: album.ink },
   // Hạ sáng một chút: ảnh chụp sáng rực giữa trang đen lúc 2 giờ sáng là chói.
-  anh: { width: '100%', marginBottom: space.md, opacity: 0.85, backgroundColor: album.trang },
+  photo: { width: '100%', marginBottom: space.md, opacity: 0.85, backgroundColor: album.page },
   // Mẩu giấy người lạ kẹp vào: chờm qua góc dán dưới phải, hơi nghiêng, bóng riêng.
-  kep: {
-    ...bong,
+  clip: {
+    ...shadow,
     position: 'absolute',
     right: -8,
     bottom: -18,
-    backgroundColor: album.kep,
-    borderRadius: bo.giay,
+    backgroundColor: album.clip,
+    borderRadius: radius.paper,
     paddingHorizontal: space.md,
     paddingVertical: space.xs,
     transform: [{ rotate: '-2deg' }],
     elevation: 6,
   },
-  chuKep: { color: album.chu },
-  dongChuThich: {
+  clipText: { color: album.ink },
+  noteRow: {
     // Không wrap: chú thích tự xuống dòng bên trong, giọt luôn nằm cuối dòng đầu, không tách ra.
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -598,76 +598,76 @@ const s = StyleSheet.create({
     marginTop: space.md,
   },
   // Mẩu kẹp chờm 18 xuống dưới tấm — chừa chỗ để nó không chạm tấm kế tiếp.
-  duoiKep: { marginBottom: space.xl },
-  chuThich: { color: album.butChi, flex: 1 },
+  belowClip: { marginBottom: space.xl },
+  note: { color: album.pencil, flex: 1 },
 
-  loi: { minHeight: touch.toiThieu, paddingVertical: space.md, justifyContent: 'center', marginTop: space.md },
-  hangLoi: { flexDirection: 'row', alignItems: 'center', gap: space.sm + space.xs },
-  khoiLoi: { flex: 1 },
-  mo: { opacity: 0.6 },
-  chuLoi: { ...text.nut, color: album.chu },
-  phuLoi: { ...text.phu, color: album.butChi, marginTop: space.xs, maxWidth: 320 },
+  link: { minHeight: touch.min, paddingVertical: space.md, justifyContent: 'center', marginTop: space.md },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm + space.xs },
+  linkBlock: { flex: 1 },
+  dim: { opacity: 0.6 },
+  linkText: { ...text.button, color: album.ink },
+  linkDetail: { ...text.caption, color: album.pencil, marginTop: space.xs, maxWidth: 320 },
 
-  nutPhu: {
-    minHeight: touch.toiThieu,
+  secondaryButton: {
+    minHeight: touch.min,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: space.sm,
     paddingHorizontal: space.md,
-    borderRadius: bo.tay,
-    backgroundColor: album.vienMo,
+    borderRadius: radius.touch,
+    backgroundColor: album.hairline,
   },
-  chuNutPhu: { ...text.nut, color: album.chu },
+  secondaryText: { ...text.button, color: album.ink },
 
-  nutChinh: {
-    minHeight: touch.chinh,
+  primaryButton: {
+    minHeight: touch.primary,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: space.lg,
-    borderRadius: bo.tay,
-    backgroundColor: album.tam,
+    borderRadius: radius.touch,
+    backgroundColor: album.card,
   },
   // Nhấn là sáng lên một bậc: bóng trên trang đen gần như không thấy, độ sáng thì thấy.
-  nutNhan: { backgroundColor: album.kep },
-  chonNhan: { opacity: 0.85 },
-  nhat: { opacity: 0.35 },
-  hangCho: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  chuNutChinh: { ...text.nut, color: album.chu, textAlign: 'center' },
+  pressedButton: { backgroundColor: album.clip },
+  pressedSelected: { opacity: 0.85 },
+  faded: { opacity: 0.35 },
+  waitRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  primaryText: { ...text.button, color: album.ink, textAlign: 'center' },
 
   // Dải giấy trơn, không góc dán: nó là thứ để bấm, không phải thứ được dán.
-  nghe: {
-    ...bong,
-    minHeight: touch.chinh,
+  player: {
+    ...shadow,
+    minHeight: touch.primary,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
     paddingLeft: 10,
     paddingRight: space.lg,
-    borderRadius: bo.tay,
-    backgroundColor: album.tam,
+    borderRadius: radius.touch,
+    backgroundColor: album.card,
   },
-  dia: {
+  disc: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: album.chu,
+    backgroundColor: album.ink,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chuNghe: { ...text.nut, color: album.chu, flex: 1 },
-  giayNghe: { color: album.butChi },
+  playerText: { ...text.button, color: album.ink, flex: 1 },
+  playerTime: { color: album.pencil },
 
-  chanMan: {
-    paddingHorizontal: space.man,
+  footer: {
+    paddingHorizontal: space.screen,
     paddingTop: space.sm + space.xs,
     paddingBottom: space.sm + space.xs,
     gap: space.sm,
-    backgroundColor: album.trang,
+    backgroundColor: album.page,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: album.vienMo,
+    borderColor: album.hairline,
   },
-  nutDen: {
+  helpButton: {
     minHeight: touch.hotline,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -675,76 +675,76 @@ const s = StyleSheet.create({
     gap: space.sm,
     paddingHorizontal: space.lg,
     borderWidth: 1.5,
-    borderColor: album.den,
-    borderRadius: bo.tay,
+    borderColor: album.lamp,
+    borderRadius: radius.touch,
   },
-  denSang: { backgroundColor: album.den },
-  chuDen: { ...text.nut, color: album.den, textAlign: 'center', flexShrink: 1 },
-  chuTrenDen: { color: album.trang },
+  helpPressed: { backgroundColor: album.lamp },
+  helpText: { ...text.button, color: album.lamp, textAlign: 'center', flexShrink: 1 },
+  helpTextPressed: { color: album.page },
 
   pill: {
-    minHeight: touch.toiThieu,
+    minHeight: touch.min,
     justifyContent: 'center',
     paddingHorizontal: space.md,
-    borderRadius: bo.tay,
-    backgroundColor: album.tam,
+    borderRadius: radius.touch,
+    backgroundColor: album.card,
   },
-  pillChon: { backgroundColor: album.chu },
-  chuPill: { ...text.nut, color: album.butChi },
-  chuPillChon: { color: album.trang },
+  pillSelected: { backgroundColor: album.ink },
+  pillText: { ...text.button, color: album.pencil },
+  pillTextSelected: { color: album.page },
 
-  oNhap: {
-    ...text.than,
-    color: album.chu,
-    backgroundColor: album.tam,
-    borderRadius: bo.tay,
+  input: {
+    ...text.body,
+    color: album.ink,
+    backgroundColor: album.card,
+    borderRadius: radius.touch,
     borderWidth: 2,
     borderColor: 'transparent',
     paddingHorizontal: space.md - 2,
-    minHeight: touch.toiThieu,
+    minHeight: touch.min,
   },
-  oNhapFocus: { borderColor: album.butChi },
+  inputFocus: { borderColor: album.pencil },
 
-  nenHop: {
+  backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: album.che,
+    backgroundColor: album.scrim,
     paddingHorizontal: space.md,
   },
-  hop: {
-    ...bong,
+  dialog: {
+    ...shadow,
     elevation: 6,
-    backgroundColor: album.kep,
-    borderRadius: bo.giay,
+    backgroundColor: album.clip,
+    borderRadius: radius.paper,
     padding: space.lg,
     width: '100%',
     maxWidth: 480,
     alignSelf: 'center',
     maxHeight: '90%',
   },
-  cuonHop: { flexGrow: 0 },
-  cauHoi: { color: album.chu },
-  phuHop: { ...text.than, color: album.butChi, marginTop: space.sm },
-  nutHop: {
-    minHeight: touch.chinh,
+  dialogScroll: { flexGrow: 0 },
+  question: { color: album.ink },
+  dialogDetail: { ...text.body, color: album.pencil, marginTop: space.sm },
+  dialogButton: {
+    minHeight: touch.primary,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: space.lg,
-    borderRadius: bo.tay,
+    borderRadius: radius.touch,
   },
-  nutBo: { marginTop: space.lg, backgroundColor: album.vienMo },
-  nutGiu: { marginTop: space.sm, backgroundColor: album.chu },
-  chuNutBo: { ...text.nut, color: album.chu, textAlign: 'center' },
-  chuNutGiu: { ...text.nut, color: album.trang, textAlign: 'center' },
+  confirmButton: { marginTop: space.lg, backgroundColor: album.hairline },
+  keepButton: { marginTop: space.sm, backgroundColor: album.ink },
+  confirmText: { ...text.button, color: album.ink, textAlign: 'center' },
+  keepText: { ...text.button, color: album.page, textAlign: 'center' },
 
-  tamLoi: {
-    ...bong,
+  comfortCard: {
+    ...shadow,
     elevation: 6,
-    backgroundColor: album.kep,
-    borderRadius: bo.giay,
+    backgroundColor: album.clip,
+    borderRadius: radius.paper,
     padding: space.lg,
     marginBottom: space.lg,
     gap: space.sm,
   },
-  kepGiay: { position: 'absolute', top: -16, left: space.man, transform: [{ rotate: '8deg' }] },
+  paperclip: { position: 'absolute', top: -16, left: space.screen, transform: [{ rotate: '8deg' }] },
 });

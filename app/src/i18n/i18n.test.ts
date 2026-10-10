@@ -1,27 +1,27 @@
 import { readdirSync, readFileSync } from 'fs';
 import { join, relative } from 'path';
 
-import { butChi } from '../theme';
-import { chonNgonNgu, datNgonNgu, LANGS, ngonNgu, t } from './index';
+import { pencil } from '../theme';
+import { pickLanguage, setLanguage, LANGS, currentLang, t } from './index';
 
 // db.ts mở SQLite ngay khi import — không có trong Jest.
 jest.mock('../db', () => ({ getSetting: () => null, setSetting: () => {} }));
 
 describe('chọn ngôn ngữ', () => {
   it('đã chọn trong Cài đặt thì theo đó, bất kể máy', () => {
-    expect(chonNgonNgu('ja', 'vi_VN')).toBe('ja');
+    expect(pickLanguage('ja', 'vi_VN')).toBe('ja');
   });
 
   it('chưa chọn thì theo máy, cả dạng Android lẫn BCP 47', () => {
-    expect(chonNgonNgu(null, 'vi_VN')).toBe('vi');
-    expect(chonNgonNgu(null, 'ja-JP')).toBe('ja');
-    expect(chonNgonNgu(null, 'en_GB')).toBe('en');
+    expect(pickLanguage(null, 'vi_VN')).toBe('vi');
+    expect(pickLanguage(null, 'ja-JP')).toBe('ja');
+    expect(pickLanguage(null, 'en_GB')).toBe('en');
   });
 
   it('máy dùng tiếng khác, hoặc giá trị đã lưu hỏng, thì tiếng Anh', () => {
-    expect(chonNgonNgu(null, 'fr_FR')).toBe('en');
-    expect(chonNgonNgu(null, 'zh_CN_#Hans')).toBe('en');
-    expect(chonNgonNgu('xx', 'ko-KR')).toBe('en');
+    expect(pickLanguage(null, 'fr_FR')).toBe('en');
+    expect(pickLanguage(null, 'zh_CN_#Hans')).toBe('en');
+    expect(pickLanguage('xx', 'ko-KR')).toBe('en');
   });
 });
 
@@ -47,31 +47,31 @@ describe('contract ngôn ngữ', () => {
         .filter((f) => f.endsWith('.tsx'))
         .map((f) => join(src, 'app', f)),
     ];
-    const chuViet = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/iu;
-    const vietCung = files.flatMap((f) =>
+    const vietnameseChars = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/iu;
+    const hardcoded = files.flatMap((f) =>
       readFileSync(f, 'utf8')
         // Xoá block comment nhưng giữ dòng trống, để số dòng báo ra vẫn đúng.
         .replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ''))
         .split(/\r?\n/)
-        .map((dong, i) => ({ dong: dong.replace(/\/\/.*$/, ''), so: i + 1 }))
-        .filter(({ dong }) => chuViet.test(dong) && !/\bvi: /.test(dong))
-        .map(({ dong, so }) => `${relative(src, f)}:${so}: ${dong.trim()}`),
+        .map((line, i) => ({ line: line.replace(/\/\/.*$/, ''), lineNo: i + 1 }))
+        .filter(({ line }) => vietnameseChars.test(line) && !/\bvi: /.test(line))
+        .map(({ line, lineNo }) => `${relative(src, f)}:${lineNo}: ${line.trim()}`),
     );
-    expect(vietCung).toEqual([]);
+    expect(hardcoded).toEqual([]);
   });
 });
 
 describe('đổi ngôn ngữ', () => {
   it('ghi đè chữ và họ chữ tay ngay tại chỗ', () => {
     // RN đóng băng style đã truyền qua prop — đổi ngôn ngữ phải thay object, không sửa bên trong.
-    Object.values(butChi).forEach((kieu) => Object.freeze(kieu));
-    datNgonNgu('ja');
-    expect(ngonNgu()).toBe('ja');
-    expect(t.tab.lich).toBe('カレンダー');
-    expect(butChi.tieuDe.fontFamily).toBe('Yomogi');
+    Object.values(pencil).forEach((style) => Object.freeze(style));
+    setLanguage('ja');
+    expect(currentLang()).toBe('ja');
+    expect(t.tab.calendar).toBe('カレンダー');
+    expect(pencil.title.fontFamily).toBe('Yomogi');
 
-    datNgonNgu('vi');
-    expect(t.tab.lich).toBe('Lịch');
-    expect(butChi.tieuDe.fontFamily).toBe('PatrickHand');
+    setLanguage('vi');
+    expect(t.tab.calendar).toBe('Lịch');
+    expect(pencil.title.fontFamily).toBe('PatrickHand');
   });
 });

@@ -1,242 +1,242 @@
 import type { Lang } from './index';
-import type { TuDien } from './vi';
+import type { Dictionary } from './vi';
 
 /**
  * です・ます nhẹ, tránh あなた khi bỏ được. "泣いたこと" thay Entry, "見知らぬ人からの / へのことば"
  * thay Comfort (PRODUCT.md). Chưa có người bản ngữ soát — phải soát trước khi có người dùng Nhật.
  */
-const TEN: Record<Lang, string> = { vi: 'ベトナム語', en: '英語', ja: '日本語' };
-const noi = (ds: string[]) =>
-  ds.length < 2 ? ds.join('') : `${ds.slice(0, -1).join('、')}と${ds[ds.length - 1]}`;
+const LANG_NAMES: Record<Lang, string> = { vi: 'ベトナム語', en: '英語', ja: '日本語' };
+const joinList = (names: string[]) =>
+  names.length < 2 ? names.join('') : `${names.slice(0, -1).join('、')}と${names[names.length - 1]}`;
 
-const ja: TuDien = {
+const ja: Dictionary = {
   locale: 'ja-JP',
   // Vài nhãn có "、" bên trong.
-  noiTag: '／',
+  tagSeparator: '／',
 
-  chung: {
-    quayLai: '戻る',
-    loiMang: '接続できませんでした。ネットワークを確認して、もう一度お試しください。',
-    dangTai: '読み込み中',
-    giuLai: '残す',
-    canTroGiup: '助けが必要なとき',
-    troGiupGoiY: '相談窓口の電話番号。オフラインでも開けます',
-    daCamOn: 'お礼済み',
-    daDich: '自動翻訳済み',
-    cuongDo: (n) => `強さは5段階中${n}`,
-    dangNhap: 'ログイン',
-    loiDaViet: '書いたことば',
-    vietLoi: '見知らぬ人へのことばを書く',
+  common: {
+    back: '戻る',
+    networkError: '接続できませんでした。ネットワークを確認して、もう一度お試しください。',
+    loading: '読み込み中',
+    keep: '残す',
+    needHelp: '助けが必要なとき',
+    needHelpHint: '相談窓口の電話番号。オフラインでも開けます',
+    thanked: 'お礼済み',
+    autoTranslated: '自動翻訳済み',
+    intensity: (n) => `強さは5段階中${n}`,
+    signIn: 'ログイン',
+    wordsYouWrote: '書いたことば',
+    writeForStranger: '見知らぬ人へのことばを書く',
     email: 'メールアドレス',
-    emailMau: 'you@example.com',
-    matKhau: 'パスワード',
-    matKhauGoiY: '6文字以上',
-    loiEmail: '正しいメールアドレスと、6文字以上のパスワードを入力してください。',
-    thoat: '戻る',
-    xoa: '削除する',
+    emailPlaceholder: 'you@example.com',
+    password: 'パスワード',
+    passwordHint: '6文字以上',
+    emailError: '正しいメールアドレスと、6文字以上のパスワードを入力してください。',
+    leave: '戻る',
+    remove: '削除する',
   },
 
-  tab: { index: '日記', viet: '見知らぬ人へ', lich: 'カレンダー', settings: '設定' },
+  tab: { index: '日記', write: '見知らぬ人へ', calendar: 'カレンダー', settings: '設定' },
 
-  tam: {
-    anh: (n) => `写真${n}枚`,
-    ghiAm: '録音',
-    kep: 'ことばがはさんであります',
-    coLoi: '見知らぬ人からのことばあり',
-    coLoiCamOn: '見知らぬ人からのことばあり、お礼済み',
-    nghe: '聞く',
-    dung: '一時停止',
-    ngheA11y: (nhan, giay) =>
-      `${nhan}、録音、${giay >= 60 ? `${Math.floor(giay / 60)}分` : ''}${giay % 60}秒`,
+  card: {
+    photos: (n) => `写真${n}枚`,
+    recording: '録音',
+    clipped: 'ことばがはさんであります',
+    hasComfort: '見知らぬ人からのことばあり',
+    hasComfortThanked: '見知らぬ人からのことばあり、お礼済み',
+    listen: '聞く',
+    pause: '一時停止',
+    listenA11y: (label, seconds) =>
+      `${label}、録音、${seconds >= 60 ? `${Math.floor(seconds / 60)}分` : ''}${seconds % 60}秒`,
   },
 
-  thoiLuong: (phut) =>
-    phut === null
+  duration: (minutes) =>
+    minutes === null
       ? '覚えていない'
-      : phut === 5
+      : minutes === 5
         ? '数分'
-        : phut === 30
+        : minutes === 30
           ? '30分ほど'
-          : phut === 60
+          : minutes === 60
             ? '30分以上'
-            : `${phut}分`,
+            : `${minutes}分`,
 
   timeline: {
-    tieuDe: '泣いた日のこと',
-    trong: 'まだ何もありません。書きたいときだけ、書けば大丈夫です。',
-    ghi: '書きとめる',
+    title: '泣いた日のこと',
+    empty: 'まだ何もありません。書きたいときだけ、書けば大丈夫です。',
+    newEntry: '書きとめる',
   },
 
-  ghi: {
-    lui: (phut) => (phut === 0 ? 'さっき' : phut === 60 * 24 ? '昨日' : `${phut / 60}時間前`),
-    ghiNgat: '録音が途中で止まりました。もう一度録音してください。',
-    bo: '削除',
-    chuaCoCamera: 'Tearnoteはまだカメラを使えません。端末の設定で許可できます。',
-    loiCamera: 'カメラを開けませんでした。もう一度お試しください。',
-    loiThuVien: '写真を開けませんでした。もう一度お試しください。',
-    chuaCoMic: 'Tearnoteはまだマイクを使えません。端末の設定で許可できます。',
-    dangGhiAm: '録音中',
-    loiGhiAm: '録音できませんでした。もう一度お試しください。',
-    loiLuu: '写真か録音を保存できませんでした。もう一度「保存する」を押すか、減らしてから保存してください。',
-    tieuDe: 'さっきは、\nどうでしたか？',
-    moDau: '全部書かなくても大丈夫です。いつでも保存できます。',
-    lucNao: 'いつ？',
-    baoLau: 'どのくらい続いた？',
-    nangDenDau: 'どのくらい強かった？',
-    cuongDo: '強さ',
-    cuongDoGiaTri: (n) => `5段階中${n}`,
-    viChuyenGi: 'どんなことで？',
-    toiDaTag: (n) => `${n}つまで。選ばなくても大丈夫です。`,
-    ghiThem: 'ほかに書きたいことは？',
-    ghiThemGoiY: '何を書いてもかまいません。読めるのは自分だけです。',
-    kem: '写真や録音も残す？',
-    kemGioiHan: (anh, phut) =>
-      `写真は${anh}枚まで、録音は1つ（${phut}分まで）。この端末の中だけに保存されます。`,
-    boAnhHoi: 'この写真を削除しますか？',
-    anhSo: (i) => `写真${i}`,
-    boAnhGoiY: 'タップするとこの写真を削除します',
-    dangGhi: (da, toiDa) => `録音中 · ${da} / ${toiDa}`,
-    dungGhi: '録音を止める',
-    loiDung: '止められませんでした。もう一度お試しください。',
-    boGhiAm: '録音を削除',
-    boGhiAmHoi: 'この録音を削除しますか？',
-    chupAnh: '写真を撮る',
-    chonAnh: '写真を選ぶ',
-    ghiAm: '録音する',
-    luu: '保存する',
-    thoi: 'やっぱり書かない',
-    thoatHoi: '保存せずに戻りますか？',
-    thoatPhu: '保存していない文章、写真、録音は消えます。',
-    ghiTiep: '続ける',
-    daLuu: '保存しました。',
+  newEntry: {
+    ago: (minutes) => (minutes === 0 ? 'さっき' : minutes === 60 * 24 ? '昨日' : `${minutes / 60}時間前`),
+    recordingInterrupted: '録音が途中で止まりました。もう一度録音してください。',
+    discard: '削除',
+    noCameraPermission: 'Tearnoteはまだカメラを使えません。端末の設定で許可できます。',
+    cameraError: 'カメラを開けませんでした。もう一度お試しください。',
+    libraryError: '写真を開けませんでした。もう一度お試しください。',
+    noMicPermission: 'Tearnoteはまだマイクを使えません。端末の設定で許可できます。',
+    recordingStarted: '録音中',
+    recordingError: '録音できませんでした。もう一度お試しください。',
+    saveError: '写真か録音を保存できませんでした。もう一度「保存する」を押すか、減らしてから保存してください。',
+    title: 'さっきは、\nどうでしたか？',
+    intro: '全部書かなくても大丈夫です。いつでも保存できます。',
+    whenLabel: 'いつ？',
+    howLongLabel: 'どのくらい続いた？',
+    howHeavyLabel: 'どのくらい強かった？',
+    intensityLabel: '強さ',
+    intensityValue: (n) => `5段階中${n}`,
+    whyLabel: 'どんなことで？',
+    maxTags: (n) => `${n}つまで。選ばなくても大丈夫です。`,
+    notesLabel: 'ほかに書きたいことは？',
+    notesPlaceholder: '何を書いてもかまいません。読めるのは自分だけです。',
+    attachLabel: '写真や録音も残す？',
+    attachLimit: (photos, minutes) =>
+      `写真は${photos}枚まで、録音は1つ（${minutes}分まで）。この端末の中だけに保存されます。`,
+    removePhotoQuestion: 'この写真を削除しますか？',
+    photoN: (index) => `写真${index}`,
+    removePhotoHint: 'タップするとこの写真を削除します',
+    recordingProgress: (elapsed, limit) => `録音中 · ${elapsed} / ${limit}`,
+    stopRecording: '録音を止める',
+    stopError: '止められませんでした。もう一度お試しください。',
+    removeRecording: '録音を削除',
+    removeRecordingQuestion: 'この録音を削除しますか？',
+    takePhoto: '写真を撮る',
+    pickPhoto: '写真を選ぶ',
+    recordButton: '録音する',
+    save: '保存する',
+    cancel: 'やっぱり書かない',
+    leaveQuestion: '保存せずに戻りますか？',
+    leaveDetail: '保存していない文章、写真、録音は消えます。',
+    keepWriting: '続ける',
+    saved: '保存しました。',
   },
 
-  lich: {
-    tieuDe: 'カレンダー',
+  calendar: {
+    title: 'カレンダー',
     // "10月" không vừa ô 22 ở cỡ 14; 12 cột số là đủ hiểu, nhãn đọc cho screen reader vẫn có "月".
-    cot: (thang) => String(thang),
-    thang: (thang, soNgay, max) =>
-      `${thang}月：泣いた日は${soNgay}日。いちばん強かった日の合計は${max}。`,
-    thangTrong: (thang) => `${thang}月：泣いた日はありません。`,
-    muc: (tu, den) => (den === undefined ? `${tu}以上` : `${tu}から${den}`),
-    chuGiai: (muc) => `1日の強さの合計が大きいほど、色が濃くなります：${muc.join('、')}`,
-    namTruoc: '前の年',
-    namSau: '次の年',
-    tenChuGiai: '1日の強さの合計',
+    monthLabel: (month) => String(month),
+    monthSummary: (month, days, max) =>
+      `${month}月：泣いた日は${days}日。いちばん強かった日の合計は${max}。`,
+    monthEmpty: (month) => `${month}月：泣いた日はありません。`,
+    levelRange: (from, to) => (to === undefined ? `${from}以上` : `${from}から${to}`),
+    legendA11y: (levels) => `1日の強さの合計が大きいほど、色が濃くなります：${levels.join('、')}`,
+    prevYear: '前の年',
+    nextYear: '次の年',
+    legendTitle: '1日の強さの合計',
   },
 
-  caiDat: {
-    tieuDe: '設定',
-    daDangXuat: 'ログアウトしました。',
-    nhanLoi: '見知らぬ人からのことばを受け取る',
-    nhanLoiPhu: 'オフにすると、見知らぬ人からのことばは届かなくなります。記録はこれまでどおりです。',
-    loiDaVietPhu: '読み返したり、取り下げたりできます。',
-    vietLoiPhu: 'ログインが必要です。24時間に5件まで。',
-    taiKhoan: 'アカウント',
-    dangXuat: 'ログアウト',
-    dangXuatPhu: '泣いた記録はこの端末に残ります。',
-    dangNhapPhu: 'ログインしていません。見知らぬ人へのことばを書くときだけ必要です。',
-    ngonNgu: '言語',
+  settings: {
+    title: '設定',
+    signedOut: 'ログアウトしました。',
+    receiveComforts: '見知らぬ人からのことばを受け取る',
+    receiveComfortsDetail: 'オフにすると、見知らぬ人からのことばは届かなくなります。記録はこれまでどおりです。',
+    wordsYouWroteDetail: '読み返したり、取り下げたりできます。',
+    writeForStrangerDetail: 'ログインが必要です。24時間に5件まで。',
+    account: 'アカウント',
+    signOut: 'ログアウト',
+    signOutDetail: '泣いた記録はこの端末に残ります。',
+    signInDetail: 'ログインしていません。見知らぬ人へのことばを書くときだけ必要です。',
+    language: '言語',
   },
 
-  lanKhoc: {
-    loiNhan: '受け取れませんでした。少ししてから、もう一度お試しください。',
-    poolRong: (chiVui) =>
-      `${chiVui ? 'この喜び' : 'このこと'}に寄せられたことばは、まだありません。今回は回数に数えません。`,
-    hetLuot: 'この24時間で3件受け取りました。今はこれ以上受け取れません。',
-    khongThay: '見つかりません',
-    khongThayPhu: 'この記録は、もう端末にありません。',
-    loiTuNguoiLa: '見知らぬ人からのことば',
-    chuaKep: 'まだ何もはさまれていません。',
-    camOn: 'ありがとう',
-    xin: '見知らぬ人からことばを受け取る',
-    daTat: '見知らぬ人からのことばをオフにしています。設定で変更できます。',
-    dangTim: 'ことばを探しています…',
-    xoa: 'この記録を削除する',
-    xoaHoi: 'この記録を削除しますか？',
-    xoaPhu: (coLoi: boolean) =>
-      `文章、写真、録音がこの端末から削除されます。元に戻せません。${coLoi ? 'はさまれていた見知らぬ人からのことばも消えます。' : ''}`,
-    daXoa: '削除しました。',
+  entry: {
+    receiveError: '受け取れませんでした。少ししてから、もう一度お試しください。',
+    poolEmpty: (joyOnly) =>
+      `${joyOnly ? 'この喜び' : 'このこと'}に寄せられたことばは、まだありません。今回は回数に数えません。`,
+    limitReached: 'この24時間で3件受け取りました。今はこれ以上受け取れません。',
+    notFound: '見つかりません',
+    notFoundDetail: 'この記録は、もう端末にありません。',
+    wordsFromStranger: '見知らぬ人からのことば',
+    noneYet: 'まだ何もはさまれていません。',
+    thank: 'ありがとう',
+    request: '見知らぬ人からことばを受け取る',
+    receivingOff: '見知らぬ人からのことばをオフにしています。設定で変更できます。',
+    searching: 'ことばを探しています…',
+    remove: 'この記録を削除する',
+    removeQuestion: 'この記録を削除しますか？',
+    removeDetail: (hasComfort: boolean) =>
+      `文章、写真、録音がこの端末から削除されます。元に戻せません。${hasComfort ? 'はさまれていた見知らぬ人からのことばも消えます。' : ''}`,
+    removed: '削除しました。',
   },
 
-  viet: {
-    hetPhien:
+  write: {
+    sessionExpired:
       'ログインの有効期限が切れました。もう一度ログインしてから送ってください。書いた文章は残っています。',
-    hetLuot: 'この24時間で5件送りました。今はこれ以上送れません。',
-    loiGui: '送れませんでした。文章は残っています。少ししてから、もう一度お試しください。',
-    tieuDe: '見知らぬ人への\nことばを書く',
-    xongTieuDe: 'ことばを\n預かりました',
-    xongPhu: '確認を経てから、見知らぬ人に届きます。取り下げるときは「設定 → 書いたことば」から。',
-    xong: '完了',
-    moDau:
+    limitReached: 'この24時間で5件送りました。今はこれ以上送れません。',
+    sendError: '送れませんでした。文章は残っています。少ししてから、もう一度お試しください。',
+    title: '見知らぬ人への\nことばを書く',
+    doneTitle: 'ことばを\n預かりました',
+    doneDetail: '確認を経てから、見知らぬ人に届きます。取り下げるときは「設定 → 書いたことば」から。',
+    done: '完了',
+    intro:
       'このことばは、似たようなことで泣いたばかりの見知らぬ人に届きます。お互いに相手が誰かはわかりません。',
-    goiY: 'アドバイスはしなくて大丈夫です。自分の助けになったことを。名前、電話番号、SNSのアカウントは書かないでください。',
-    oNhap: '見知らぬ人へのことば',
-    oNhapGoiY: 'あのとき聞きたかったことばを。',
-    demA11y: (n, max) => `${max}文字中${n}文字`,
-    conThieu: (n) => ` · あと${n}文字`,
-    vietBang: '何語で書きますか？',
-    danhCho: 'どんなことへのことば？',
-    chonTag: (max, chung) => `1つか${max}つ選んでください。誰にでも合うことばなら「${chung}」を。`,
-    dongY: (khac) =>
-      `「送る」を押すと、このことばが確認を経て${noi(khac.map((l) => TEN[l]))}に翻訳され、匿名で見知らぬ人に届くことに同意したことになります。「設定 → 書いたことば」から取り下げられますが、すでに受け取った人の手元には残ります。`,
-    dangNhapLai: 'もう一度ログイン',
-    gui: '送る',
-    thoatHoi: '送らずに戻りますか？',
-    thoatPhu: 'いま書いていることばは消えます。',
-    vietTiep: '書き続ける',
-    canTag: '上から1つ以上選んでください。',
+    guidance: 'アドバイスはしなくて大丈夫です。自分の助けになったことを。名前、電話番号、SNSのアカウントは書かないでください。',
+    inputLabel: '見知らぬ人へのことば',
+    inputPlaceholder: 'あのとき聞きたかったことばを。',
+    counterA11y: (n, max) => `${max}文字中${n}文字`,
+    shortBy: (n) => ` · あと${n}文字`,
+    languageLabel: '何語で書きますか？',
+    topicLabel: 'どんなことへのことば？',
+    pickTags: (max, unknownLabel) => `1つか${max}つ選んでください。誰にでも合うことばなら「${unknownLabel}」を。`,
+    consent: (others) =>
+      `「送る」を押すと、このことばが確認を経て${joinList(others.map((lang) => LANG_NAMES[lang]))}に翻訳され、匿名で見知らぬ人に届くことに同意したことになります。「設定 → 書いたことば」から取り下げられますが、すでに受け取った人の手元には残ります。`,
+    signInAgain: 'もう一度ログイン',
+    send: '送る',
+    leaveQuestion: '送らずに戻りますか？',
+    leaveDetail: 'いま書いていることばは消えます。',
+    keepWriting: '書き続ける',
+    needTag: '上から1つ以上選んでください。',
   },
 
-  cuaToi: {
-    trangThai: {
+  myComforts: {
+    status: {
       pending: '確認待ち',
       approved: '承認済み',
       rejected: '送られませんでした',
       retracted: '取り下げ済み',
     },
-    loiTai: '一覧を読み込めませんでした。ネットワークを確認して、もう一度お試しください。',
-    hoiThuHoi: 'このことばを取り下げますか？',
-    hoiThuHoiPhu:
+    loadError: '一覧を読み込めませんでした。ネットワークを確認して、もう一度お試しください。',
+    retractQuestion: 'このことばを取り下げますか？',
+    retractDetail:
       'これ以上、誰にも届かなくなります。すでに受け取った人の手元には残ります。取り下げたら元に戻せません。',
-    thuHoi: '取り下げる',
-    loiThuHoi: '取り下げられませんでした。ネットワークを確認して、もう一度お試しください。',
-    theoTaiKhoan: '書いたことばはアカウントに保存されます。',
-    dangNhapXem: 'ログインして見る',
-    trong: 'まだありません。',
-    thuHoiA11y: (dau) => `取り下げる：${dau}`,
-    khongHoanTac: '元に戻せません',
-    dangThuHoi: '取り下げ中…',
-    thuLai: 'もう一度試す',
-    daThuHoi: '取り下げました。',
+    retract: '取り下げる',
+    retractError: '取り下げられませんでした。ネットワークを確認して、もう一度お試しください。',
+    keptByAccount: '書いたことばはアカウントに保存されます。',
+    signInToView: 'ログインして見る',
+    empty: 'まだありません。',
+    retractA11y: (excerpt) => `取り下げる：${excerpt}`,
+    irreversible: '元に戻せません',
+    retracting: '取り下げ中…',
+    retry: 'もう一度試す',
+    retracted: '取り下げました。',
   },
 
-  dangNhap: {
-    daGuiXacMinh: '確認メールを送りました。確認が済んだら、ここでログインしてください。',
-    loi: 'ログインできませんでした。メールアドレス、パスワード、ネットワークを確認してください。',
-    giaiThich:
+  login: {
+    verificationSent: '確認メールを送りました。確認が済んだら、ここでログインしてください。',
+    error: 'ログインできませんでした。メールアドレス、パスワード、ネットワークを確認してください。',
+    explanation:
       '見知らぬ人へ書くには、読む人の安全のためにログインが必要です。読む人にメールアドレスが見えることはありません。泣いたことを記録するだけなら必要ありません。',
-    taoMoi: 'アカウントを作る',
-    deSau: 'あとで',
+    createAccount: 'アカウントを作る',
+    later: 'あとで',
   },
 
-  taoTaiKhoan: {
-    tieuDe: 'アカウントを作る',
-    khongKhop: '2つのパスワードが一致しません。',
-    loiTao:
+  register: {
+    title: 'アカウントを作る',
+    mismatch: '2つのパスワードが一致しません。',
+    createError:
       'アカウントを作れませんでした。このメールアドレスはすでに登録されているかもしれません。ログインを試すか、ネットワークを確認してください。',
-    giaiThich:
+    explanation:
       'アカウントは、見知らぬ人へ書くためだけのものです。読む人にメールアドレスが見えることはありません。',
-    nhapLai: 'パスワード（確認）',
-    daCo: 'アカウントをお持ちの方はログイン',
+    confirmPassword: 'パスワード（確認）',
+    haveAccount: 'アカウントをお持ちの方はログイン',
   },
 
-  troGiup: {
-    moDau: '自分や誰かが今まさに危険な状態なら、救急に電話してください。',
-    goi: (so) => `${so} に電話`,
-    goiA11y: (ten, so) => `${ten}に電話、番号 ${so}`,
-    moWeb: (ten) => `${ten}のウェブサイトを開く`,
-    cuoi: 'この一覧は端末に保存されていて、オフラインでも開けます。つながらない番号があれば、別の番号を試してください。',
+  help: {
+    intro: '自分や誰かが今まさに危険な状態なら、救急に電話してください。',
+    call: (phone) => `${phone} に電話`,
+    callA11y: (name, phone) => `${name}に電話、番号 ${phone}`,
+    openWebsite: (name) => `${name}のウェブサイトを開く`,
+    footer: 'この一覧は端末に保存されていて、オフラインでも開けます。つながらない番号があれば、別の番号を試してください。',
   },
 };
 

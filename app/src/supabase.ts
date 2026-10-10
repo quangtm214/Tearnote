@@ -23,19 +23,19 @@ const store = {
 // ponytail: huỷ yêu cầu không đuổi được kết nối chết khỏi pool của OkHttp — trên emulator (bật/tắt máy bay
 // giữ nguyên IP) các yêu cầu sau vẫn lỗi tới khi mở lại app. Dứt điểm cần cấu hình OkHttp phía native
 // (`pingInterval`), tức dev client thay Expo Go; làm khi build bản thật.
-const HAN_CHO_MS = 20_000;
-const fetchCoHan: typeof fetch = (input, init) => {
-  const huy = new AbortController();
-  const hen = setTimeout(() => huy.abort(), HAN_CHO_MS);
-  init?.signal?.addEventListener('abort', () => huy.abort());
-  return fetch(input, { ...init, signal: huy.signal }).finally(() => clearTimeout(hen));
+const TIMEOUT_MS = 20_000;
+const fetchWithTimeout: typeof fetch = (input, init) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  init?.signal?.addEventListener('abort', () => controller.abort());
+  return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer));
 };
 
 export const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
   process.env.EXPO_PUBLIC_SUPABASE_KEY!,
   {
-    global: { fetch: fetchCoHan },
+    global: { fetch: fetchWithTimeout },
     auth: {
       storage: store,
       autoRefreshToken: true,

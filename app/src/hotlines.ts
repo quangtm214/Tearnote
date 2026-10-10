@@ -13,25 +13,25 @@ import type { Lang } from './i18n';
  * lúc nửa đêm phải thấy số gọi được ngay trước. Giờ viết thành chữ cho screen reader đọc đúng.
  * Tên riêng giữ nguyên; phần mô tả thì dịch.
  */
-type Chu = Record<Lang, string>;
+type Localized = Record<Lang, string>;
 
 export type Hotline = {
   country: string;
-  name: Chu;
+  name: Localized;
   phone?: string;
   url?: string;
-  hours?: Chu;
+  hours?: Localized;
 };
 
-const CA_NGAY: Chu = { vi: '24 giờ, mọi ngày', en: '24 hours, every day', ja: '24時間・毎日' };
-const CAP_CUU: Chu = { vi: 'Cấp cứu', en: 'Emergency', ja: '救急' };
+const ALL_DAY: Localized = { vi: '24 giờ, mọi ngày', en: '24 hours, every day', ja: '24時間・毎日' };
+const EMERGENCY: Localized = { vi: 'Cấp cứu', en: 'Emergency', ja: '救急' };
 
 /** Nước lên đầu màn hotline: vùng của máy nếu có trong danh sách, không thì theo ngôn ngữ app. */
-export const nuocDau = (vung: string | undefined, lang: Lang): string =>
-  vung && HOTLINES_FALLBACK.some((h) => h.country === vung) ? vung : ({ vi: 'VN', ja: 'JP', en: 'US' } as const)[lang];
+export const topCountry = (region: string | undefined, lang: Lang): string =>
+  region && HOTLINES_FALLBACK.some((h) => h.country === region) ? region : ({ vi: 'VN', ja: 'JP', en: 'US' } as const)[lang];
 
 export const HOTLINES_FALLBACK: Hotline[] = [
-  { country: 'VN', name: CAP_CUU, phone: '115', hours: CA_NGAY },
+  { country: 'VN', name: EMERGENCY, phone: '115', hours: ALL_DAY },
   {
     country: 'VN',
     name: {
@@ -40,7 +40,7 @@ export const HOTLINES_FALLBACK: Hotline[] = [
       ja: '子ども保護全国ホットライン',
     },
     phone: '111',
-    hours: CA_NGAY,
+    hours: ALL_DAY,
   },
   {
     country: 'VN',
@@ -56,7 +56,7 @@ export const HOTLINES_FALLBACK: Hotline[] = [
       ja: '水曜〜日曜、13:00〜20:30',
     },
   },
-  { country: 'JP', name: CAP_CUU, phone: '119', hours: CA_NGAY },
+  { country: 'JP', name: EMERGENCY, phone: '119', hours: ALL_DAY },
   {
     country: 'JP',
     name: {
@@ -78,7 +78,7 @@ export const HOTLINES_FALLBACK: Hotline[] = [
     url: 'https://telljp.com',
     hours: { vi: '9:00–23:00', en: '9:00–23:00', ja: '9:00〜23:00' },
   },
-  { country: 'US', name: CAP_CUU, phone: '911', hours: CA_NGAY },
+  { country: 'US', name: EMERGENCY, phone: '911', hours: ALL_DAY },
   {
     country: 'US',
     name: {
@@ -88,14 +88,14 @@ export const HOTLINES_FALLBACK: Hotline[] = [
     },
     phone: '988',
     url: 'https://988lifeline.org',
-    hours: CA_NGAY,
+    hours: ALL_DAY,
   },
-  { country: 'GB', name: CAP_CUU, phone: '999', hours: CA_NGAY },
+  { country: 'GB', name: EMERGENCY, phone: '999', hours: ALL_DAY },
   {
     country: 'GB',
     name: { vi: 'Samaritans', en: 'Samaritans', ja: 'Samaritans' },
     phone: '116 123',
     url: 'https://samaritans.org',
-    hours: CA_NGAY,
+    hours: ALL_DAY,
   },
 ];

@@ -1,0 +1,141 @@
+import { router, useFocusEffect, type Href } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { tagLabels, t } from '@/i18n';
+import { isRealAccount, supabase } from '@/supabase';
+import type { TagId } from '@/tags';
+import { album, pencil, space, text } from '@/theme';
+import { ScreenFooter, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, type ConfirmRequest } from '@/ui';
+
+/**
+ * Lời mình đã viết. overview.md §6 là ràng buộc bắt buộc: người viết phải thu hồi được.
+ *
+ * Đây là chỗ DUY NHẤT app `select` vào bảng `comforts`, và không phạm ADR 0008:
+ * policy `comfort_select_own` chỉ trả về dòng của chính mình. Pool của người khác
+ * vẫn chỉ vào được qua `request_comfort()`.
+ */
+type MyComfort = {
+  id: string;
+  body: string;
+  tags: TagId[];
+  status: 'pending' | 'approved' | 'rejected' | 'retracted';
+};
+
+export default function MyComfortsScreen() {
+  // null = đang tải; 'chuaDangNhap' tách khỏi danh sách rỗng — RLS trả [] cho cả hai.
+  const [items, setItems] = useState<MyComfort[] | 'signedOut' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retractingId, setRetractingId] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
+
+  const load = useCallback(async () => {
+    if (!(await isRealAccount())) return setItems('signedOut');
+    const { data, error } = await supabase
+      .from('comforts')
+      .select('id, body, tags, status')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      setError(t.myComforts.loadError);
+      setItems([]);
+      return;
+    }
+    setError(null);
+    setItems(data as MyComfort[]);
+  }, []);
+
+  // Theo focus: đăng nhập xong quay lại đây thì tải lại.
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
+
+  // Thu hồi không hoàn tác được (RLS chỉ cho đổi sang 'retracted'), nên hỏi lại một lần.
+  function askRetract(id: string) {
+    setDialog({
+      question: t.myComforts.retractQuestion,
+      detail: t.myComforts.retractDetail,
+      confirmLabel: t.myComforts.retract,
+      onConfirm: () => void retract(id),
+    });
+  }
+
+  async function retract(id: string) {
+    setRetractingId(id);
+    // RLS chỉ cho đổi cột status, và chỉ sang 'retracted'. Không cần kiểm lại ở đây.
+    const { error } = await supabase.from('comforts').update({ status: 'retracted' }).eq('id', id);
+    setRetractingId(null);
+    if (error) {
+      setError(t.myComforts.retractError);
+      return;
+    }
+    AccessibilityInfo.announceForAccessibility(t.myComforts.retracted);
+    await load();
+  }
+
+  const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
+
+  return (
+    <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={s.scroll}>
+        <Text style={[pencil.title, s.title]} accessibilityRole="header">
+          {t.common.wordsYouWrote}
+        </Text>
+
+        {items === null ? (
+          <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
+        ) : items === 'signedOut' ? (
+          <>
+            <Text style={s.explanation}>{t.myComforts.keptByAccount}</Text>
+            <LinkRow label={t.myComforts.signInToView} chevron onPress={() => router.push('/login')} />
+          </>
+        ) : items.length === 0 && !error ? (
+          <Text style={s.explanation}>{t.myComforts.empty}</Text>
+        ) : (
+          items.map((comfort) => (
+            <ComfortCard key={comfort.id}>
+              <Text style={s.body}>{comfort.body}</Text>
+              <Text style={[pencil.note, s.muted]}>
+                {tagLabels(comfort.tags)} · {t.myComforts.status[comfort.status]}
+              </Text>
+              {/* Thu hồi rồi thì thôi; bị từ chối cũng không còn trong pool để mà thu. */}
+              {comfort.status === 'pending' || comfort.status === 'approved' ? (
+                <SecondaryButton
+                  label={retractingId === comfort.id ? t.myComforts.retracting : t.myComforts.retract}
+                  onPress={() => askRetract(comfort.id)}
+                  disabled={retractingId === comfort.id}
+                  accessibilityLabel={t.myComforts.retractA11y(comfort.body.slice(0, 40))}
+                  accessibilityHint={t.myComforts.irreversible}
+                />
+              ) : null}
+            </ComfortCard>
+          ))
+        )}
+
+        {error ? (
+          <>
+            <Text style={s.error}>{error}</Text>
+            <LinkRow icon="refresh" label={t.myComforts.retry} onPress={() => void load()} />
+          </>
+        ) : null}
+
+        <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
+      </ScrollView>
+      <ScreenFooter />
+      <ConfirmDialog request={dialog} onClose={() => setDialog(null)} />
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: album.page },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  title: { color: album.ink, marginBottom: space.lg },
+  explanation: { ...text.body, color: album.pencil },
+  body: { ...text.body, color: album.ink },
+  muted: { color: album.pencil },
+  error: { ...text.body, color: album.ink, marginTop: space.md },
+});

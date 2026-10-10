@@ -12,257 +12,257 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LANGS, ngonNgu, nhanTag, t, TEN_GOC, type Lang } from '@/i18n';
+import { LANGS, currentLang, tagLabel, t, NATIVE_NAMES, type Lang } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
 import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
-import { album, butChi, space, text } from '@/theme';
-import { ChanMan, DongLoi, HopThoai, NutChinh, ONhap, Pill, type YeuCauHoi } from '@/ui';
+import { album, pencil, space, text } from '@/theme';
+import { ScreenFooter, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, type ConfirmRequest } from '@/ui';
 
-const TOI_THIEU = 20;
-const TOI_DA = 500;
+const MIN_LENGTH = 20;
+const MAX_LENGTH = 500;
 
 /**
- * Viết Comfort. Hai luật quan trọng nhất KHÔNG nằm ở đây mà ở DB:
- * "chỉ tài khoản thật" và "tối đa 5 / 24h" do RLS ép (docs/db.md). App chỉ dịch lỗi ra lời.
+ * Viáº¿t Comfort. Hai luáº­t quan trá»ng nháº¥t KHÃ”NG náº±m á»Ÿ Ä‘Ã¢y mÃ  á»Ÿ DB:
+ * "chá»‰ tÃ i khoáº£n tháº­t" vÃ  "tá»‘i Ä‘a 5 / 24h" do RLS Ã©p (docs/db.md). App chá»‰ dá»‹ch lá»—i ra lá»i.
  */
 export default function WriteComfortScreen() {
-  const [choDuyenQuyen, setChoDuyenQuyen] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [body, setBody] = useState('');
   const [tags, setTags] = useState<TagId[]>([]);
-  // source_lang: batch dịch từ đây. Mặc định ngôn ngữ app, nhưng người viết có thể viết tiếng khác.
-  const [nguon, setNguon] = useState<Lang>(ngonNgu);
-  const [dangGui, setDangGui] = useState(false);
-  const [loi, setLoi] = useState<string | null>(null);
-  const [hetPhien, setHetPhien] = useState(false);
-  const [xong, setXong] = useState(false);
-  const [hoi, setHoi] = useState<YeuCauHoi | null>(null);
-  const daHoi = useRef(false);
+  // source_lang: batch dá»‹ch tá»« Ä‘Ã¢y. Máº·c Ä‘á»‹nh ngÃ´n ngá»¯ app, nhÆ°ng ngÆ°á»i viáº¿t cÃ³ thá»ƒ viáº¿t tiáº¿ng khÃ¡c.
+  const [sourceLang, setSourceLang] = useState<Lang>(currentLang);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [done, setDone] = useState(false);
+  const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
+  const sentToLogin = useRef(false);
 
-  // Lời đang viết mất vì chạm nhầm Back cũng đau như một Reflection: hỏi lại trước khi rời.
-  // Sang màn Đăng nhập (đăng nhập lại) là push, không phải rời, nên không hỏi.
+  // Lá»i Ä‘ang viáº¿t máº¥t vÃ¬ cháº¡m nháº§m Back cÅ©ng Ä‘au nhÆ° má»™t Reflection: há»i láº¡i trÆ°á»›c khi rá»i.
+  // Sang mÃ n ÄÄƒng nháº­p (Ä‘Äƒng nháº­p láº¡i) lÃ  push, khÃ´ng pháº£i rá»i, nÃªn khÃ´ng há»i.
   const navigation = useNavigation();
-  usePreventRemove(body.trim() !== '' && !xong, ({ data }) =>
-    setHoi({
-      cauHoi: t.viet.thoatHoi,
-      phu: t.viet.thoatPhu,
-      nhanBo: t.chung.thoat,
-      nhanGiu: t.viet.vietTiep,
-      bo: () => navigation.dispatch(data.action),
+  usePreventRemove(body.trim() !== '' && !done, ({ data }) =>
+    setDialog({
+      question: t.write.leaveQuestion,
+      detail: t.write.leaveDetail,
+      confirmLabel: t.common.leave,
+      keepLabel: t.write.keepWriting,
+      onConfirm: () => navigation.dispatch(data.action),
     }),
   );
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
+  const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
-  // push chứ không replace: đăng nhập xong thì quay về đúng màn này, chữ đã gõ còn nguyên.
+  // push chá»© khÃ´ng replace: Ä‘Äƒng nháº­p xong thÃ¬ quay vá» Ä‘Ãºng mÃ n nÃ y, chá»¯ Ä‘Ã£ gÃµ cÃ²n nguyÃªn.
   useFocusEffect(
     useCallback(() => {
-      let huy = false;
-      isRealAccount().then((that) => {
-        if (huy) return;
-        if (that) return setChoDuyenQuyen(false);
-        // Lần đầu thì sang đăng nhập; quay về mà vẫn chưa đăng nhập ("Để sau") thì rời màn viết.
-        if (daHoi.current) thoat();
+      let cancelled = false;
+      isRealAccount().then((isReal) => {
+        if (cancelled) return;
+        if (isReal) return setCheckingAuth(false);
+        // Láº§n Ä‘áº§u thÃ¬ sang Ä‘Äƒng nháº­p; quay vá» mÃ  váº«n chÆ°a Ä‘Äƒng nháº­p ("Äá»ƒ sau") thÃ¬ rá»i mÃ n viáº¿t.
+        if (sentToLogin.current) leave();
         else {
-          daHoi.current = true;
+          sentToLogin.current = true;
           router.push('/login');
         }
       });
       return () => {
-        huy = true;
+        cancelled = true;
       };
     }, []),
   );
 
-  // Đếm theo code point cho khớp CHECK char_length(body) của Postgres — emoji là 1, không phải 2.
-  const doDai = [...body.trim()].length;
-  const guiDuoc = doDai >= TOI_THIEU && doDai <= TOI_DA && tags.length > 0 && !dangGui;
+  // Äáº¿m theo code point cho khá»›p CHECK char_length(body) cá»§a Postgres â€” emoji lÃ  1, khÃ´ng pháº£i 2.
+  const length = [...body.trim()].length;
+  const canSend = length >= MIN_LENGTH && length <= MAX_LENGTH && tags.length > 0 && !sending;
 
-  function doiTag(tag: TagId) {
-    setTags((truoc) =>
-      truoc.includes(tag)
-        ? truoc.filter((x) => x !== tag)
-        : truoc.length >= MAX_COMFORT_TAGS
-          ? truoc
-          : [...truoc, tag],
+  function toggleTag(tag: TagId) {
+    setTags((prev) =>
+      prev.includes(tag)
+        ? prev.filter((x) => x !== tag)
+        : prev.length >= MAX_COMFORT_TAGS
+          ? prev
+          : [...prev, tag],
     );
   }
 
-  const bao = (msg: string) => {
-    setLoi(msg);
+  const reportError = (msg: string) => {
+    setError(msg);
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  async function gui() {
-    if (!guiDuoc) return;
-    setLoi(null);
-    setHetPhien(false);
-    setDangGui(true);
+  async function send() {
+    if (!canSend) return;
+    setError(null);
+    setSessionExpired(false);
+    setSending(true);
     try {
-      // Session trên máy, không gọi mạng: mất mạng thì để insert báo lỗi mạng, đừng đá sang login.
+      // Session trÃªn mÃ¡y, khÃ´ng gá»i máº¡ng: máº¥t máº¡ng thÃ¬ Ä‘á»ƒ insert bÃ¡o lá»—i máº¡ng, Ä‘á»«ng Ä‘Ã¡ sang login.
       const { data } = await supabase.auth.getSession();
       const user = data.session?.user;
       if (!user) {
-        setHetPhien(true);
-        bao(t.viet.hetPhien);
+        setSessionExpired(true);
+        reportError(t.write.sessionExpired);
         return;
       }
 
-      // author_id là cột not null nên vẫn phải truyền, dù RLS ép nó = auth.uid().
+      // author_id lÃ  cá»™t not null nÃªn váº«n pháº£i truyá»n, dÃ¹ RLS Ã©p nÃ³ = auth.uid().
       const { error } = await supabase.from('comforts').insert({
         author_id: user.id,
         body: body.trim(),
-        source_lang: nguon,
+        source_lang: sourceLang,
         tags,
       });
 
       if (error) {
-        // 42501 = RLS chặn, và policy comfort_insert có ba điều kiện. Hết lượt 5/24h là
-        // lý do hay gặp nhất, nhưng tài khoản anonymous hoặc session hết hạn cũng trả
-        // đúng mã này — hỏi lại để khỏi hiện một câu sai.
+        // 42501 = RLS cháº·n, vÃ  policy comfort_insert cÃ³ ba Ä‘iá»u kiá»‡n. Háº¿t lÆ°á»£t 5/24h lÃ 
+        // lÃ½ do hay gáº·p nháº¥t, nhÆ°ng tÃ i khoáº£n anonymous hoáº·c session háº¿t háº¡n cÅ©ng tráº£
+        // Ä‘Ãºng mÃ£ nÃ y â€” há»i láº¡i Ä‘á»ƒ khá»i hiá»‡n má»™t cÃ¢u sai.
         if (error.code === '42501' && (await isRealAccount())) {
-          bao(t.viet.hetLuot);
+          reportError(t.write.limitReached);
         } else if (error.code === '42501') {
-          setHetPhien(true);
-          bao(t.viet.hetPhien);
+          setSessionExpired(true);
+          reportError(t.write.sessionExpired);
         } else {
-          // supabase-js trả lỗi mạng qua `error` với code rỗng; có code là server từ chối.
-          bao(error.code ? t.viet.loiGui : t.chung.loiMang);
+          // supabase-js tráº£ lá»—i máº¡ng qua `error` vá»›i code rá»—ng; cÃ³ code lÃ  server tá»« chá»‘i.
+          reportError(error.code ? t.write.sendError : t.common.networkError);
         }
         return;
       }
-      setXong(true);
+      setDone(true);
     } catch {
-      bao(t.chung.loiMang);
+      reportError(t.common.networkError);
     } finally {
-      setDangGui(false);
+      setSending(false);
     }
   }
 
-  if (choDuyenQuyen) {
+  if (checkingAuth) {
     return (
-      <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-        <View style={s.giua}>
-          <ActivityIndicator color={album.butChi} accessibilityLabel={t.chung.dangTai} />
+      <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+        <View style={s.center}>
+          <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
         </View>
-        <ChanMan />
+        <ScreenFooter />
       </SafeAreaView>
     );
   }
 
-  if (xong) {
+  if (done) {
     return (
-      <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-        <View style={s.noiDungXong}>
-          <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            {t.viet.xongTieuDe}
+      <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+        <View style={s.doneContent}>
+          <Text style={[pencil.title, s.title]} accessibilityRole="header">
+            {t.write.doneTitle}
           </Text>
-          <Text style={s.giaiThich}>{t.viet.xongPhu}</Text>
-          <NutChinh nhan={t.viet.xong} onPress={thoat} />
+          <Text style={s.explanation}>{t.write.doneDetail}</Text>
+          <PrimaryButton label={t.write.done} onPress={leave} />
         </View>
-        <ChanMan />
+        <ScreenFooter />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={s.man} behavior="padding">
-        <ScrollView contentContainerStyle={s.noiDung} keyboardShouldPersistTaps="handled">
-          <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            {t.viet.tieuDe}
+    <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView style={s.screen} behavior="padding">
+        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+          <Text style={[pencil.title, s.title]} accessibilityRole="header">
+            {t.write.title}
           </Text>
-          <Text style={s.giaiThich}>{t.viet.moDau}</Text>
-          <Text style={s.phu}>{t.viet.goiY}</Text>
+          <Text style={s.explanation}>{t.write.intro}</Text>
+          <Text style={s.caption}>{t.write.guidance}</Text>
 
-          <ONhap
-            style={s.oVanBan}
+          <TextField
+            style={s.textArea}
             value={body}
             onChangeText={setBody}
-            accessibilityLabel={t.viet.oNhap}
+            accessibilityLabel={t.write.inputLabel}
             multiline
             textAlignVertical="top"
-            maxLength={TOI_DA}
-            placeholder={t.viet.oNhapGoiY}
-            editable={!dangGui}
+            maxLength={MAX_LENGTH}
+            placeholder={t.write.inputPlaceholder}
+            editable={!sending}
           />
-          <Text style={s.dem} accessibilityLabel={t.viet.demA11y(doDai, TOI_DA)}>
-            {doDai}/{TOI_DA}
-            {doDai < TOI_THIEU ? t.viet.conThieu(TOI_THIEU - doDai) : ''}
+          <Text style={s.counter} accessibilityLabel={t.write.counterA11y(length, MAX_LENGTH)}>
+            {length}/{MAX_LENGTH}
+            {length < MIN_LENGTH ? t.write.shortBy(MIN_LENGTH - length) : ''}
           </Text>
 
-          <Text style={[butChi.ngay, s.nhan]} accessibilityRole="header">
-            {t.viet.vietBang}
+          <Text style={[pencil.date, s.label]} accessibilityRole="header">
+            {t.write.languageLabel}
           </Text>
-          <View style={s.hangTag} accessibilityRole="radiogroup">
+          <View style={s.tagRow} accessibilityRole="radiogroup">
             {LANGS.map((l) => (
               <Pill
                 key={l}
-                nhan={TEN_GOC[l]}
-                mot
-                chon={nguon === l}
-                tat={dangGui}
-                onPress={() => setNguon(l)}
+                label={NATIVE_NAMES[l]}
+                single
+                selected={sourceLang === l}
+                disabled={sending}
+                onPress={() => setSourceLang(l)}
               />
             ))}
           </View>
 
-          <Text style={[butChi.ngay, s.nhan]} accessibilityRole="header">
-            {t.viet.danhCho}
+          <Text style={[pencil.date, s.label]} accessibilityRole="header">
+            {t.write.topicLabel}
           </Text>
-          <Text style={s.phu}>{t.viet.chonTag(MAX_COMFORT_TAGS, nhanTag('unknown'))}</Text>
-          <View style={s.hangTag}>
+          <Text style={s.caption}>{t.write.pickTags(MAX_COMFORT_TAGS, tagLabel('unknown'))}</Text>
+          <View style={s.tagRow}>
             {TAG_IDS.map((tag) => {
-              const chon = tags.includes(tag);
+              const selected = tags.includes(tag);
               return (
                 <Pill
                   key={tag}
-                  nhan={nhanTag(tag)}
-                  chon={chon}
-                  tat={dangGui || (!chon && tags.length >= MAX_COMFORT_TAGS)}
-                  onPress={() => doiTag(tag)}
+                  label={tagLabel(tag)}
+                  selected={selected}
+                  disabled={sending || (!selected && tags.length >= MAX_COMFORT_TAGS)}
+                  onPress={() => toggleTag(tag)}
                 />
               );
             })}
           </View>
 
-          {/* Đồng ý rõ ràng trước khi lời vào pool — overview.md §6. */}
-          {doDai >= TOI_THIEU && tags.length === 0 ? <Text style={s.phu}>{t.viet.canTag}</Text> : null}
-          <Text style={[s.phu, s.dongY]}>{t.viet.dongY(LANGS.filter((l) => l !== nguon))}</Text>
+          {/* Äá»“ng Ã½ rÃµ rÃ ng trÆ°á»›c khi lá»i vÃ o pool â€” overview.md Â§6. */}
+          {length >= MIN_LENGTH && tags.length === 0 ? <Text style={s.caption}>{t.write.needTag}</Text> : null}
+          <Text style={[s.caption, s.consent]}>{t.write.consent(LANGS.filter((l) => l !== sourceLang))}</Text>
 
-          {loi ? <Text style={s.loi}>{loi}</Text> : null}
-          {hetPhien ? (
-            <DongLoi nhan={t.viet.dangNhapLai} mui onPress={() => router.push('/login')} />
+          {error ? <Text style={s.error}>{error}</Text> : null}
+          {sessionExpired ? (
+            <LinkRow label={t.write.signInAgain} chevron onPress={() => router.push('/login')} />
           ) : null}
 
-          <DongLoi icon="arrow-left" nhan={t.chung.quayLai} onPress={thoat} />
+          <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
         </ScrollView>
-        <ChanMan>
-          <NutChinh nhan={t.viet.gui} onPress={gui} tat={!guiDuoc && !dangGui} dangChay={dangGui} />
-        </ChanMan>
+        <ScreenFooter>
+          <PrimaryButton label={t.write.send} onPress={send} disabled={!canSend && !sending} busy={sending} />
+        </ScreenFooter>
       </KeyboardAvoidingView>
-      <HopThoai hoi={hoi} onDong={() => setHoi(null)} />
+      <ConfirmDialog request={dialog} onClose={() => setDialog(null)} />
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  hangTag: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  man: { flex: 1, backgroundColor: album.trang },
-  giua: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  noiDung: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl, gap: space.md },
-  noiDungXong: {
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  screen: { flex: 1, backgroundColor: album.page },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  content: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl, gap: space.md },
+  doneContent: {
     flex: 1,
-    paddingHorizontal: space.man,
+    paddingHorizontal: space.screen,
     paddingVertical: space.lg,
     gap: space.md,
     justifyContent: 'center',
   },
-  tieuDe: { color: album.chu },
-  giaiThich: { ...text.than, color: album.butChi },
-  nhan: { color: album.butChi, marginTop: space.md },
-  phu: { ...text.phu, color: album.butChi },
-  dongY: { marginTop: space.md },
-  oVanBan: { minHeight: 160, paddingVertical: space.md - 2 },
-  dem: { ...text.phu, color: album.butChi },
-  loi: { ...text.than, color: album.chu },
+  title: { color: album.ink },
+  explanation: { ...text.body, color: album.pencil },
+  label: { color: album.pencil, marginTop: space.md },
+  caption: { ...text.caption, color: album.pencil },
+  consent: { marginTop: space.md },
+  textArea: { minHeight: 160, paddingVertical: space.md - 2 },
+  counter: { ...text.caption, color: album.pencil },
+  error: { ...text.body, color: album.ink },
 });
