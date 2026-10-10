@@ -1,19 +1,20 @@
-import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
+  type TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { supabase } from '@/supabase';
-import { album, butChi, space, text, touch } from '@/theme';
-import { ChanMan, DongLoi, NutChinh } from '@/ui';
+import { album, pencil, space, text } from '@/theme';
+import { ScreenFooter, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
+import { check, loginForm } from '@/validation';
 
 /**
  * Đăng nhập chỉ cần cho hai việc: VIẾT Comfort và bật sync. Nhật ký chạy không cần
@@ -21,122 +22,113 @@ import { ChanMan, DongLoi, NutChinh } from '@/ui';
  */
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
-  const [matKhau, setMatKhau] = useState('');
-  const [dangChay, setDangChay] = useState(false);
-  const [loi, setLoi] = useState<string | null>(null);
-  const [thongBao, setThongBao] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
   // Do màn Tạo tài khoản gửi về khi xong (register.tsx).
-  const { tao, email: emailMoi } = useLocalSearchParams<{ tao?: string; email?: string }>();
+  const { registered, email: newEmail } = useLocalSearchParams<{ registered?: string; email?: string }>();
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
-
-  const baoLoi = (msg: string) => {
-    setLoi(msg);
+  const reportError = (msg: string) => {
+    setError(msg);
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
   useEffect(() => {
     // Đã có session thật thì màn này hết việc — trả người dùng về chỗ họ đến.
-    if (tao === 'xong') return thoat();
-    if (tao !== 'xacMinh') return;
-    const msg = t.dangNhap.daGuiXacMinh;
-    if (emailMoi) setEmail(emailMoi);
-    setLoi(null);
-    setThongBao(msg);
+    if (registered === 'done') return leave();
+    if (registered !== 'verify') return;
+    const msg = t.login.verificationSent;
+    if (newEmail) setEmail(newEmail);
+    setError(null);
+    setNotice(msg);
     AccessibilityInfo.announceForAccessibility(msg);
-  }, [tao, emailMoi]);
+  }, [registered, newEmail]);
 
-  async function dangNhap() {
-    if (dangChay) return;
-    setLoi(null);
-    setThongBao(null);
+  async function signIn() {
+    if (busy) return;
+    setError(null);
+    setNotice(null);
 
-    if (!email.includes('@') || matKhau.length < 6) {
-      baoLoi(t.chung.loiEmail);
-      return;
-    }
+    const form = check(loginForm, { email, password });
+    if ('code' in form) return reportError(t.validation[form.code]);
 
-    setDangChay(true);
+    setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: matKhau });
-      if (error) return baoLoi(t.dangNhap.loi);
-      thoat();
+      const { error } = await supabase.auth.signInWithPassword(form.data);
+      if (error) return reportError(t.login.error);
+      leave();
     } catch {
-      baoLoi(t.chung.loiMang);
+      reportError(t.common.networkError);
     } finally {
-      setDangChay(false);
+      setBusy(false);
     }
   }
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={s.man} behavior="padding">
-        <ScrollView contentContainerStyle={s.noiDung} keyboardShouldPersistTaps="handled">
-          <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            {t.chung.dangNhap}
+    <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView style={s.screen} behavior="padding">
+        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+          <Text style={[pencil.title, s.title]} accessibilityRole="header">
+            {t.common.signIn}
           </Text>
 
-          <Text style={s.giaiThich}>{t.dangNhap.giaiThich}</Text>
+          <Text style={s.explanation}>{t.login.explanation}</Text>
 
-          <Text style={s.nhan}>{t.chung.email}</Text>
-          <TextInput
-            style={s.o}
+          <Text style={s.label}>{t.common.email}</Text>
+          {/* Enter ở ô email sang ô mật khẩu, Enter ở ô mật khẩu là đăng nhập. */}
+          <TextField
             value={email}
             onChangeText={setEmail}
-            accessibilityLabel={t.chung.email}
+            accessibilityLabel={t.common.email}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
             textContentType="emailAddress"
             autoComplete="email"
-            placeholder={t.chung.emailMau}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
-            editable={!dangChay}
+            placeholder={t.common.emailPlaceholder}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            editable={!busy}
           />
 
-          <Text style={s.nhan}>{t.chung.matKhau}</Text>
-          <TextInput
-            style={s.o}
-            value={matKhau}
-            onChangeText={setMatKhau}
-            accessibilityLabel={t.chung.matKhau}
+          <Text style={s.label}>{t.common.password}</Text>
+          <TextField
+            ref={passwordRef}
+            value={password}
+            onChangeText={setPassword}
+            accessibilityLabel={t.common.password}
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry
             autoComplete="password"
-            placeholder={t.chung.matKhauGoiY}
-            placeholderTextColor={album.butChi}
-            selectionColor={album.butChi}
-            editable={!dangChay}
+            placeholder={t.common.passwordHint}
+            returnKeyType="go"
+            onSubmitEditing={() => void signIn()}
+            editable={!busy}
           />
 
-          {loi ? <Text style={s.loi}>{loi}</Text> : null}
-          {thongBao ? <Text style={s.loi}>{thongBao}</Text> : null}
+          {error ? <Text style={s.error}>{error}</Text> : null}
+          {notice ? <Text style={s.error}>{notice}</Text> : null}
 
-          <NutChinh nhan={t.chung.dangNhap} onPress={dangNhap} dangChay={dangChay} />
-          <DongLoi nhan={t.dangNhap.taoMoi} onPress={() => router.push('/register')} />
-
-          <DongLoi nhan={t.dangNhap.deSau} onPress={thoat} />
+          <LinkRow label={t.login.createAccount} chevron onPress={() => router.push('/register')} />
+          <LinkRow icon="arrow-left" label={t.login.later} onPress={leave} />
         </ScrollView>
-        <ChanMan />
+        <ScreenFooter>
+          <PrimaryButton label={t.common.signIn} onPress={signIn} busy={busy} />
+        </ScreenFooter>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  man: { flex: 1, backgroundColor: album.trang },
-  noiDung: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl, gap: space.md },
-  tieuDe: { color: album.chu },
-  giaiThich: { ...text.than, color: album.butChi },
-  nhan: { ...text.phu, color: album.butChi, marginTop: space.sm },
-  o: {
-    ...text.than,
-    color: album.chu,
-    backgroundColor: album.tam,
-    paddingHorizontal: space.md,
-    minHeight: touch.toiThieu,
-  },
-  loi: { ...text.than, color: album.chu },
+  screen: { flex: 1, backgroundColor: album.page },
+  content: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl, gap: space.md },
+  title: { color: album.ink },
+  explanation: { ...text.body, color: album.pencil },
+  label: { ...text.caption, color: album.pencil, marginTop: space.sm },
+  error: { ...text.body, color: album.ink },
 });

@@ -13,97 +13,100 @@ import {
   type Entry,
 } from '@/db';
 import { t } from '@/i18n';
-import { album, butChi, space } from '@/theme';
-import { ChanMan, GocDan, nhanNgay, NutChinh, TamEntry, type TrangThai } from '@/ui';
+import { album, pencil, space } from '@/theme';
+import { ScreenFooter, PhotoCorners, formatDate, PrimaryButton, EntryCard, type ComfortState } from '@/ui';
 
 
 /** Khoá nhóm theo ngày địa phương. */
-const khoaNgay = (ms: number) => new Date(ms).toDateString();
+const dayKey = (ms: number) => new Date(ms).toDateString();
 
 /** Entry mở gần nhất — mở lại app thì album cuộn về đêm đó. */
-const KHOA_DUNG = 'timeline_dung';
+const LAST_OPENED_KEY = 'timeline_dung';
 
 export default function Timeline() {
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [trangThai, setTrangThai] = useState<Record<string, TrangThai>>({});
-  const [dinhKem, setDinhKem] = useState<Record<string, Attachment[]>>({});
-  const [dung, setDung] = useState<string | null>(null);
-  const cuon = useRef<ScrollView>(null);
-  const daCuon = useRef(false);
+  const [comfortStates, setComfortStates] = useState<Record<string, ComfortState>>({});
+  const [attachments, setAttachments] = useState<Record<string, Attachment[]>>({});
+  const scrollRef = useRef<ScrollView>(null);
+  /** Khoá đêm cần cuộn tới ở lần dựng kế tiếp; cuộn xong thì về null. */
+  const scrollTarget = useRef<string | null>(null);
+  /** Entry đã hiện ở lần focus trước — null là lần đầu mở màn. */
+  const seenIds = useRef<Set<string> | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      const es = listEntries();
-      const tt: Record<string, TrangThai> = {};
-      const dk: Record<string, Attachment[]> = {};
-      for (const e of es) {
-        const cs = listReceivedComforts(e.id);
-        if (cs.length) tt[e.id] = cs.every((c) => c.thanked) ? 'camOn' : 'kep';
-        dk[e.id] = listAttachments(e.id);
+      const list = listEntries();
+      const states: Record<string, ComfortState> = {};
+      const atts: Record<string, Attachment[]> = {};
+      for (const e of list) {
+        const received = listReceivedComforts(e.id);
+        if (received.length) states[e.id] = received.every((c) => c.thanked) ? 'thanked' : 'clipped';
+        atts[e.id] = listAttachments(e.id);
       }
-      setEntries(es);
-      setTrangThai(tt);
-      setDinhKem(dk);
-      setDung(getSetting(KHOA_DUNG));
+      // Mở app: về đêm của Entry mở gần nhất. Quay về sau khi Lưu: về đêm của lần khóc vừa ghi — không thì
+      // trang đứng ở chỗ cuộn cũ và người vừa ghi không thấy nó đâu.
+      const seen = seenIds.current;
+      const target = seen ? list.find((e) => !seen.has(e.id)) : list.find((e) => e.id === getSetting(LAST_OPENED_KEY));
+      scrollTarget.current = target ? dayKey(target.occurredAt) : null;
+      seenIds.current = new Set(list.map((e) => e.id));
+      setEntries(list);
+      setComfortStates(states);
+      setAttachments(atts);
     }, []),
   );
 
-  const moEntry = (id: string) => {
-    setSetting(KHOA_DUNG, id);
+  const openEntry = (id: string) => {
+    setSetting(LAST_OPENED_KEY, id);
     router.push(`/comfort/${id}` as Href);
   };
 
   // Entry đã sắp xếp giảm dần từ DB — chỉ cần cắt nhóm khi đổi ngày.
-  const nhom: Entry[][] = [];
+  const groups: Entry[][] = [];
   for (const e of entries) {
-    const cuoi = nhom[nhom.length - 1];
-    if (cuoi && khoaNgay(cuoi[0].occurredAt) === khoaNgay(e.occurredAt)) cuoi.push(e);
-    else nhom.push([e]);
+    const last = groups[groups.length - 1];
+    if (last && dayKey(last[0].occurredAt) === dayKey(e.occurredAt)) last.push(e);
+    else groups.push([e]);
   }
-  const eDung = entries.find((e) => e.id === dung);
-  const khoaDung = eDung ? khoaNgay(eDung.occurredAt) : null;
 
   return (
-    <SafeAreaView style={s.man} edges={['top']}>
-      <ScrollView ref={cuon} contentContainerStyle={s.cuon}>
-        <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          {t.timeline.tieuDe}
+    <SafeAreaView style={s.screen} edges={['top']}>
+      <ScrollView ref={scrollRef} contentContainerStyle={s.scroll}>
+        <Text style={[pencil.title, s.title]} accessibilityRole="header">
+          {t.timeline.title}
         </Text>
 
-        {nhom.length === 0 ? (
-          <View style={s.khungCho}>
-            <GocDan />
-            <Text style={[butChi.chuThich, s.chuCho]}>{t.timeline.trong}</Text>
+        {groups.length === 0 ? (
+          <View style={s.emptyFrame}>
+            <PhotoCorners />
+            <Text style={[pencil.note, s.emptyText]}>{t.timeline.empty}</Text>
           </View>
         ) : (
-          nhom.map((ngayNhom, i) => {
-            const k = khoaNgay(ngayNhom[0].occurredAt);
+          groups.map((group, i) => {
+            const key = dayKey(group[0].occurredAt);
             return (
               <View
-                key={k}
+                key={key}
                 onLayout={(ev) => {
-                  // Chỉ cuộn một lần khi mở app, không giật trang mỗi lần quay về.
-                  if (daCuon.current || k !== khoaDung) return;
-                  daCuon.current = true;
+                  // Chỉ cuộn khi có đích (mở app, vừa Lưu), không giật trang mỗi lần quay về.
+                  if (key !== scrollTarget.current) return;
+                  scrollTarget.current = null;
                   // Chờ một frame: gọi ngay trong onLayout thì ScrollView native chưa biết chiều
                   // cao nội dung mới và kẹp về 0 — mở lại app vẫn đứng ở đầu trang.
-                  const y = ev.nativeEvent.layout.y;
-                  if (i > 0) {
-                    requestAnimationFrame(() => cuon.current?.scrollTo({ y, animated: false }));
-                  }
+                  const y = i > 0 ? ev.nativeEvent.layout.y : 0;
+                  requestAnimationFrame(() => scrollRef.current?.scrollTo({ y, animated: false }));
                 }}
               >
-                {i > 0 && <View style={s.poLuya} />}
-                <Text style={[butChi.ngay, s.ngay]} accessibilityRole="header">
-                  {nhanNgay(ngayNhom[0].occurredAt)}
+                {i > 0 && <View style={s.tissue} />}
+                <Text style={[pencil.date, s.date]} accessibilityRole="header">
+                  {formatDate(group[0].occurredAt)}
                 </Text>
-                {ngayNhom.map((e) => (
-                  <TamEntry
+                {group.map((e) => (
+                  <EntryCard
                     key={e.id}
-                    e={e}
-                    dk={dinhKem[e.id]}
-                    tt={trangThai[e.id]}
-                    onPress={() => moEntry(e.id)}
+                    entry={e}
+                    attachments={attachments[e.id]}
+                    comfortState={comfortStates[e.id]}
+                    onPress={() => openEntry(e.id)}
                   />
                 ))}
               </View>
@@ -112,24 +115,24 @@ export default function Timeline() {
         )}
       </ScrollView>
 
-      <ChanMan>
-        <NutChinh nhan={t.timeline.ghi} onPress={() => router.push('/new')} />
-      </ChanMan>
+      <ScreenFooter>
+        <PrimaryButton label={t.timeline.newEntry} onPress={() => router.push('/new')} />
+      </ScreenFooter>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  man: { flex: 1, backgroundColor: album.trang },
-  cuon: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl },
-  tieuDe: { color: album.chu, marginBottom: space.lg },
-  ngay: { color: album.butChi, marginBottom: space.md },
+  screen: { flex: 1, backgroundColor: album.page },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  title: { color: album.ink, marginBottom: space.lg },
+  date: { color: album.pencil, marginBottom: space.md },
 
   // Tờ pơ-luya giữa hai đêm: chỉ thấy mép giấy mỏng chìa ra — một mép sáng, hơi lệch,
   // chờm quá lề trang, phần thân mờ dần vào nền. Không có khung, để không thành ô nhập.
-  poLuya: {
+  tissue: {
     height: 10,
-    backgroundColor: album.poLuya,
+    backgroundColor: album.tissue,
     borderTopWidth: 1,
     borderColor: 'rgba(228, 220, 207, 0.22)',
     marginHorizontal: -space.sm,
@@ -138,13 +141,13 @@ const s = StyleSheet.create({
     transform: [{ rotate: '-0.8deg' }],
   },
 
-  khungCho: {
+  emptyFrame: {
     minHeight: 160,
     justifyContent: 'center',
     padding: space.lg,
     marginBottom: space.xl,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: album.vienMo,
+    borderColor: album.hairline,
   },
-  chuCho: { color: album.butChi, textAlign: 'center' },
+  emptyText: { color: album.pencil, textAlign: 'center' },
 });

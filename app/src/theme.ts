@@ -2,7 +2,7 @@ import type { Lang } from './i18n';
 
 /**
  * Token hệ thống của Tearnote. Chỉ hằng số — không component, không context, không hook. Ngoại lệ
- * duy nhất: họ chữ tay của `butChi` đổi theo ngôn ngữ (`datChuTay`).
+ * duy nhất: họ chữ tay của `pencil` đổi theo ngôn ngữ (`setHandwriting`).
  *
  * Bối cảnh chi phối mọi giá trị dưới đây: người dùng mở app lúc 2 giờ sáng, vừa khóc xong,
  * cầm máy bằng một tay, trong bóng tối, mắt nhoè. Nền tối là mặc định duy nhất, không có light mode.
@@ -15,29 +15,33 @@ import type { Lang } from './i18n';
  */
 export const album = {
   /** Trang album. */
-  trang: '#1A1614',
+  page: '#1A1614',
   /** Tấm dán: Entry, nút chính. Sáng hơn trang vừa đủ để thấy nó nằm trên trang. */
-  tam: '#2B2622',
+  card: '#2B2622',
   /** Tấm nhỏ người lạ kẹp vào: Comfort đã nhận. */
-  kep: '#3A322C',
+  clip: '#3A322C',
   /** Chữ thân trên tấm. ~11:1 trên tấm — đủ qua mắt nhoè, chưa tới trắng gắt. */
-  chu: '#E4DCCF',
+  ink: '#E4DCCF',
   /** Bút chì trắng: chú thích, ngày, giọt cường độ. ~7.8:1 trên trang. */
-  butChi: '#B3AA9C',
+  pencil: '#B3AA9C',
   /** Góc dán ảnh — cùng tông bút chì trắng. */
-  goc: '#B3AA9C',
+  corner: '#B3AA9C',
   /** Giấy pơ-luya ngăn giữa các đêm: vệt sáng rất nhạt. */
-  poLuya: 'rgba(228, 220, 207, 0.06)',
+  tissue: 'rgba(228, 220, 207, 0.06)',
   /** Hairline duy nhất được dùng: mép trên chân màn, khung trang trống. */
-  vienMo: 'rgba(228, 220, 207, 0.12)',
+  hairline: 'rgba(228, 220, 207, 0.12)',
   /** Màu duy nhất được nổi: lối trợ giúp (~8:1 trên trang). */
-  den: '#E2A55A',
+  lamp: '#E2A55A',
+  /** Tấm Entry đang nhấn: giữa `card` và `clip` — trên nền đen bóng gần như không thấy, nhấn phải sáng lên. */
+  cardLifted: '#322C27',
+  /** Nền che sau hộp thoại, nền dấu × trên ảnh nhỏ: đen ấm, không #000. */
+  scrim: 'rgba(10, 8, 7, 0.72)',
   /**
    * Bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục. Ô trống (ngày có thật, không Entry)
-   * rồi 5 mức theo `NGUONG` trong `lich.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
-   * Thanh chọn cường độ ở màn ghi dùng lại 5 mức này (`lich[1..5]`).
+   * rồi 5 mức theo `THRESHOLDS` trong `calendar.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
+   * Thanh chọn cường độ ở màn ghi dùng lại 5 mức này (`calendar[1..5]`).
    */
-  lich: [
+  calendar: [
     'rgba(228, 220, 207, 0.06)',
     'rgba(228, 220, 207, 0.22)',
     'rgba(228, 220, 207, 0.40)',
@@ -53,23 +57,23 @@ export const album = {
  * Patrick Hand không có kana. Không dùng Yomogi cho tiếng Việt: chữ Latin của nó rộng cố định nên
  * tách chữ có dấu ("l ần").
  */
-const CHU_TAY: Record<Lang, string> = { vi: 'PatrickHand', en: 'PatrickHand', ja: 'Yomogi' };
+const HANDWRITING_FONT: Record<Lang, string> = { vi: 'PatrickHand', en: 'PatrickHand', ja: 'Yomogi' };
 
-const taoButChi = (fontFamily: string) => ({
-  tieuDe: { fontFamily, fontSize: 34, lineHeight: 46 },
-  ngay: { fontFamily, fontSize: 22, lineHeight: 33 },
-  chuThich: { fontFamily, fontSize: 19, lineHeight: 29 },
+const makePencil = (fontFamily: string) => ({
+  title: { fontFamily, fontSize: 34, lineHeight: 46 },
+  date: { fontFamily, fontSize: 22, lineHeight: 33 },
+  note: { fontFamily, fontSize: 19, lineHeight: 29 },
 });
 
-export const butChi = taoButChi('PatrickHand');
+export const pencil = makePencil('PatrickHand');
 
 /**
  * Chỉ i18n gọi, ngay trước khi dựng lại cây giao diện. Thay cả ba object chứ không sửa bên trong:
- * RN đóng băng style đã truyền qua prop (bản dev ném lỗi khi sửa). Vì vậy đừng trải `...butChi.x`
- * vào StyleSheet cấp module — bản trải giữ họ chữ cũ; dùng mảng style `[butChi.x, s.y]`.
+ * RN đóng băng style đã truyền qua prop (bản dev ném lỗi khi sửa). Vì vậy đừng trải `...pencil.x`
+ * vào StyleSheet cấp module — bản trải giữ họ chữ cũ; dùng mảng style `[pencil.x, s.y]`.
  */
-export function datChuTay(lang: Lang) {
-  Object.assign(butChi, taoButChi(CHU_TAY[lang]));
+export function setHandwriting(lang: Lang) {
+  Object.assign(pencil, makePencil(HANDWRITING_FONT[lang]));
 }
 
 /**
@@ -80,17 +84,17 @@ export function datChuTay(lang: Lang) {
  *
  * Thang bắt đầu từ 17 chứ không phải 16, và không có nấc nào dưới 14.
  * Mắt nhoè lúc nửa đêm không đọc được caption 12. lineHeight rộng (~1.5) vì tiếng Việt có dấu
- * chồng hai tầng, dòng sát nhau là dấu dính vào dòng trên. Chỉ 3 weight: font hệ thống Android
+ * chồng hai tầng, dòng sát nhau là dấu dính vào dòng trên. Chỉ 2 weight: font hệ thống Android
  * (Roboto) render '600' không ổn định, nên dừng ở 400 / 500. Tiêu đề và nhãn mục là
- * Patrick Hand (`butChi`).
+ * Patrick Hand (`pencil`).
  */
 export const text = {
   /** Chữ thân: Reflection, nội dung Comfort. Đây là cỡ mặc định của app. */
-  than: { fontSize: 17, fontWeight: '400', lineHeight: 26 },
+  body: { fontSize: 17, fontWeight: '400', lineHeight: 26 },
   /** Chữ trên nút bấm và tag. Đậm hơn thân một nấc để ngón tay biết chỗ bấm mà không cần viền. */
-  nut: { fontSize: 17, fontWeight: '500', lineHeight: 22 },
+  button: { fontSize: 17, fontWeight: '500', lineHeight: 22 },
   /** Chữ phụ: mốc thời gian, thời lượng. Nhỏ nhất được phép — không có nấc nào dưới đây. */
-  phu: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
+  caption: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
 } as const;
 
 /**
@@ -105,7 +109,7 @@ export const space = {
   /** Khoảng nghỉ giữa các khối lớn / giữa các Entry khác ngày. */
   xl: 40,
   /** Lề ngang của mọi màn hình. */
-  man: 20,
+  screen: 20,
 } as const;
 
 /**
@@ -114,10 +118,17 @@ export const space = {
  */
 export const touch = {
   /** Sàn cho mọi thứ bấm được: icon, tag, nấc cường độ. */
-  toiThieu: 48,
+  min: 48,
   /** Nút hành động chính: lưu Entry, gửi Comfort. */
-  chinh: 56,
+  primary: 56,
   /** Nút hotline. To hơn vì lúc cần tới nó là lúc tay run nhất. */
   hotline: 64,
 } as const;
+
+/**
+ * Hình khối (DESIGN.md › Shapes): có góc dán thì vuông (0 — không cần token); thứ ngón tay chạm bo `touch`;
+ * giấy rời (mẩu kẹp, tấm lời, thẻ hotline, hộp thoại) bo `paper`. Hình tròn (đĩa play, con trượt, dấu ×)
+ * là hình, không phải mức bo thứ ba. Không có mức nào ≥ 20 (không viên thuốc).
+ */
+export const radius = { paper: 6, touch: 14 } as const;
 

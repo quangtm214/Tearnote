@@ -275,7 +275,7 @@
       }
     ],
     "dos": [
-      "**Do** dùng `album` và `butChi` từ `app/src/theme.ts` cho mọi màn mới hoặc màn đang chuyển world.",
+      "**Do** dùng `album` và `pencil` từ `app/src/theme.ts` cho mọi màn mới hoặc màn đang chuyển world.",
       "**Do** giữ Reflection và nút bấm ở font hệ thống cỡ `than` / `nut`.",
       "**Do** cho mọi tờ giấy góc vuông và bóng \"nằm trên trang\"; nhấn thì \"nhấc khỏi trang\".",
       "**Do** biểu diễn cường độ bằng đúng n nét bút chì.",

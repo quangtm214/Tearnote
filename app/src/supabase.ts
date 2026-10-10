@@ -15,10 +15,27 @@ const store = {
   removeItem: SecureStore.deleteItemAsync,
 };
 
+/**
+ * fetch của RN (OkHttp) không có hạn chờ: mất mạng sau khi đã có một kết nối giữ sẵn thì yêu cầu kế tiếp
+ * treo mãi, kể cả khi có mạng lại — nút "Nhận một lời" quay không dừng. Cắt ở 20 giây để màn hình báo
+ * "không kết nối được"; supabase-js trả lỗi đó qua `error` như mọi lỗi mạng khác.
+ */
+// ponytail: huỷ yêu cầu không đuổi được kết nối chết khỏi pool của OkHttp — trên emulator (bật/tắt máy bay
+// giữ nguyên IP) các yêu cầu sau vẫn lỗi tới khi mở lại app. Dứt điểm cần cấu hình OkHttp phía native
+// (`pingInterval`), tức dev client thay Expo Go; làm khi build bản thật.
+const TIMEOUT_MS = 20_000;
+const fetchWithTimeout: typeof fetch = (input, init) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  init?.signal?.addEventListener('abort', () => controller.abort());
+  return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer));
+};
+
 export const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
   process.env.EXPO_PUBLIC_SUPABASE_KEY!,
   {
+    global: { fetch: fetchWithTimeout },
     auth: {
       storage: store,
       autoRefreshToken: true,

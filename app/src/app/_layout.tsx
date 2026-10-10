@@ -4,7 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 
-import { ngonNgu, theoDoiNgonNgu } from '@/i18n';
+import { currentLang, subscribeLanguage } from '@/i18n';
 import { album } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -17,29 +17,29 @@ const YOMOGI = { Yomogi: require('../../assets/fonts/Yomogi-Regular.ttf') };
  * nên route thêm sau (login, comfort/*) không cần đụng file này.
  */
 export default function RootLayout() {
-  const [lang, setLang] = useState(ngonNgu);
+  const [lang, setLang] = useState(currentLang);
   // Font lỗi thì vẫn mở app bằng font hệ thống — không để màn trắng chặn lối trợ giúp.
   // useFonts chỉ đọc map lúc mount; đổi sang tiếng Nhật sau đó thì nạp ở dưới.
-  const [xong, loi] = useFonts({
+  const [loaded, fontError] = useFonts({
     PatrickHand: require('../../assets/fonts/PatrickHand-Regular.ttf'),
     ...(lang === 'ja' ? YOMOGI : {}),
   });
 
   useEffect(() => {
-    if (xong || loi) SplashScreen.hideAsync();
-  }, [xong, loi]);
+    if (loaded || fontError) SplashScreen.hideAsync();
+  }, [loaded, fontError]);
 
   // Đổi ngôn ngữ trong Cài đặt: `t` đã mang chữ mới, đổi `key` để dựng lại mọi màn. Sang tiếng Nhật
   // thì nạp Yomogi trước; nạp hỏng vẫn đổi — kana rơi về font hệ thống.
   useEffect(
     () =>
-      theoDoiNgonNgu((l) => {
-        (l === 'ja' ? loadAsync(YOMOGI).catch(() => {}) : Promise.resolve()).then(() => setLang(l));
+      subscribeLanguage((next) => {
+        (next === 'ja' ? loadAsync(YOMOGI).catch(() => {}) : Promise.resolve()).then(() => setLang(next));
       }),
     [],
   );
 
-  if (!xong && !loi) return null;
+  if (!loaded && !fontError) return null;
 
   return (
     <>
@@ -48,7 +48,7 @@ export default function RootLayout() {
         key={lang}
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: album.trang },
+          contentStyle: { backgroundColor: album.page },
           animation: 'fade',
         }}
       />

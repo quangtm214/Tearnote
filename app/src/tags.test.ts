@@ -23,9 +23,9 @@ describe('contract Tag', () => {
 
   it('nhãn vi/en/ja trùng từng cột trong docs/tags.md', () => {
     const md = readFileSync(join(repoRoot, 'docs', 'tags.md'), 'utf8');
-    const dong = [...md.matchAll(/^\| `([a-z_]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|/gm)];
-    const cot = (i: number) => Object.fromEntries(dong.map((m) => [m[1], m[i]]));
-    expect({ vi: cot(2), en: cot(3), ja: cot(4) }).toEqual(TAG_LABEL);
+    const rows = [...md.matchAll(/^\| `([a-z_]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|/gm)];
+    const column = (i: number) => Object.fromEntries(rows.map((m) => [m[1], m[i]]));
+    expect({ vi: column(2), en: column(3), ja: column(4) }).toEqual(TAG_LABEL);
   });
 });
 
@@ -35,9 +35,9 @@ describe('normalizeTags', () => {
   });
 
   it('cắt còn 3 tag thay vì báo lỗi', () => {
-    const bon: TagId[] = ['grief', 'pressure', 'family', 'anxiety'];
-    expect(normalizeTags(bon)).toHaveLength(MAX_ENTRY_TAGS);
-    expect(normalizeTags(bon)).toEqual(['grief', 'pressure', 'family']);
+    const four: TagId[] = ['grief', 'pressure', 'family', 'anxiety'];
+    expect(normalizeTags(four)).toHaveLength(MAX_ENTRY_TAGS);
+    expect(normalizeTags(four)).toEqual(['grief', 'pressure', 'family']);
   });
 
   it('bỏ tag trùng', () => {

@@ -4,46 +4,49 @@ import { Tabs } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { t } from '@/i18n';
-import { album, space, text, touch } from '@/theme';
-
-type TenIcon = keyof typeof MaterialCommunityIcons.glyphMap;
+import { album, radius, space, text, touch } from '@/theme';
+import type { IconName } from '@/ui';
 
 /**
  * "Viết lời" không phải tab: nó mở màn viết đè lên, để luồng đăng nhập / Gửi / Xong của màn đó
  * giữ nguyên. Tab đang mở thì icon tô đặc — chữ ngà và bút chì quá gần nhau để chỉ đổi màu.
- * Nhãn lấy từ `t.tab[ten]` lúc render.
+ * Nhãn lấy từ `t.tab[name]` lúc render.
  */
-const MUC: { ten: keyof typeof t.tab; icon: TenIcon; iconChon?: TenIcon; href?: Href }[] = [
-  { ten: 'index', icon: 'notebook-outline', iconChon: 'notebook' },
-  { ten: 'viet', icon: 'pencil-outline', href: '/comfort/write' },
-  { ten: 'lich', icon: 'calendar-blank-outline', iconChon: 'calendar-blank' },
-  { ten: 'settings', icon: 'cog-outline', iconChon: 'cog' },
+const TABS: { name: keyof typeof t.tab; icon: IconName; iconSelected?: IconName; href?: Href }[] = [
+  { name: 'index', icon: 'notebook-outline', iconSelected: 'notebook' },
+  { name: 'write', icon: 'note-edit-outline', href: '/comfort/write' },
+  { name: 'calendar', icon: 'calendar-blank-outline', iconSelected: 'calendar-blank' },
+  { name: 'settings', icon: 'cog-outline', iconSelected: 'cog' },
 ];
 
 /**
  * Thanh điều hướng tự dựng thay thanh mặc định: thanh mặc định cao cố định 49 nên vỡ khi tăng
- * cỡ chữ hệ thống, và nhãn 10–12 dưới sàn 14 của DESIGN.md. Nằm dưới chân màn (ChanMan) của mỗi tab.
+ * cỡ chữ hệ thống, và nhãn 10–12 dưới sàn 14 của DESIGN.md. Nằm dưới chân màn (ScreenFooter) của mỗi tab.
  */
 export default function TabLayout() {
   return (
     <Tabs
-      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: album.trang } }}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: album.page } }}
       tabBar={({ state, navigation, insets }) => (
-        <View style={[s.thanh, { paddingBottom: insets.bottom }]} accessibilityRole="tablist">
-          {MUC.map((m) => {
-            const chon = state.routes[state.index].name === m.ten;
-            const mau = chon ? album.chu : album.butChi;
+        <View style={[s.bar, { paddingBottom: insets.bottom }]} accessibilityRole="tablist">
+          {TABS.map((tab) => {
+            const selected = state.routes[state.index].name === tab.name;
+            const color = selected ? album.ink : album.pencil;
             return (
               <Pressable
-                key={m.ten}
-                onPress={() => (m.href ? router.push(m.href) : navigation.navigate(m.ten))}
-                accessibilityRole={m.href ? 'button' : 'tab'}
-                accessibilityState={{ selected: chon }}
-                accessibilityLabel={t.tab[m.ten]}
-                style={({ pressed }) => [s.muc, pressed && s.mo]}
+                key={tab.name}
+                onPress={() => (tab.href ? router.push(tab.href) : navigation.navigate(tab.name))}
+                accessibilityRole={tab.href ? 'button' : 'tab'}
+                accessibilityState={{ selected }}
+                accessibilityLabel={t.tab[tab.name]}
+                style={({ pressed }) => [s.item, pressed && s.dim]}
               >
-                <MaterialCommunityIcons name={chon && m.iconChon ? m.iconChon : m.icon} size={24} color={mau} />
-                <Text style={[s.nhan, { color: mau }]}>{t.tab[m.ten]}</Text>
+                <View style={[s.indicator, selected && s.indicatorSelected]}>
+                  <MaterialCommunityIcons name={selected && tab.iconSelected ? tab.iconSelected : tab.icon} size={24} color={color} />
+                </View>
+                <Text style={[s.label, { color }]} maxFontSizeMultiplier={1.3}>
+                  {t.tab[tab.name]}
+                </Text>
               </Pressable>
             );
           })}
@@ -52,27 +55,26 @@ export default function TabLayout() {
     >
       {/* Khai báo đủ để Nhật ký là tab đầu: Back ở tab khác quay về đây. */}
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="lich" />
+      <Tabs.Screen name="calendar" />
       <Tabs.Screen name="settings" />
     </Tabs>
   );
 }
 
 const s = StyleSheet.create({
-  thanh: {
-    flexDirection: 'row',
-    backgroundColor: album.trang,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: album.vienMo,
-  },
-  muc: {
+  // Không hairline riêng: hairline của chân màn ngay trên đã tách trang khỏi phần cố định.
+  bar: { flexDirection: 'row', backgroundColor: album.page },
+  item: {
     flex: 1,
-    minHeight: touch.toiThieu,
+    minHeight: touch.min,
     alignItems: 'center',
-    justifyContent: 'center',
+    // Canh trên: nhãn hai dòng ("For / strangers") không đẩy icon lệch hàng với các mục khác.
+    justifyContent: 'flex-start',
     gap: space.xs,
-    paddingVertical: space.sm,
+    paddingVertical: space.xs,
   },
-  mo: { opacity: 0.6 },
-  nhan: { ...text.phu, textAlign: 'center' },
+  indicator: { width: 56, height: 32, borderRadius: radius.touch, alignItems: 'center', justifyContent: 'center' },
+  indicatorSelected: { backgroundColor: album.hairline },
+  dim: { opacity: 0.6 },
+  label: { ...text.caption, textAlign: 'center' },
 });

@@ -1,78 +1,80 @@
-import { router, type Href } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HOTLINES_FALLBACK, type Hotline } from '@/hotlines';
-import { ngonNgu, t, type Lang } from '@/i18n';
-import { album, butChi, space, text, touch } from '@/theme';
-import { bong, DongLoi, NutDen } from '@/ui';
+import { HOTLINES_FALLBACK, topCountry, type Hotline } from '@/hotlines';
+import { currentLang, t, deviceRegion, type Lang } from '@/i18n';
+import { album, pencil, radius, space, text, touch } from '@/theme';
+import { shadow, LinkRow, HelpButton, leave } from '@/ui';
 
 /** Màn này phải chạy khi máy bay bật: chỉ đọc danh sách đóng gói sẵn, không gọi mạng. */
-const TEN_NUOC: Record<string, Record<Lang, string>> = {
+const COUNTRY_NAMES: Record<string, Record<Lang, string>> = {
   VN: { vi: 'Việt Nam', en: 'Vietnam', ja: 'ベトナム' },
   JP: { vi: 'Nhật Bản', en: 'Japan', ja: '日本' },
   US: { vi: 'Mỹ', en: 'United States', ja: 'アメリカ' },
-  GB: { vi: 'Anh', en: 'United Kingdom', ja: 'イギリス' },
+  GB: { vi: 'Vương quốc Anh', en: 'United Kingdom', ja: 'イギリス' },
 };
 
-const nhomTheoNuoc = (ds: Hotline[]): [string, Hotline[]][] => {
-  const m = new Map<string, Hotline[]>();
-  for (const h of ds) {
-    const cu = m.get(h.country);
-    if (cu) cu.push(h);
-    else m.set(h.country, [h]);
+const groupByCountry = (list: Hotline[]): [string, Hotline[]][] => {
+  const map = new Map<string, Hotline[]>();
+  for (const h of list) {
+    const existing = map.get(h.country);
+    if (existing) existing.push(h);
+    else map.set(h.country, [h]);
   }
-  return [...m];
+  return [...map];
 };
 
 /** TalkBack đọc "096 306 1414" thành số lớn; tách từng chữ số cho dễ nghe, dễ nhớ. */
-const docSo = (phone: string) => phone.replace(/\D/g, '').split('').join(' ');
+const spellDigits = (phone: string) => phone.replace(/\D/g, '').split('').join(' ');
 
 // Máy không gọi được (tablet, không SIM) thì openURL từ chối — số vẫn hiện trên màn để bấm tay.
-const mo = (url: string) => Linking.openURL(url).catch(() => {});
+const openUrl = (url: string) => Linking.openURL(url).catch(() => {});
 
 /**
- * Màn này chính là lối trợ giúp, nên mọi nút Gọi đều là `NutDen` — ngoại lệ duy nhất của luật
+ * Màn này chính là lối trợ giúp, nên mọi nút Gọi đều là `HelpButton` — ngoại lệ duy nhất của luật
  * Một Ngọn Đèn (DESIGN.md). Không có chân màn: đây là nơi nút trợ giúp dẫn tới.
  */
 export default function Help() {
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
-  const l = ngonNgu();
+  const lang = currentLang();
+  // Nước của mình lên đầu (người Nhật mở màn này không phải cuộn qua số 115); còn lại giữ thứ tự, vẫn đủ mọi nước.
+  const first = topCountry(deviceRegion(), lang);
+  const groups = groupByCountry(HOTLINES_FALLBACK);
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.cuon}>
-        <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          {t.chung.canTroGiup}
+    <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={s.scroll}>
+        <Text style={[pencil.title, s.title]} accessibilityRole="header">
+          {t.common.needHelp}
         </Text>
-        <Text style={s.moDau}>{t.troGiup.moDau}</Text>
+        <Text style={s.intro}>{t.help.intro}</Text>
 
-        {nhomTheoNuoc(HOTLINES_FALLBACK).map(([nuoc, ds]) => (
-          <View key={nuoc}>
-            <Text style={[butChi.ngay, s.nuoc]} accessibilityRole="header">
-              {TEN_NUOC[nuoc]?.[l] ?? nuoc}
+        {[...groups.filter(([n]) => n === first), ...groups.filter(([n]) => n !== first)].map(([country, list]) => (
+          <View key={country}>
+            <Text style={[pencil.date, s.country]} accessibilityRole="header">
+              {COUNTRY_NAMES[country]?.[lang] ?? country}
             </Text>
-            {ds.map(({ name, hours, phone, url }) => (
-              <View key={name.vi} style={s.tam}>
-                <Text style={s.ten}>{name[l]}</Text>
-                {hours ? <Text style={s.phu}>{hours[l]}</Text> : null}
+            {list.map(({ name, hours, phone, url }) => (
+              <View key={name.vi} style={s.card}>
+                <Text style={s.name}>{name[lang]}</Text>
+                {hours ? <Text style={s.caption}>{hours[lang]}</Text> : null}
                 {phone ? (
-                  <View style={s.nutGoi}>
-                    <NutDen
-                      nhan={t.troGiup.goi(phone)}
-                      accessibilityLabel={t.troGiup.goiA11y(name[l], docSo(phone))}
-                      onPress={() => mo(`tel:${phone.replace(/\s/g, '')}`)}
+                  <View style={s.callButton}>
+                    <HelpButton
+                      icon="phone-outline"
+                      label={t.help.call(phone)}
+                      accessibilityLabel={t.help.callA11y(name[lang], spellDigits(phone))}
+                      onPress={() => openUrl(`tel:${phone.replace(/\s/g, '')}`)}
                     />
                   </View>
                 ) : null}
                 {url ? (
                   <Pressable
-                    style={({ pressed }) => [s.web, pressed && s.nhan]}
+                    style={({ pressed }) => [s.link, pressed && s.pressed]}
                     accessibilityRole="link"
-                    accessibilityLabel={t.troGiup.moWeb(name[l])}
-                    onPress={() => mo(url)}
+                    accessibilityLabel={t.help.openWebsite(name[lang])}
+                    onPress={() => openUrl(url)}
                   >
-                    <Text style={s.chuWeb}>{url.replace(/^https?:\/\//, '')}</Text>
+                    <Text style={s.linkText}>{url.replace(/^https?:\/\//, '')}</Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -80,25 +82,25 @@ export default function Help() {
           </View>
         ))}
 
-        <Text style={[s.phu, s.cuoi]}>{t.troGiup.cuoi}</Text>
-        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+        <Text style={[s.caption, s.footer]}>{t.help.footer}</Text>
+        <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  man: { flex: 1, backgroundColor: album.trang },
-  cuon: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl },
-  tieuDe: { color: album.chu },
-  moDau: { ...text.than, color: album.chu, marginTop: space.sm },
-  nuoc: { color: album.butChi, marginTop: space.xl, marginBottom: space.md },
-  tam: { ...bong, backgroundColor: album.tam, padding: space.lg, marginBottom: space.lg },
-  ten: { ...text.than, color: album.chu },
-  phu: { ...text.phu, color: album.butChi, marginTop: space.xs },
-  nutGoi: { marginTop: space.md },
-  web: { minHeight: touch.toiThieu, justifyContent: 'center', marginTop: space.sm },
-  nhan: { opacity: 0.6 },
-  chuWeb: { ...text.nut, color: album.chu, textDecorationLine: 'underline' },
-  cuoi: { marginTop: space.lg },
+  screen: { flex: 1, backgroundColor: album.page },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  title: { color: album.ink },
+  intro: { ...text.body, color: album.ink, marginTop: space.sm },
+  country: { color: album.pencil, marginTop: space.xl, marginBottom: space.md },
+  card: { ...shadow, backgroundColor: album.card, borderRadius: radius.paper, padding: space.lg, marginBottom: space.lg },
+  name: { ...text.body, color: album.ink },
+  caption: { ...text.caption, color: album.pencil, marginTop: space.xs },
+  callButton: { marginTop: space.md },
+  link: { minHeight: touch.min, justifyContent: 'center', marginTop: space.sm },
+  pressed: { opacity: 0.6 },
+  linkText: { ...text.button, color: album.ink, textDecorationLine: 'underline' },
+  footer: { marginTop: space.lg },
 });

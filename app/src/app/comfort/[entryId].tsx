@@ -1,25 +1,37 @@
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  deleteEntry,
   getEntry,
   listAttachments,
   listReceivedComforts,
   markThanked,
-  nhanComfortBat,
+  isComfortReceivingEnabled,
   saveReceivedComfort,
   type Attachment,
   type Entry,
   type ReceivedComfort,
 } from '@/db';
-import { ngonNgu, t } from '@/i18n';
+import { currentLang, t } from '@/i18n';
 import { ensureSession, supabase } from '@/supabase';
-import { album, butChi, space, text, touch } from '@/theme';
-import { bong, ChanMan, DongLoi, NgheLai, nhanNgay, NutChinh, TamEntry } from '@/ui';
-
-type ComfortRow = { comfort_id: string; body: string; translated: boolean };
+import { album, pencil, space, text } from '@/theme';
+import {
+  ScreenFooter,
+  LinkRow,
+  ConfirmDialog,
+  VoicePlayer,
+  formatDate,
+  PrimaryButton,
+  SecondaryButton,
+  EntryCard,
+  ComfortCard,
+  leave,
+  type ConfirmRequest,
+} from '@/ui';
+import { comfortRows } from '@/validation';
 
 /**
  * Mở một Entry: đọc lại đủ Reflection (Timeline cắt ở 6 dòng), rồi xem hoặc xin lời từ người lạ.
@@ -27,52 +39,55 @@ type ComfortRow = { comfort_id: string; body: string; translated: boolean };
 export default function EntryComfortScreen() {
   const { entryId } = useLocalSearchParams<{ entryId: string }>();
   const [entry, setEntry] = useState<Entry | null>(null);
-  const [dk, setDk] = useState<Attachment[]>([]);
-  const [ds, setDs] = useState<ReceivedComfort[]>([]);
-  const [dangXin, setDangXin] = useState(false);
-  const [choNhan, setChoNhan] = useState(true);
-  const [thongBao, setThongBao] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [comforts, setComforts] = useState<ReceivedComfort[]>([]);
+  const [requesting, setRequesting] = useState(false);
+  const [receivingOn, setReceivingOn] = useState(true);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
 
-  const nap = useCallback(() => {
+  const reload = useCallback(() => {
     if (!entryId) return;
     setEntry(getEntry(entryId));
-    setDk(listAttachments(entryId));
-    setDs(listReceivedComforts(entryId));
-    setChoNhan(nhanComfortBat());
+    setAttachments(listAttachments(entryId));
+    setComforts(listReceivedComforts(entryId));
+    setReceivingOn(isComfortReceivingEnabled());
   }, [entryId]);
 
-  useEffect(nap, [nap]);
+  useEffect(reload, [reload]);
 
   // Thông báo mới mount thì TalkBack không chắc đọc — đọc thẳng cho chắc.
-  const bao = (msg: string) => {
-    setThongBao(msg);
+  const notify = (msg: string) => {
+    setNotice(msg);
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  async function xin() {
-    if (!entry || dangXin) return;
-    setThongBao(null);
-    setDangXin(true);
+  async function requestComfort() {
+    if (!entry || requesting) return;
+    setNotice(null);
+    setRequesting(true);
+    AccessibilityInfo.announceForAccessibility(t.entry.searching);
     try {
       await ensureSession();
       // Lời trả về bằng ngôn ngữ app; pool chỉ gồm lời đã có bản ngôn ngữ đó (docs/db.md).
       const { data, error } = await supabase.rpc('request_comfort', {
         p_tags: entry.tags,
-        p_lang: ngonNgu(),
+        p_lang: currentLang(),
       });
 
       if (error) {
         // supabase-js trả lỗi mạng qua `error` với code rỗng; có code là server từ chối.
-        bao(error.code ? t.lanKhoc.loiNhan : t.chung.loiMang);
+        notify(error.code ? t.entry.receiveError : t.common.networkError);
         return;
       }
 
-      const rows = (data ?? []) as ComfortRow[];
-      const row = rows[0];
+      const parsed = comfortRows.safeParse(data ?? []);
+      if (!parsed.success) return notify(t.entry.receiveError);
+      const row = parsed.data[0];
       if (!row) {
         // Hai lý do khác hẳn nhau, hai câu khác nhau (CLAUDE.md: edge case bắt buộc).
-        const chiVui = entry.tags.length === 1 && entry.tags[0] === 'moved';
-        bao((await daDuLuot()) ? t.lanKhoc.hetLuot : t.lanKhoc.poolRong(chiVui));
+        const joyOnly = entry.tags.length === 1 && entry.tags[0] === 'moved';
+        notify((await hitDailyLimit()) ? t.entry.limitReached : t.entry.poolEmpty(joyOnly));
         return;
       }
 
@@ -82,93 +97,106 @@ export default function EntryComfortScreen() {
         body: row.body,
         translated: row.translated,
       });
-      nap();
+      reload();
       AccessibilityInfo.announceForAccessibility(row.body);
     } catch {
-      bao(t.chung.loiMang);
+      notify(t.common.networkError);
     } finally {
-      setDangXin(false);
+      setRequesting(false);
     }
   }
 
-  async function camOn(comfortId: string) {
+  async function thank(comfortId: string) {
     // Đánh dấu ở máy trước: cảm ơn hụt trên server không đáng để chặn người dùng lúc này,
     // và supabase-js trả { error } chứ không throw nên try/catch ở đây là thừa.
-    markThanked(comfortId);
-    nap();
+    markThanked(entryId, comfortId);
+    reload();
+    AccessibilityInfo.announceForAccessibility(t.common.thanked);
     await supabase.from('deliveries').update({ thanked: true }).eq('comfort_id', comfortId);
   }
 
-  const thoat = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
-  const ghiAm = dk.find((d) => d.kind === 'audio');
+  const recording = attachments.find((att) => att.kind === 'audio');
+
+  // Xoá thật, không thùng rác, không hoàn tác: câu phụ nói rõ mất những gì.
+  const askRemove = () =>
+    entry &&
+    setDialog({
+      question: t.entry.removeQuestion,
+      detail: t.entry.removeDetail(comforts.length > 0),
+      confirmLabel: t.common.remove,
+      onConfirm: () => {
+        deleteEntry(entry.id);
+        AccessibilityInfo.announceForAccessibility(t.entry.removed);
+        leave();
+      },
+    });
 
   if (!entryId || !entry) {
     return (
-      <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-        <View style={[s.man, s.cuon]}>
-          <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-            {t.lanKhoc.khongThay}
+      <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+        <View style={[s.screen, s.scroll]}>
+          <Text style={[pencil.title, s.title]} accessibilityRole="header">
+            {t.entry.notFound}
           </Text>
-          <Text style={s.giaiThich}>{t.lanKhoc.khongThayPhu}</Text>
-          <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+          <Text style={s.explanation}>{t.entry.notFoundDetail}</Text>
+          <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
         </View>
-        <ChanMan />
+        <ScreenFooter />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={s.man} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.cuon}>
-        <Text style={[butChi.tieuDe, s.tieuDe]} accessibilityRole="header">
-          {nhanNgay(entry.occurredAt)}
+    <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={s.scroll}>
+        <Text style={[pencil.title, s.title]} accessibilityRole="header">
+          {formatDate(entry.occurredAt)}
         </Text>
-        <TamEntry e={entry} dk={dk} />
+        <EntryCard entry={entry} attachments={attachments} />
         {/* Nằm ngoài tấm: tấm là một vùng đọc gộp cho screen reader, nút bên trong sẽ bị nuốt mất. */}
-        {ghiAm ? <NgheLai uri={ghiAm.uri} /> : null}
+        {recording ? <VoicePlayer uri={recording.uri} /> : null}
 
-        <Text style={[butChi.ngay, s.nhom]} accessibilityRole="header">
-          {t.lanKhoc.loiTuNguoiLa}
+        <Text style={[pencil.date, s.section]} accessibilityRole="header">
+          {t.entry.wordsFromStranger}
         </Text>
 
-        {ds.length === 0 ? (
-          <Text style={s.giaiThich}>{t.lanKhoc.chuaKep}</Text>
+        {comforts.length === 0 ? (
+          <Text style={s.explanation}>{t.entry.noneYet}</Text>
         ) : (
-          ds.map((c) => (
-            // Mẩu giấy người lạ kẹp vào trang — cùng tông `kep` với mẩu nhỏ trên Timeline.
-            <View key={c.comfortId} style={s.kep}>
-              <Text style={s.than}>{c.body}</Text>
-              {c.translated ? <Text style={[butChi.chuThich, s.phu]}>{t.chung.daDich}</Text> : null}
-              {c.thanked ? (
-                <Text style={[butChi.chuThich, s.phu]}>{t.chung.daCamOn}</Text>
+          comforts.map((comfort) => (
+            // Mẩu giấy người lạ kẹp vào trang — cùng tông `album.clip` với mẩu nhỏ trên Timeline.
+            <ComfortCard key={comfort.comfortId}>
+              <Text style={s.body}>{comfort.body}</Text>
+              {comfort.translated ? <Text style={[pencil.note, s.muted]}>{t.common.autoTranslated}</Text> : null}
+              {comfort.thanked ? (
+                <Text style={[pencil.note, s.muted]}>{t.common.thanked}</Text>
               ) : (
-                <Pressable
-                  style={({ pressed }) => [s.nutCamOn, pressed && s.mo]}
-                  onPress={() => camOn(c.comfortId)}
-                  accessibilityRole="button">
-                  <Text style={s.chuCamOn}>{t.lanKhoc.camOn}</Text>
-                </Pressable>
+                <SecondaryButton label={t.entry.thank} onPress={() => void thank(comfort.comfortId)} />
               )}
-            </View>
+            </ComfortCard>
           ))
         )}
 
-        {thongBao ? <Text style={s.thongBao}>{thongBao}</Text> : null}
+        {notice ? <Text style={s.notice}>{notice}</Text> : null}
 
         {/* Mỗi Entry một Comfort (ADR 0007), và công tắc tắt nhận thì không còn nút xin ở đâu cả. */}
-        {ds.length === 0 && choNhan ? (
-          <View style={s.nutXin}>
-            <NutChinh nhan={t.lanKhoc.xin} onPress={xin} dangChay={dangXin} />
+        {comforts.length === 0 && receivingOn ? (
+          <View style={s.requestButton}>
+            <PrimaryButton label={t.entry.request} onPress={requestComfort} busy={requesting} busyLabel={t.entry.searching} />
           </View>
         ) : null}
 
-        {ds.length === 0 && !choNhan ? (
-          <Text style={[s.giaiThich, s.nutXin]}>{t.lanKhoc.daTat}</Text>
+        {comforts.length === 0 && !receivingOn ? (
+          <Text style={[s.explanation, s.requestButton]}>{t.entry.receivingOff}</Text>
         ) : null}
 
-        <DongLoi nhan={t.chung.quayLai} onPress={thoat} />
+        <View style={s.removeRow}>
+          <LinkRow icon="trash-can-outline" label={t.entry.remove} onPress={askRemove} />
+        </View>
+        <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
       </ScrollView>
-      <ChanMan />
+      <ScreenFooter />
+      <ConfirmDialog request={dialog} onClose={() => setDialog(null)} />
     </SafeAreaView>
   );
 }
@@ -182,34 +210,25 @@ export default function EntryComfortScreen() {
  * không trả `received_at`, nên không đếm được "3 lời trong 24h qua" trên máy. RLS cho đọc
  * đúng dòng mình là người nhận, và ta vừa gọi mạng xong nên không tốn thêm vòng offline nào.
  */
-async function daDuLuot(): Promise<boolean> {
-  const tu = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+async function hitDailyLimit(): Promise<boolean> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { count, error } = await supabase
     .from('deliveries')
     .select('comfort_id', { count: 'exact', head: true })
-    .gt('delivered_at', tu);
+    .gt('delivered_at', since);
   return !error && (count ?? 0) >= 3;
 }
 
 const s = StyleSheet.create({
-  man: { flex: 1, backgroundColor: album.trang },
-  cuon: { paddingHorizontal: space.man, paddingTop: space.lg, paddingBottom: space.xl },
-  tieuDe: { color: album.chu, marginBottom: space.lg },
-  nhom: { color: album.butChi, marginTop: space.lg, marginBottom: space.md },
-  giaiThich: { ...text.than, color: album.butChi },
-  kep: {
-    ...bong,
-    elevation: 6,
-    backgroundColor: album.kep,
-    padding: space.lg,
-    marginBottom: space.lg,
-    gap: space.sm,
-  },
-  than: { ...text.than, color: album.chu },
-  phu: { color: album.butChi },
-  nutCamOn: { minHeight: touch.toiThieu, alignSelf: 'flex-start', justifyContent: 'center' },
-  chuCamOn: { ...text.nut, color: album.chu },
-  mo: { opacity: 0.6 },
-  thongBao: { ...text.than, color: album.chu, marginTop: space.md },
-  nutXin: { marginTop: space.lg },
+  screen: { flex: 1, backgroundColor: album.page },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  title: { color: album.ink, marginBottom: space.lg },
+  // Đáy `lg` để chiếc kẹp nhô 16 trên mẩu lời không chạm nhãn mục.
+  section: { color: album.pencil, marginTop: space.lg, marginBottom: space.lg },
+  explanation: { ...text.body, color: album.pencil },
+  body: { ...text.body, color: album.ink },
+  muted: { color: album.pencil },
+  notice: { ...text.body, color: album.ink, marginTop: space.md },
+  requestButton: { marginTop: space.lg },
+  removeRow: { marginTop: space.lg },
 });

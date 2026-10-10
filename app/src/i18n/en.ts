@@ -1,12 +1,12 @@
 import type { Lang } from './index';
-import type { TuDien } from './vi';
+import type { Dictionary } from './vi';
 
 /** "a cry" thay Entry, "words from / for a stranger" thay Comfort (PRODUCT.md). */
-const TEN: Record<Lang, string> = { vi: 'Vietnamese', en: 'English', ja: 'Japanese' };
-const noi = (ds: string[]) =>
-  ds.length < 2 ? ds.join('') : `${ds.slice(0, -1).join(', ')} and ${ds[ds.length - 1]}`;
-const dem = (n: number, mot: string, nhieu: string) => `${n} ${n === 1 ? mot : nhieu}`;
-const THANG = [
+const LANG_NAMES: Record<Lang, string> = { vi: 'Vietnamese', en: 'English', ja: 'Japanese' };
+const joinList = (names: string[]) =>
+  names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const MONTHS = [
   'January',
   'February',
   'March',
@@ -21,216 +21,244 @@ const THANG = [
   'December',
 ];
 
-const en: TuDien = {
+const en: Dictionary = {
   locale: 'en-US',
-  noiTag: '; ',
+  tagSeparator: '; ',
 
-  chung: {
-    quayLai: 'Back',
-    loiMang: "Couldn't connect. Check your connection and try again.",
-    dangTai: 'Loading',
-    giuLai: 'Keep',
-    canTroGiup: 'Need help now',
-    troGiupGoiY: 'Hotline numbers, available even offline',
-    daCamOn: 'thanked',
-    daDich: 'translated automatically',
-    cuongDo: (n) => `intensity ${n} of 5`,
-    dangNhap: 'Sign in',
-    loiDaViet: 'Words you wrote',
-    vietLoi: 'Write words for a stranger',
+  common: {
+    back: 'Back',
+    networkError: "Couldn't connect. Check your connection and try again.",
+    loading: 'Loading',
+    keep: 'Keep',
+    needHelp: 'Need help now',
+    needHelpHint: 'Hotline numbers, available even offline',
+    thanked: 'thanked',
+    autoTranslated: 'translated automatically',
+    intensity: (n) => `intensity ${n} of 5`,
+    signIn: 'Sign in',
+    wordsYouWrote: 'Words you wrote',
+    writeForStranger: 'Write words for a stranger',
     email: 'Email',
-    emailMau: 'you@example.com',
-    matKhau: 'Password',
-    matKhauGoiY: 'At least 6 characters',
-    loiEmail: 'Enter a valid email and a password of at least 6 characters.',
+    emailPlaceholder: 'you@example.com',
+    password: 'Password',
+    passwordHint: 'At least 6 characters',
+    leave: 'Leave',
+    remove: 'Delete',
   },
 
-  tab: { index: 'Journal', viet: 'Write', lich: 'Calendar', settings: 'Settings' },
+  tab: { index: 'Journal', write: 'For strangers', calendar: 'Calendar', settings: 'Settings' },
 
-  tam: {
-    anh: (n) => dem(n, 'photo', 'photos'),
-    ghiAm: 'voice note',
-    kep: 'words tucked in here',
-    coLoi: 'has words from a stranger',
-    coLoiCamOn: 'has words from a stranger, thanked',
-    nghe: 'Listen',
-    dung: 'Pause',
-    ngheA11y: (nhan, giay) =>
-      `${nhan}, voice note, ${giay >= 60 ? `${dem(Math.floor(giay / 60), 'minute', 'minutes')} ` : ''}${dem(giay % 60, 'second', 'seconds')}`,
+  card: {
+    photos: (n) => count(n, 'photo', 'photos'),
+    recording: 'voice note',
+    clipped: 'words tucked in here',
+    hasComfort: 'has words from a stranger',
+    hasComfortThanked: 'has words from a stranger, thanked',
+    listen: 'Listen',
+    pause: 'Pause',
+    listenA11y: (label, seconds) =>
+      `${label}, voice note, ${seconds >= 60 ? `${count(Math.floor(seconds / 60), 'minute', 'minutes')} ` : ''}${count(seconds % 60, 'second', 'seconds')}`,
   },
 
-  thoiLuong: (phut) =>
-    phut === null
-      ? 'Not sure'
-      : phut === 5
+  duration: (minutes) =>
+    minutes === null
+      ? "Can't remember"
+      : minutes === 5
         ? 'A few minutes'
-        : phut === 30
+        : minutes === 30
           ? 'Half an hour'
-          : phut === 60
+          : minutes === 60
             ? 'Over half an hour'
-            : dem(phut, 'minute', 'minutes'),
+            : count(minutes, 'minute', 'minutes'),
 
   timeline: {
-    tieuDe: 'Times I cried',
-    trong: "Nothing here yet. Write when you feel like it — or don't.",
-    ghi: 'Write it down',
+    title: 'Times I cried',
+    empty: "Nothing here yet. Write when you feel like it — or don't.",
+    newEntry: 'Write it down',
   },
 
-  ghi: {
-    lui: (phut) =>
-      phut === 0 ? 'Just now' : phut === 60 * 24 ? 'Yesterday' : `${dem(phut / 60, 'hour', 'hours')} ago`,
-    ghiNgat: 'The recording stopped partway. Try again.',
-    bo: 'Remove',
-    chuaCoCamera: "Tearnote can't use the camera yet. You can allow it in your phone's Settings.",
-    loiCamera: "Couldn't open the camera.",
-    loiThuVien: "Couldn't open your photos.",
-    chuaCoMic: "Tearnote can't use the microphone yet. You can allow it in your phone's Settings.",
-    dangGhiAm: 'Recording',
-    loiGhiAm: "Couldn't record. Try again.",
-    loiLuu: "Couldn't save the photos or voice note. Tap Save again, or remove some and save.",
-    tieuDe: 'How was it?',
-    moDau: 'No need to fill in everything. Tap Save whenever you like.',
-    lucNao: 'When?',
-    baoLau: 'How long did it last?',
-    nangDenDau: 'How intense was it?',
-    cuongDo: 'Intensity',
-    cuongDoGiaTri: (n) => `${n} of 5`,
-    viChuyenGi: 'What was it about?',
-    toiDaTag: (n) => `Up to ${n}. Choosing none is fine too.`,
-    ghiThem: 'Anything else to write?',
-    ghiThemGoiY: 'Write whatever you want. Only you can read it.',
-    kem: 'Add a photo or voice note?',
-    kemGioiHan: (anh, phut) =>
-      `Up to ${anh} photos and one ${phut}-minute voice note. They stay on this phone.`,
-    boAnhHoi: 'Remove this photo?',
-    anhSo: (i) => `Photo ${i}`,
-    boAnhGoiY: 'Tap to remove this photo',
-    dangGhi: (da, toiDa) => `Recording · ${da} / ${toiDa}`,
-    dungGhi: 'Stop recording',
-    loiDung: "Couldn't stop. Try again.",
-    boGhiAm: 'Remove voice note',
-    boGhiAmHoi: 'Remove this voice note?',
-    chupAnh: 'Take a photo',
-    chonAnh: 'Choose photos',
-    ghiAm: 'Record',
-    luu: 'Save',
-    thoi: "Never mind, don't save",
+  newEntry: {
+    ago: (minutes) =>
+      minutes === 0 ? 'Just now' : minutes === 60 * 24 ? 'Yesterday' : `${count(minutes / 60, 'hour', 'hours')} ago`,
+    recordingInterrupted: 'The recording stopped partway. Try again.',
+    discard: 'Remove',
+    noCameraPermission: "Tearnote can't use the camera yet. You can allow it in your phone's Settings.",
+    cameraError: "Couldn't open the camera. Try again.",
+    libraryError: "Couldn't open your photos. Try again.",
+    noMicPermission: "Tearnote can't use the microphone yet. You can allow it in your phone's Settings.",
+    recordingStarted: 'Recording',
+    recordingError: "Couldn't record. Try again.",
+    saveError: "Couldn't save the photos or voice note. Tap Save again, or remove some and save.",
+    title: 'How was it?',
+    intro: 'No need to fill in everything. Tap Save whenever you like.',
+    whenLabel: 'When?',
+    howLongLabel: 'How long did it last?',
+    howHeavyLabel: 'How intense was it?',
+    intensityLabel: 'Intensity',
+    intensityValue: (n) => `${n} of 5`,
+    whyLabel: 'What was it about?',
+    maxTags: (n) => `Up to ${n}. Choosing none is fine too.`,
+    notesLabel: 'Anything else to write?',
+    notesPlaceholder: 'Write anything. Only you can read it.',
+    attachLabel: 'Add a photo or voice note?',
+    attachLimit: (photos, minutes) =>
+      `Up to ${photos} photos and one ${minutes}-minute voice note. They stay on this phone.`,
+    removePhotoQuestion: 'Remove this photo?',
+    photoN: (index) => `Photo ${index}`,
+    removePhotoHint: 'Tap to remove this photo',
+    recordingProgress: (elapsed, limit) => `Recording · ${elapsed} / ${limit}`,
+    stopRecording: 'Stop recording',
+    stopError: "Couldn't stop. Try again.",
+    removeRecording: 'Remove voice note',
+    removeRecordingQuestion: 'Remove this voice note?',
+    takePhoto: 'Take a photo',
+    pickPhoto: 'Choose photos',
+    recordButton: 'Record',
+    save: 'Save',
+    cancel: "Never mind, don't save",
+    leaveQuestion: 'Leave without saving?',
+    leaveDetail: 'Unsaved words, photos and voice notes will be lost.',
+    keepWriting: 'Keep writing',
+    saved: 'Saved.',
   },
 
-  lich: {
-    tieuDe: 'Calendar',
-    chonNam: (nam) => `${nam}, choose another year`,
+  calendar: {
+    title: 'Calendar',
     // "Jan"… không vừa ô 22 ở máy hẹp; một chữ cái là cách viết quen của bảng cả năm.
-    cot: (thang) => 'JFMAMJJASOND'[thang - 1],
-    thang: (thang, soNgay, max) =>
-      `${THANG[thang - 1]}: cried on ${dem(soNgay, 'day', 'days')}. Heaviest day, combined intensity ${max}.`,
-    thangTrong: (thang) => `${THANG[thang - 1]}: no days with crying.`,
-    muc: (tu, den) => (den === undefined ? `${tu} or more` : `${tu} to ${den}`),
-    chuGiai: (muc) => `The color deepens with the day's total intensity: ${muc.join(', ')}`,
-    dong: 'Close',
+    monthLabel: (month) => 'JFMAMJJASOND'[month - 1],
+    monthSummary: (month, days, max) =>
+      `${MONTHS[month - 1]}: cried on ${count(days, 'day', 'days')}. Heaviest day, combined intensity ${max}.`,
+    monthEmpty: (month) => `${MONTHS[month - 1]}: no days with crying.`,
+    levelRange: (from, to) => (to === undefined ? `${from} or more` : `${from} to ${to}`),
+    legendA11y: (levels) => `The color deepens with the day's total intensity: ${levels.join(', ')}`,
+    prevYear: 'Previous year',
+    nextYear: 'Next year',
+    legendTitle: 'Total intensity for the day',
   },
 
-  caiDat: {
-    tieuDe: 'Settings',
-    daDangXuat: 'Signed out.',
-    nhanLoi: 'Receive words from strangers',
-    nhanLoiPhu:
+  settings: {
+    title: 'Settings',
+    signedOut: 'Signed out.',
+    receiveComforts: 'Receive words from strangers',
+    receiveComfortsDetail:
       "When off, you won't receive any more words from strangers. Your journal stays the same.",
-    loiDaVietPhu: 'Look back at, or withdraw, what you wrote.',
-    vietLoiPhu: 'Requires signing in. Up to 5 in 24 hours.',
-    taiKhoan: 'Account',
-    dangXuat: 'Sign out',
-    dangXuatPhu: 'Your journal stays on this phone.',
-    dangNhapPhu: 'Not signed in. Only needed to write words for strangers.',
-    ngonNgu: 'Language',
+    wordsYouWroteDetail: 'Read them again, or withdraw them.',
+    writeForStrangerDetail: 'Requires signing in. Up to 5 in 24 hours.',
+    account: 'Account',
+    signOut: 'Sign out',
+    signOutDetail: 'Your journal stays on this phone.',
+    signInDetail: 'Not signed in. Only needed to write words for strangers.',
+    language: 'Language',
   },
 
-  lanKhoc: {
-    loiNhan: "Couldn't receive any. Try again in a little while.",
-    poolRong: (chiVui) =>
-      `There are no words for this${chiVui ? ' joy' : ''} yet. This doesn't count toward your limit.`,
-    hetLuot: "You've received 3 in the last 24 hours. You can't receive more yet.",
-    khongThay: 'Not found',
-    khongThayPhu: 'This cry is no longer on this phone.',
-    loiTuNguoiLa: 'Words from a stranger',
-    chuaKep: 'Nothing tucked in here yet.',
-    camOn: 'Thank you',
-    xin: 'Receive words from a stranger',
-    daTat: "You've turned off words from strangers. You can change this in Settings.",
+  entry: {
+    receiveError: "Couldn't get any words just now. Try again in a little while.",
+    poolEmpty: (joyOnly) =>
+      `No one has written words for this${joyOnly ? ' joy' : ''} yet. This one doesn't count toward your limit.`,
+    limitReached: "You've received 3 in the last 24 hours. You can't receive more yet.",
+    notFound: 'Not found',
+    notFoundDetail: 'This cry is no longer on this phone.',
+    wordsFromStranger: 'Words from a stranger',
+    noneYet: 'Nothing tucked in here yet.',
+    thank: 'Thank you',
+    request: 'Receive words from a stranger',
+    receivingOff: "You've turned off words from strangers. You can change this in Settings.",
+    searching: 'Looking for words…',
+    remove: 'Delete this cry',
+    removeQuestion: 'Delete this cry?',
+    removeDetail: (hasComfort: boolean) =>
+      `Its words, photos and voice note will be deleted from this phone. This can't be undone.${hasComfort ? ' The words from a stranger tucked in here will go too.' : ''}`,
+    removed: 'Deleted.',
   },
 
-  viet: {
-    hetPhien: 'Your sign-in has expired. Sign in again and send — what you typed is still here.',
-    hetLuot: "You've sent 5 in the last 24 hours. You can't send more yet.",
-    loiGui: "Couldn't send. Your words are still here — try again in a little while.",
-    xongTieuDe: 'Your words were received',
-    xongPhu:
+  write: {
+    sessionExpired: 'Your sign-in has expired. Sign in again and send — what you typed is still here.',
+    limitReached: "You've sent 5 in the last 24 hours. You can't send more yet.",
+    sendError: "Couldn't send. Your words are still here — try again in a little while.",
+    title: 'Write words for a stranger',
+    doneTitle: 'Your words were received',
+    doneDetail:
       "They'll be reviewed first, then reach a stranger. To withdraw them, go to Settings → Words you wrote.",
-    xong: 'Done',
-    moDau:
+    done: 'Done',
+    intro:
       'Your words will reach a stranger who just cried over something similar. Neither of you knows who the other is.',
-    goiY: "Share what once helped you — no advice needed. Don't include names, phone numbers or social media.",
-    oNhap: 'Words for a stranger',
-    oNhapGoiY: 'Write what you once needed to hear.',
-    demA11y: (n, max) => `${n} of ${max} characters`,
-    conThieu: (n) => ` · ${dem(n, 'more character', 'more characters')} needed`,
-    vietBang: 'What language are you writing in?',
-    danhCho: 'What is it for?',
-    chonTag: (max, chung) =>
-      `Choose 1 or ${max}. If it fits anyone who is sad, choose “${chung}”.`,
-    dongY: (khac) =>
-      `By tapping Send, you agree that your words will be reviewed, translated into ${noi(khac.map((l) => TEN[l]))}, and sent anonymously to strangers. You can withdraw them in Settings → Words you wrote; anyone who already received them keeps their copy.`,
-    dangNhapLai: 'Sign in again',
-    gui: 'Send',
+    guidance: "Share what once helped you — no advice needed. Don't include names, phone numbers or social media handles.",
+    inputLabel: 'Words for a stranger',
+    inputPlaceholder: 'Write what you once needed to hear.',
+    counterA11y: (n, max) => `${n} of ${max} characters`,
+    shortBy: (n) => ` · ${count(n, 'more character', 'more characters')} needed`,
+    languageLabel: 'What language are you writing in?',
+    topicLabel: 'What situation is it for?',
+    pickTags: (max, unknownLabel) =>
+      `Choose 1 or ${max}. If it fits anyone who is sad, choose “${unknownLabel}”.`,
+    consent: (others) =>
+      `By tapping Send, you agree that your words will be reviewed, translated into ${joinList(others.map((lang) => LANG_NAMES[lang]))}, and sent anonymously to strangers. You can withdraw them in Settings → Words you wrote; anyone who already received them keeps their copy.`,
+    signInAgain: 'Sign in again',
+    send: 'Send',
+    leaveQuestion: 'Leave without sending?',
+    leaveDetail: "The words you're writing will be lost.",
+    keepWriting: 'Keep writing',
+    needTag: 'Choose at least one situation above.',
   },
 
-  cuaToi: {
-    trangThai: {
+  myComforts: {
+    status: {
       pending: 'Waiting for review',
       approved: 'Approved',
       rejected: 'Not sent',
       retracted: 'Withdrawn',
     },
-    loiTai: "Couldn't load the list. Check your connection and try again.",
-    hoiThuHoi: 'Withdraw these words?',
-    hoiThuHoiPhu:
+    loadError: "Couldn't load the list. Check your connection and try again.",
+    retractQuestion: 'Withdraw these words?',
+    retractDetail:
       "They won't reach anyone else. Anyone who already received them keeps them. This can't be undone.",
-    thuHoi: 'Withdraw',
-    loiThuHoi: "Couldn't withdraw. Check your connection and try again.",
-    theoTaiKhoan: 'Words you write are kept with your account.',
-    dangNhapXem: 'Sign in to see them',
-    trong: 'Nothing yet.',
-    thuHoiA11y: (dau) => `Withdraw: ${dau}`,
-    khongHoanTac: "Can't be undone",
-    dangThuHoi: 'Withdrawing…',
-    thuLai: 'Try again',
+    retract: 'Withdraw',
+    retractError: "Couldn't withdraw. Check your connection and try again.",
+    keptByAccount: 'Words you write are kept with your account.',
+    signInToView: 'Sign in to see them',
+    empty: 'Nothing yet.',
+    retractA11y: (excerpt) => `Withdraw: ${excerpt}`,
+    irreversible: "Can't be undone",
+    retracting: 'Withdrawing…',
+    retry: 'Try again',
+    retracted: 'Withdrawn.',
   },
 
-  dangNhap: {
-    daGuiXacMinh: "We've sent a verification email. Once you've verified, sign in here.",
-    loi: "Couldn't sign in. Check your email, password and connection.",
-    giaiThich:
-      'Writing for strangers requires signing in, to keep readers safe. Readers never see your email. Recording your cries needs no account.',
-    taoMoi: 'Create an account',
-    deSau: 'Not now',
+  login: {
+    verificationSent: "We've sent a verification email. Once you've verified, sign in here.",
+    error: "Couldn't sign in. Check your email, password and connection.",
+    explanation:
+      'Writing for strangers requires signing in, to keep readers safe. Readers never see your email. Keeping your journal needs no account.',
+    createAccount: 'Create an account',
+    later: 'Not now',
   },
 
-  taoTaiKhoan: {
-    tieuDe: 'Create account',
-    khongKhop: "The passwords don't match.",
-    loiTao:
+  register: {
+    title: 'Create account',
+    createError:
       "Couldn't create the account. This email may already have one — try signing in. Or check your connection.",
-    giaiThich: 'An account is only for writing to strangers. Readers never see your email.',
-    nhapLai: 'Confirm password',
-    daCo: 'Already have an account? Sign in',
+    explanation: 'An account is only for writing to strangers. Readers never see your email.',
+    confirmPassword: 'Confirm password',
+    haveAccount: 'Already have an account? Sign in',
   },
 
-  troGiup: {
-    moDau: 'If you or someone else is in danger right now, call emergency services.',
-    goi: (so) => `Call ${so}`,
-    goiA11y: (ten, so) => `Call ${ten}, number ${so}`,
-    moWeb: (ten) => `Open the ${ten} website`,
-    cuoi: "This list is stored on your phone and opens even offline. If a number doesn't go through, try another.",
+  help: {
+    intro: 'If you or someone else is in danger right now, call emergency services.',
+    call: (phone) => `Call ${phone}`,
+    callA11y: (name, phone) => `Call ${name}, number ${phone}`,
+    openWebsite: (name) => `Open the ${name} website`,
+    footer: "This list is stored on your phone and opens even offline. If a number doesn't go through, try another.",
+  },
+  validation: {
+    emailInvalid: "That email doesn't look right — please check it.",
+    passwordRequired: 'Enter your password.',
+    passwordTooShort: 'Your password needs at least 6 characters.',
+    passwordMismatch: "The passwords don't match.",
+    bodyTooShort: 'Your words are a little short — add a bit more.',
+    bodyTooLong: 'Your words are too long — trim them a little.',
+    tagsNone: 'Pick at least one topic.',
+    tagsTooMany: 'You can pick up to 2 topics.',
+    langInvalid: 'Pick the language you wrote in.',
   },
 };
 
