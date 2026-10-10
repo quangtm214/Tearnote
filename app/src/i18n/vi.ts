@@ -31,7 +31,6 @@ const vi = {
     emailPlaceholder: 'ban@vidu.com',
     password: 'Mật khẩu',
     passwordHint: 'Ít nhất 6 ký tự',
-    emailError: 'Cần một email hợp lệ và mật khẩu ít nhất 6 ký tự.',
     leave: 'Thoát',
     remove: 'Xoá',
   },
@@ -229,7 +228,6 @@ const vi = {
 
   register: {
     title: 'Tạo tài khoản',
-    mismatch: 'Hai lần nhập mật khẩu chưa khớp.',
     createError:
       'Không tạo được tài khoản. Có thể email này đã có tài khoản — thử Đăng nhập. Hoặc kiểm tra mạng.',
     explanation: 'Tài khoản chỉ để viết cho người lạ. Người đọc không bao giờ thấy email của bạn.',
@@ -244,6 +242,16 @@ const vi = {
     callA11y: (name: string, phone: string) => `Gọi ${name}, số ${phone}`,
     openWebsite: (name: string) => `Mở trang web ${name}`,
     footer: 'Danh sách có sẵn trong máy, mở được cả khi không có mạng. Số nào không gọi được thì thử số khác.',
+  },
+  validation: {
+    emailInvalid: 'Email này chưa đúng dạng — kiểm tra lại giúp mình nhé.',
+    passwordTooShort: 'Mật khẩu cần ít nhất 6 ký tự.',
+    passwordMismatch: 'Hai lần nhập mật khẩu chưa khớp.',
+    bodyTooShort: 'Lời nhắn còn hơi ngắn — hãy viết thêm một chút.',
+    bodyTooLong: 'Lời nhắn dài quá giới hạn — hãy rút gọn lại một chút.',
+    tagsNone: 'Chọn ít nhất một chủ đề.',
+    tagsTooMany: 'Chỉ chọn được tối đa 2 chủ đề.',
+    langInvalid: 'Hãy chọn ngôn ngữ bạn viết.',
   },
 };
 

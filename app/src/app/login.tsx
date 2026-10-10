@@ -14,10 +14,11 @@ import { t } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
 import { ScreenFooter, LinkRow, PrimaryButton, TextField } from '@/ui';
+import { check, loginForm } from '@/validation';
 
 /**
- * ÄÄƒng nháº­p chá»‰ cáº§n cho hai viá»‡c: VIáº¾T Comfort vÃ  báº­t sync. Nháº­t kÃ½ cháº¡y khÃ´ng cáº§n
- * tÃ i khoáº£n (ADR 0004) â€” mÃ n nÃ y luÃ´n pháº£i cÃ³ lá»‘i thoÃ¡t.
+ * Đăng nhập chỉ cần cho hai việc: VIẾT Comfort và bật sync. Nhật ký chạy không cần
+ * tài khoản (ADR 0004) — màn này luôn phải có lối thoát.
  */
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const passwordRef = useRef<TextInput>(null);
-  // Do mÃ n Táº¡o tÃ i khoáº£n gá»­i vá» khi xong (register.tsx).
+  // Do màn Tạo tài khoản gửi về khi xong (register.tsx).
   const { registered, email: newEmail } = useLocalSearchParams<{ registered?: string; email?: string }>();
 
   const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
@@ -37,7 +38,7 @@ export default function LoginScreen() {
   };
 
   useEffect(() => {
-    // ÄÃ£ cÃ³ session tháº­t thÃ¬ mÃ n nÃ y háº¿t viá»‡c â€” tráº£ ngÆ°á»i dÃ¹ng vá» chá»— há» Ä‘áº¿n.
+    // Đã có session thật thì màn này hết việc — trả người dùng về chỗ họ đến.
     if (registered === 'done') return leave();
     if (registered !== 'verify') return;
     const msg = t.login.verificationSent;
@@ -52,14 +53,12 @@ export default function LoginScreen() {
     setError(null);
     setNotice(null);
 
-    if (!email.includes('@') || password.length < 6) {
-      reportError(t.common.emailError);
-      return;
-    }
+    const form = check(loginForm, { email, password });
+    if ('code' in form) return reportError(t.validation[form.code]);
 
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: password });
+      const { error } = await supabase.auth.signInWithPassword(form.data);
       if (error) return reportError(t.login.error);
       leave();
     } catch {
@@ -80,7 +79,7 @@ export default function LoginScreen() {
           <Text style={s.explanation}>{t.login.explanation}</Text>
 
           <Text style={s.label}>{t.common.email}</Text>
-          {/* Enter á»Ÿ Ã´ email sang Ã´ máº­t kháº©u, Enter á»Ÿ Ã´ máº­t kháº©u lÃ  Ä‘Äƒng nháº­p. */}
+          {/* Enter ở ô email sang ô mật khẩu, Enter ở ô mật khẩu là đăng nhập. */}
           <TextField
             value={email}
             onChangeText={setEmail}

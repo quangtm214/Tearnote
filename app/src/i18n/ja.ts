@@ -31,7 +31,6 @@ const ja: Dictionary = {
     emailPlaceholder: 'you@example.com',
     password: 'パスワード',
     passwordHint: '6文字以上',
-    emailError: '正しいメールアドレスと、6文字以上のパスワードを入力してください。',
     leave: '戻る',
     remove: '削除する',
   },
@@ -222,7 +221,6 @@ const ja: Dictionary = {
 
   register: {
     title: 'アカウントを作る',
-    mismatch: '2つのパスワードが一致しません。',
     createError:
       'アカウントを作れませんでした。このメールアドレスはすでに登録されているかもしれません。ログインを試すか、ネットワークを確認してください。',
     explanation:
@@ -237,6 +235,16 @@ const ja: Dictionary = {
     callA11y: (name, phone) => `${name}に電話、番号 ${phone}`,
     openWebsite: (name) => `${name}のウェブサイトを開く`,
     footer: 'この一覧は端末に保存されていて、オフラインでも開けます。つながらない番号があれば、別の番号を試してください。',
+  },
+  validation: {
+    emailInvalid: 'メールアドレスの形式が正しくないようです。もう一度確かめてください。',
+    passwordTooShort: 'パスワードは6文字以上にしてください。',
+    passwordMismatch: '2つのパスワードが一致しません。',
+    bodyTooShort: '少し短いようです。もう少し書き足してください。',
+    bodyTooLong: '長すぎます。少し短くしてください。',
+    tagsNone: 'テーマを1つ以上選んでください。',
+    tagsTooMany: 'テーマは2つまで選べます。',
+    langInvalid: '書いた言語を選んでください。',
   },
 };
 

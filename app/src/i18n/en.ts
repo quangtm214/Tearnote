@@ -42,7 +42,6 @@ const en: Dictionary = {
     emailPlaceholder: 'you@example.com',
     password: 'Password',
     passwordHint: 'At least 6 characters',
-    emailError: 'Enter a valid email and a password of at least 6 characters.',
     leave: 'Leave',
     remove: 'Delete',
   },
@@ -236,7 +235,6 @@ const en: Dictionary = {
 
   register: {
     title: 'Create account',
-    mismatch: "The passwords don't match.",
     createError:
       "Couldn't create the account. This email may already have one — try signing in. Or check your connection.",
     explanation: 'An account is only for writing to strangers. Readers never see your email.',
@@ -250,6 +248,16 @@ const en: Dictionary = {
     callA11y: (name, phone) => `Call ${name}, number ${phone}`,
     openWebsite: (name) => `Open the ${name} website`,
     footer: "This list is stored on your phone and opens even offline. If a number doesn't go through, try another.",
+  },
+  validation: {
+    emailInvalid: "That email doesn't look right — please check it.",
+    passwordTooShort: 'Your password needs at least 6 characters.',
+    passwordMismatch: "The passwords don't match.",
+    bodyTooShort: 'Your words are a little short — add a bit more.',
+    bodyTooLong: 'Your words are too long — trim them a little.',
+    tagsNone: 'Pick at least one topic.',
+    tagsTooMany: 'You can pick up to 2 topics.',
+    langInvalid: 'Pick the language you wrote in.',
   },
 };
 

@@ -14,10 +14,11 @@ import { t } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
 import { ScreenFooter, LinkRow, PrimaryButton, TextField } from '@/ui';
+import { check, registerForm } from '@/validation';
 
 /**
- * Táº¡o tÃ i khoáº£n â€” má»Ÿ tá»« mÃ n ÄÄƒng nháº­p, xong thÃ¬ quay vá» Ä‘Ã³ (dismissTo kÃ¨m param `tao`
- * Ä‘á»ƒ mÃ n ÄÄƒng nháº­p biáº¿t bÃ¡o gÃ¬ hoáº·c tá»± thoÃ¡t).
+ * Tạo tài khoản — mở từ màn Đăng nhập, xong thì quay về đó (dismissTo kèm param `tao`
+ * để màn Đăng nhập biết báo gì hoặc tự thoát).
  */
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -33,40 +34,39 @@ export default function RegisterScreen() {
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  // 'xong' = Ä‘Ã£ cÃ³ tÃ i khoáº£n tháº­t vÃ  session; 'xacMinh' = cÃ²n chá» xÃ¡c minh email.
+  // 'xong' = đã có tài khoản thật và session; 'xacMinh' = còn chờ xác minh email.
   const backToLogin = (result: 'done' | 'verify') =>
-    router.dismissTo({ pathname: '/login', params: { registered: result, email } });
+    router.dismissTo({ pathname: '/login', params: { registered: result, email: email.trim() } });
 
   async function register() {
     if (busy) return;
     setError(null);
 
-    if (!email.includes('@') || password.length < 6) {
-      return reportError(t.common.emailError);
-    }
-    if (password !== confirm) return reportError(t.register.mismatch);
+    const form = check(registerForm, { email, password, confirm });
+    if ('code' in form) return reportError(t.validation[form.code]);
+    const credentials = { email: form.data.email, password: form.data.password };
 
     setBusy(true);
     try {
-      // ÄÄƒng kÃ½ khi Ä‘ang cÃ³ session anonymous pháº£i NÃ‚NG Cáº¤P chÃ­nh user Ä‘Ã³, khÃ´ng táº¡o user má»›i:
-      // deliveries neo vÃ o user id: táº¡o má»›i lÃ  máº¥t lá»‹ch sá»­ "Ä‘Ã£ nháº­n Comfort nÃ o", tráº§n 3/24h
-      // reset, vÃ  ngÆ°á»i dÃ¹ng nháº­n láº¡i Ä‘Ãºng lá»i Ä‘Ã£ Ä‘á»c. signUp chá»‰ dÃ¹ng khi chÆ°a cÃ³ session.
+      // Đăng ký khi đang có session anonymous phải NÂNG CẤP chính user đó, không tạo user mới:
+      // deliveries neo vào user id: tạo mới là mất lịch sử "đã nhận Comfort nào", trần 3/24h
+      // reset, và người dùng nhận lại đúng lời đã đọc. signUp chỉ dùng khi chưa có session.
       const { data: sessionData } = await supabase.auth.getSession();
 
       if (sessionData.session?.user.is_anonymous === true) {
-        const { data, error } = await supabase.auth.updateUser({ email, password: password });
+        const { data, error } = await supabase.auth.updateUser(credentials);
         if (error) return reportError(t.register.createError);
-        // updateUser khÃ´ng bao giá» tráº£ session. CÃ²n chá» xÃ¡c minh thÃ¬ email má»›i náº±m á»Ÿ new_email;
-        // Ä‘Ã£ Ä‘á»•i ngay (dá»± Ã¡n táº¯t xÃ¡c minh) thÃ¬ lÃ m má»›i JWT Ä‘á»ƒ claim is_anonymous háº¿t lÃ  true â€”
-        // khÃ´ng thÃ¬ RLS váº«n coi Ä‘Ã¢y lÃ  tÃ i khoáº£n áº©n danh vÃ  cháº·n viáº¿t.
+        // updateUser không bao giờ trả session. Còn chờ xác minh thì email mới nằm ở new_email;
+        // đã đổi ngay (dự án tắt xác minh) thì làm mới JWT để claim is_anonymous hết là true —
+        // không thì RLS vẫn coi đây là tài khoản ẩn danh và chặn viết.
         if (data.user.new_email || !data.user.email) return backToLogin('verify');
         await supabase.auth.refreshSession();
         return backToLogin('done');
       }
 
-      const { data, error } = await supabase.auth.signUp({ email, password: password });
+      const { data, error } = await supabase.auth.signUp(credentials);
       if (error) return reportError(t.register.createError);
-      // KhÃ´ng cÃ³ session tráº£ vá» = dá»± Ã¡n Ä‘ang báº­t xÃ¡c minh email.
+      // Không có session trả về = dự án đang bật xác minh email.
       backToLogin(data.session ? 'done' : 'verify');
     } catch {
       reportError(t.common.networkError);
@@ -86,7 +86,7 @@ export default function RegisterScreen() {
           <Text style={s.explanation}>{t.register.explanation}</Text>
 
           <Text style={s.label}>{t.common.email}</Text>
-          {/* Enter Ä‘i qua Ä‘á»§ ba Ã´; Ã´ cuá»‘i lÃ  táº¡o tÃ i khoáº£n. */}
+          {/* Enter đi qua đủ ba ô; ô cuối là tạo tài khoản. */}
           <TextField
             value={email}
             onChangeText={setEmail}

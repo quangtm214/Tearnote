@@ -30,8 +30,7 @@ import {
   ComfortCard,
   type ConfirmRequest,
 } from '@/ui';
-
-type ComfortRow = { comfort_id: string; body: string; translated: boolean };
+import { comfortRows } from '@/validation';
 
 /**
  * Mở một Entry: đọc lại đủ Reflection (Timeline cắt ở 6 dòng), rồi xem hoặc xin lời từ người lạ.
@@ -81,8 +80,9 @@ export default function EntryComfortScreen() {
         return;
       }
 
-      const rows = (data ?? []) as ComfortRow[];
-      const row = rows[0];
+      const parsed = comfortRows.safeParse(data ?? []);
+      if (!parsed.success) return notify(t.entry.receiveError);
+      const row = parsed.data[0];
       if (!row) {
         // Hai lý do khác hẳn nhau, hai câu khác nhau (CLAUDE.md: edge case bắt buộc).
         const joyOnly = entry.tags.length === 1 && entry.tags[0] === 'moved';
