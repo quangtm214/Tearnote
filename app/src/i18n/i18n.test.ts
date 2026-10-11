@@ -60,7 +60,7 @@ describe('contract ngôn ngữ', () => {
     expect(hardcoded).toEqual([]);
   });
 
-  it('comment viết tiếng Anh (CLAUDE.md › Luật comment)', () => {
+  it('comment viết tiếng Anh (.claude/rules/comments.md)', () => {
     // Quoted examples ("l ần", "bạn") are allowed: they show Vietnamese text, not explain in it.
     const src = join(__dirname, '..');
     const vietnamese = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/iu;
