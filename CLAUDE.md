@@ -24,6 +24,7 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 4 việc nhỏ, không đáng tự dựng |
 | Test runner | jest-expo | Đi kèm Expo, không thêm dependency |
 | Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 khoá react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
+| Chạy app khi máy tính tắt | EAS Update vào Expo Go: `expo-updates`, project `@quangtm/tearnote`, `runtimeVersion` policy `sdkVersion` (ra `exposdk:57.0.0`). Đẩy bản mới: `cd app; npx eas-cli update --branch preview --environment preview --message "<msg>"`, mở trong Expo Go (đăng nhập tài khoản `quangtm`) › project › branch `preview` | User dùng iOS, không có Apple Developer nên không build được app iOS. Expo Go chỉ nhận update có runtime `exposdk:<sdk>`; policy `appVersion` thì Expo Go từ chối. `--environment preview` bỏ qua `app/.env`: biến `EXPO_PUBLIC_SUPABASE_*` lấy từ EAS env `preview` (`eas env:list preview`); đổi `.env` thì sửa cả bên đó |
 | Visual world | "Album ảnh trang đen": `album` + `pencil` trong `app/src/theme.ts` | Chọn qua `/impeccable` (thay world một-bit — bị bỏ vì lạnh, retro, khó đọc); hướng chi tiết ở `.impeccable/surfaces/`. Đã phủ mọi màn; mảnh dùng chung ở `app/src/ui.tsx`, world cũ đã xoá |
 | Lưới / heatmap | Chỉ bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục (DESIGN.md) | Nhìn cả năm một lượt mới thấy mùa nào dày. Màu = tổng cường độ trong ngày, ngưỡng cố định ở `app/src/calendar.ts` để màu cùng nghĩa giữa các năm |
 | Từ vựng trên UI | "lần khóc" thay "Entry", "lời từ/cho người lạ" thay "Comfort"; bản en/ja ("a cry", "words from/for a stranger"; "泣いたこと", "見知らぬ人から/へのことば") cũng ở PRODUCT.md | Screen reader đọc chữ Anh sai giữa câu Việt; các khái niệm khác vốn đã Việt hoá trên UI |
@@ -100,6 +101,7 @@ Verify:
 cd app; npx tsc --noEmit    # typecheck
 cd app; npm test            # jest-expo
 cd app; npx expo start      # quét QR bằng Expo Go trên máy thật
+cd app; npx eas-cli update --branch preview --environment preview --message "<msg>"  # chạy không cần máy tính
 ```
 
 Phần server không có lệnh chạy được ở máy: kiểm bằng MCP Supabase (`execute_sql` cho luật pool,

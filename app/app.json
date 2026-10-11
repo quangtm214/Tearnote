@@ -49,6 +49,19 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6284812f-e655-431d-968c-83083b045b77"
+      }
+    },
+    "owner": "quangtm",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6284812f-e655-431d-968c-83083b045b77"
     }
   }
 }
