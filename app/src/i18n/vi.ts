@@ -230,6 +230,10 @@ const vi = {
     title: 'Tạo tài khoản',
     createError:
       'Không tạo được tài khoản. Có thể email này đã có tài khoản — thử Đăng nhập. Hoặc kiểm tra mạng.',
+    emailRejected: 'Email này không dùng được. Kiểm tra lại địa chỉ, hoặc dùng email khác.',
+    emailExists: 'Email này đã có tài khoản. Bấm "Đã có tài khoản? Đăng nhập" để vào.',
+    weakPassword: 'Mật khẩu này quá dễ đoán. Thử mật khẩu dài hơn, trộn chữ và số.',
+    emailNotSent: 'Chưa gửi được thư xác minh, có thể vì đã gửi quá nhiều lần. Đợi một lúc rồi thử lại.',
     explanation: 'Tài khoản chỉ để viết cho người lạ. Người đọc không bao giờ thấy email của bạn.',
     confirmPassword: 'Nhập lại mật khẩu',
     haveAccount: 'Đã có tài khoản? Đăng nhập',

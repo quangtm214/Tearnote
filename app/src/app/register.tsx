@@ -1,3 +1,4 @@
+import { type AuthError, isAuthRetryableFetchError } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -55,7 +56,7 @@ export default function RegisterScreen() {
 
       if (sessionData.session?.user.is_anonymous === true) {
         const { data, error } = await supabase.auth.updateUser(credentials);
-        if (error) return reportError(t.register.createError);
+        if (error) return reportError(createErrorText(error));
         // updateUser never returns a session. While verification is pending the address is in new_email;
         // if it changed immediately (verification off), refresh the JWT so is_anonymous becomes false —
         // otherwise RLS still treats the user as anonymous and blocks writing.
@@ -65,7 +66,9 @@ export default function RegisterScreen() {
       }
 
       const { data, error } = await supabase.auth.signUp(credentials);
-      if (error) return reportError(t.register.createError);
+      if (error) return reportError(createErrorText(error));
+      // With email verification on, Supabase hides an existing address: no error, but a user with no identities.
+      if (data.user?.identities?.length === 0) return reportError(t.register.emailExists);
       // No session returned = email verification is on for the project.
       backToLogin(data.session ? 'done' : 'verify');
     } catch {
@@ -147,6 +150,25 @@ export default function RegisterScreen() {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+// Supabase returns network failures as an error instead of throwing, so the catch above never sees them.
+function createErrorText(error: AuthError) {
+  if (isAuthRetryableFetchError(error)) return t.common.networkError;
+  switch (error.code) {
+    case 'email_address_invalid':
+      return t.register.emailRejected;
+    case 'email_exists':
+    case 'user_already_exists':
+      return t.register.emailExists;
+    case 'weak_password':
+      return t.register.weakPassword;
+    case 'over_email_send_rate_limit':
+    case 'email_address_not_authorized':
+      return t.register.emailNotSent;
+    default:
+      return t.register.createError;
+  }
 }
 
 const s = StyleSheet.create({
