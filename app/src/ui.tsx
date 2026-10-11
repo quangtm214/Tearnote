@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router, type Href } from 'expo-router';
 import { useState, type ReactNode, type Ref } from 'react';
 import {
@@ -219,6 +219,9 @@ export function VoicePlayer({ uri }: { uri: string }) {
     if (status.playing) return player.pause();
     // After the end the player stays there; seek to 0 or play() does nothing.
     if (status.duration > 0 && status.currentTime >= status.duration - 0.1) await player.seekTo(0);
+    // iOS mutes playback with the ring/silent switch unless the session plays in silent mode;
+    // stopping a recording also resets the session to that muted mode.
+    await setAudioModeAsync({ playsInSilentMode: true });
     player.play();
   }
 
