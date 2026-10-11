@@ -152,7 +152,8 @@ export default function NewEntryScreen() {
         return reportError(t.newEntry.noMicPermission);
       }
       // iOS refuses to record unless the audio session allows it; Android ignores this flag.
-      await setAudioModeAsync({ allowsRecording: true });
+      // expo-audio on iOS throws when allowsRecording is true without playsInSilentMode.
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record({ forDuration: MAX_RECORDING_SECONDS });
       AccessibilityInfo.announceForAccessibility(t.newEntry.recordingStarted);
