@@ -1,7 +1,7 @@
 import { MAX_COMFORT_TAGS } from './tags';
 import { check, comfortDraft, comfortRows, loginForm, myComfortRows, registerForm } from './validation';
 
-// db.ts mở SQLite ngay khi import (qua i18n) — không có trong Jest.
+// db.ts opens SQLite on import (through i18n), which Jest does not have.
 jest.mock('./db', () => ({ getSetting: () => null, setSetting: () => {} }));
 
 const ok = { email: 'a@b.com', password: '123456' };

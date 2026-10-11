@@ -1,8 +1,8 @@
--- Comfort mồi. docs/overview.md §6: pool rỗng thì người đầu tiên mở app không nhận được gì.
--- Do chính tác giả dự án viết, không phải của người dùng thật. Chạy lại được nhiều lần.
+-- Seed Comforts. docs/overview.md §6: with an empty pool the first users would receive nothing.
+-- Written by the project author, not by real users. Safe to run repeatedly.
 --
--- Chạy bằng service role (MCP execute_sql hoặc SQL editor), không qua app:
--- RLS chặn insert từ client, và tài khoản mồi không đăng nhập bao giờ.
+-- Run with the service role (MCP execute_sql or the SQL editor), not through the app:
+-- RLS blocks client inserts, and the seed account never logs in.
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -68,7 +68,7 @@ insert into comfort_translations (comfort_id, lang, body) values
  ('5eed0001-0000-4000-8000-00000000000c','ja','今日ひとつだけできたことがあります。飲み込まずに書き留めたこと。今日はそれで十分です。')
 on conflict (comfort_id, lang) do nothing;
 
--- Hotline. App vẫn đóng gói bản dự phòng trong máy — ADR 0005.
+-- Hotlines. The app also bundles an offline fallback — ADR 0005.
 insert into hotlines (country, name, phone, url, hours, sort) values
  ('VN','Đường dây nóng Ngày Mai (sức khoẻ tâm thần)','096 306 1414',null,'13:00–20:30, thứ 4 đến CN',1),
  ('VN','Tổng đài Quốc gia Bảo vệ Trẻ em','111',null,'24/7',2),

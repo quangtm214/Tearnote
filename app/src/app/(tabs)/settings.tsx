@@ -11,13 +11,13 @@ import { ScreenFooter, LinkRow, Pill } from '@/ui';
 
 export default function SettingsScreen() {
   const [receiving, setReceiving] = useState(true);
-  // null = chưa đăng nhập tài khoản thật (anonymous hoặc chưa có session).
+  // null = no real account (anonymous or no session).
   const [email, setEmail] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       setReceiving(isComfortReceivingEnabled());
-      // Session trên máy như isRealAccount — mất mạng vẫn thấy mình đang đăng nhập bằng gì.
+      // Local session like isRealAccount — offline users still see which account they use.
       supabase.auth.getSession().then(({ data }) => {
         const user = data.session?.user;
         setEmail(user && !user.is_anonymous ? (user.email ?? null) : null);
@@ -31,7 +31,7 @@ export default function SettingsScreen() {
   }
 
   async function signOut() {
-    // signOut luôn xoá session trên máy, kể cả khi mất mạng (lỗi chỉ là server chưa thu hồi token).
+    // signOut always clears the local session, even offline (an error only means the server did not revoke the token).
     await supabase.auth.signOut();
     setEmail(null);
     AccessibilityInfo.announceForAccessibility(t.settings.signedOut);
@@ -44,7 +44,7 @@ export default function SettingsScreen() {
           {t.settings.title}
         </Text>
 
-        {/* Cả hàng là một công tắc: lưới an toàn duy nhất (overview §6) phải gạt được chắc tay. */}
+        {/* The whole row is the switch: this safety net (overview §6) must be easy to hit. */}
         <Pressable
           onPress={() => toggleReceiving(!receiving)}
           accessibilityRole="switch"
@@ -98,7 +98,7 @@ export default function SettingsScreen() {
           />
         )}
 
-        {/* Đổi là dựng lại cả cây giao diện ở ngôn ngữ mới (_layout gốc), không cần mở lại app. */}
+        {/* Changing rebuilds the whole tree in the new language (root _layout); no restart needed. */}
         <Text style={[pencil.date, s.languageHeading]} accessibilityRole="header">
           {t.settings.language}
         </Text>

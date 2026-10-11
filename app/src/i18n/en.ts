@@ -1,7 +1,7 @@
 import type { Lang } from './index';
 import type { Dictionary } from './vi';
 
-/** "a cry" thay Entry, "words from / for a stranger" thay Comfort (PRODUCT.md). */
+/** "a cry" instead of Entry, "words from / for a stranger" instead of Comfort (PRODUCT.md). */
 const LANG_NAMES: Record<Lang, string> = { vi: 'Vietnamese', en: 'English', ja: 'Japanese' };
 const joinList = (names: string[]) =>
   names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
@@ -124,7 +124,7 @@ const en: Dictionary = {
 
   calendar: {
     title: 'Calendar',
-    // "Jan"… không vừa ô 22 ở máy hẹp; một chữ cái là cách viết quen của bảng cả năm.
+    // "Jan"… does not fit a 22-wide cell on narrow phones; single letters are the usual year-grid labels.
     monthLabel: (month) => 'JFMAMJJASOND'[month - 1],
     monthSummary: (month, days, max) =>
       `${MONTHS[month - 1]}: cried on ${count(days, 'day', 'days')}. Heaviest day, combined intensity ${max}.`,

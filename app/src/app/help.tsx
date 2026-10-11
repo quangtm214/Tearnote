@@ -6,7 +6,7 @@ import { currentLang, t, deviceRegion, type Lang } from '@/i18n';
 import { album, pencil, radius, space, text, touch } from '@/theme';
 import { shadow, LinkRow, HelpButton, leave } from '@/ui';
 
-/** Màn này phải chạy khi máy bay bật: chỉ đọc danh sách đóng gói sẵn, không gọi mạng. */
+/** Must work in airplane mode: reads only the bundled list, no network calls. */
 const COUNTRY_NAMES: Record<string, Record<Lang, string>> = {
   VN: { vi: 'Việt Nam', en: 'Vietnam', ja: 'ベトナム' },
   JP: { vi: 'Nhật Bản', en: 'Japan', ja: '日本' },
@@ -24,19 +24,19 @@ const groupByCountry = (list: Hotline[]): [string, Hotline[]][] => {
   return [...map];
 };
 
-/** TalkBack đọc "096 306 1414" thành số lớn; tách từng chữ số cho dễ nghe, dễ nhớ. */
+/** TalkBack reads "096 306 1414" as a large number; spell it digit by digit so it is easy to follow. */
 const spellDigits = (phone: string) => phone.replace(/\D/g, '').split('').join(' ');
 
-// Máy không gọi được (tablet, không SIM) thì openURL từ chối — số vẫn hiện trên màn để bấm tay.
+// Devices that cannot call (tablet, no SIM) reject openURL — the number stays on screen to dial by hand.
 const openUrl = (url: string) => Linking.openURL(url).catch(() => {});
 
 /**
- * Màn này chính là lối trợ giúp, nên mọi nút Gọi đều là `HelpButton` — ngoại lệ duy nhất của luật
- * Một Ngọn Đèn (DESIGN.md). Không có chân màn: đây là nơi nút trợ giúp dẫn tới.
+ * This screen is the help destination, so every Call button is a `HelpButton` — the only exception
+ * to the One Lamp rule (DESIGN.md). No ScreenFooter: this is where the help button leads.
  */
 export default function Help() {
   const lang = currentLang();
-  // Nước của mình lên đầu (người Nhật mở màn này không phải cuộn qua số 115); còn lại giữ thứ tự, vẫn đủ mọi nước.
+  // The user's country first (a Japanese user should not scroll past 115); the rest keep their order.
   const first = topCountry(deviceRegion(), lang);
   const groups = groupByCountry(HOTLINES_FALLBACK);
 

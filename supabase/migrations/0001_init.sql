@@ -1,5 +1,5 @@
--- Tearnote — schema khởi tạo. Nguồn sự thật: docs/db.md
--- Sửa file này thì phải sửa docs/db.md và schema SQLite trong app cho khớp.
+-- Tearnote initial schema. Source of truth: docs/db.md
+-- Changing this file means updating docs/db.md and the app's SQLite schema to match.
 
 create type tag as enum (
   'heartbreak','grief','pressure','self_worth','loneliness',
@@ -7,7 +7,7 @@ create type tag as enum (
 create type lang as enum ('en','vi','ja');
 create type comfort_status as enum ('pending','approved','rejected','retracted');
 
--- Lời động viên ẩn danh, bản gốc, bằng ngôn ngữ người viết.
+-- Anonymous Comforts, original text in the writer's language.
 create table comforts (
   id          uuid primary key default gen_random_uuid(),
   author_id   uuid not null references auth.users(id) on delete cascade,
@@ -29,7 +29,7 @@ create table comfort_translations (
   primary key (comfort_id, lang)
 );
 
--- Khoá chính chính là luật "không gửi lại lần hai".
+-- The primary key is the "never deliver twice" rule.
 create table deliveries (
   comfort_id   uuid not null references comforts(id) on delete cascade,
   recipient_id uuid not null references auth.users(id) on delete cascade,
@@ -51,9 +51,9 @@ create table hotlines (
 );
 create index hotlines_country_sort_idx on hotlines (country, sort);
 
--- Chỉ tồn tại cho người đã bật sync. Bản sao của SQLite, không phải nguồn sự thật.
+-- Only for users who turned on sync. A copy of SQLite, not the source of truth.
 create table entries (
-  id           uuid primary key,             -- do máy sinh
+  id           uuid primary key,             -- generated on the device
   user_id      uuid not null references auth.users(id) on delete cascade,
   occurred_at  timestamptz not null,
   duration_min int check (duration_min >= 0),
@@ -72,11 +72,11 @@ alter table deliveries           enable row level security;
 alter table hotlines             enable row level security;
 alter table entries              enable row level security;
 
--- Người nhận không đọc được comforts ⇒ author_id không có đường nào ra ngoài.
+-- Readers cannot select comforts ⇒ author_id never leaks.
 create policy comfort_select_own on comforts for select to authenticated
   using (author_id = auth.uid());
 
--- Chỉ tài khoản thật, tối đa 5 Comfort / 24h. Cửa sổ trượt, không theo ngày lịch.
+-- Real accounts only, max 5 Comforts / 24h. Sliding window, not calendar days.
 create policy comfort_insert on comforts for insert to authenticated
 with check (
   author_id = auth.uid()
@@ -86,30 +86,30 @@ with check (
          and c.created_at > now() - interval '24 hours') < 5
 );
 
--- Thu hồi: đổi sang 'retracted', không sửa được gì khác.
+-- Retract: only a change to 'retracted' is allowed.
 create policy comfort_retract on comforts for update to authenticated
   using (author_id = auth.uid())
   with check (author_id = auth.uid() and status = 'retracted');
 revoke update on comforts from authenticated;
 grant update (status) on comforts to authenticated;
 
--- comfort_translations: không ai đọc, chỉ batch (service role) ghi. Không policy nào cả.
+-- comfort_translations: no one reads it, only the batch (service role) writes. No policies.
 
--- Chỉ đọc dòng mình là người nhận; chỉ sửa được đúng cột thanked.
+-- Read only rows where you are the recipient; only the thanked column can change.
 create policy delivery_select_own on deliveries for select to authenticated
   using (recipient_id = auth.uid());
 create policy delivery_thank on deliveries for update to authenticated
   using (recipient_id = auth.uid()) with check (recipient_id = auth.uid());
 revoke update on deliveries from authenticated;
 grant update (thanked) on deliveries to authenticated;
--- Không có policy insert: chỉ request_comfort() được ghi.
+-- No insert policy: only request_comfort() writes.
 
 create policy hotline_read on hotlines for select to anon, authenticated using (true);
 
 create policy entry_own on entries for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
--- ── Đường đọc duy nhất vào pool ────────────────────────────────────────────
+-- ── The only read path into the pool ───────────────────────────────────────
 create function request_comfort(p_tags tag[], p_lang lang)
 returns table (comfort_id uuid, body text, translated boolean)
 language sql security definer set search_path = public, pg_temp as $fn$
@@ -122,15 +122,15 @@ language sql security definer set search_path = public, pg_temp as $fn$
       on t.comfort_id = c.id and t.lang = p_lang
     where c.status = 'approved'
       and c.author_id <> auth.uid()
-      -- trùng tag; không có thì lùi về 'unknown', trừ 'moved' (xem tags.md)
+      -- matching tag; otherwise fall back to 'unknown', except for 'moved' (see tags.md)
       and (c.tags && p_tags
            or (not ('moved' = any(p_tags)) and 'unknown' = any(c.tags)))
-      -- không trả bản chưa có ngôn ngữ của người đọc
+      -- skip Comforts not yet available in the reader's language
       and (t.comfort_id is not null or c.source_lang = p_lang)
       and not exists (
         select 1 from deliveries d
         where d.comfort_id = c.id and d.recipient_id = auth.uid())
-      -- tối đa 3 Comfort nhận được trong 24h
+      -- max 3 Comforts received per 24h
       and (select count(*) from deliveries d2
            where d2.recipient_id = auth.uid()
              and d2.delivered_at > now() - interval '24 hours') < 3

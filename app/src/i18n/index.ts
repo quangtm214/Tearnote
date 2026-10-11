@@ -8,47 +8,47 @@ import ja from './ja';
 import vi, { type Dictionary } from './vi';
 
 /**
- * Đa ngôn ngữ tự dựng, không thư viện. Chữ trên UI nằm trong từ điển: `vi.ts` là khuôn, `en.ts` /
- * `ja.ts` thiếu hay thừa khoá nào thì tsc đỏ. Dữ liệu có tên theo ngôn ngữ (nhãn Tag, hotline,
- * tên nước) để `Record<Lang, …>` ngay cạnh dữ liệu đó.
+ * Hand-rolled i18n, no library. UI text lives in dictionaries: `vi.ts` is the template; tsc fails when
+ * `en.ts` / `ja.ts` miss or add a key. Data with per-language names (Tag labels, hotlines, countries)
+ * keeps its `Record<Lang, …>` next to the data.
  *
- * Thêm ngôn ngữ: `alter type lang add value` (migration), thêm vào LANGS, thêm một file từ điển —
- * rồi tsc chỉ ra mọi chỗ còn thiếu.
+ * Adding a language: `alter type lang add value` (migration), add it to LANGS, add a dictionary file —
+ * then tsc points to everything still missing.
  */
 
-/** Khớp enum `lang` trong Postgres (i18n.test.ts kiểm). Đây cũng là thứ tự hiện trong Cài đặt. */
+/** Matches the Postgres `lang` enum (checked by i18n.test.ts). Also the order shown in Settings. */
 export const LANGS = ['vi', 'en', 'ja'] as const;
 export type Lang = (typeof LANGS)[number];
 
-/** Tên ngôn ngữ viết bằng chính nó: ai lỡ chọn nhầm vẫn nhận ra tiếng của mình. */
+/** Each language named in itself, so someone who switched by mistake can still find theirs. */
 export const NATIVE_NAMES: Record<Lang, string> = { vi: 'Tiếng Việt', en: 'English', ja: '日本語' };
 
 const DICTIONARIES: Record<Lang, Dictionary> = { vi, en, ja };
 const LANG_SETTING_KEY = 'ngon_ngu';
 
 /**
- * Đã chọn trong Cài đặt thì theo đó; chưa chọn thì theo máy; máy dùng tiếng khác thì tiếng Anh.
- * `may` là locale của máy, dạng "vi_VN" (Android) hoặc "ja-JP" (Intl).
+ * The Settings choice if any; else the device language; else English.
+ * `device` is the device locale, "vi_VN" (Android) or "ja-JP" (Intl).
  */
 export function pickLanguage(saved: string | null, device: string): Lang {
   const match = (value: string | null) => LANGS.find((l) => l === value);
   return match(saved) ?? match(device.split(/[-_]/)[0].toLowerCase()) ?? 'en';
 }
 
-// ponytail: iOS không có localeIdentifier nên hỏi Intl — chưa kiểm được trên iPhone thật; lệch thì
-// thay bằng expo-localization.
+// ponytail: iOS has no localeIdentifier, so this asks Intl — not tested on a real iPhone; if it is wrong,
+// switch to expo-localization.
 const deviceLocale = () =>
   I18nManager.getConstants().localeIdentifier ?? Intl.DateTimeFormat().resolvedOptions().locale;
 
-/** Vùng của máy: "vi_VN" → "VN", "en-GB" → "GB", "en" → undefined. Màn hotline đưa nước này lên đầu. */
+/** Device region: "vi_VN" → "VN", "en-GB" → "GB", "en" → undefined. The hotline screen lists it first. */
 export const deviceRegion = () => deviceLocale().split(/[-_]/)[1]?.toUpperCase();
 
 let current: Lang = 'vi';
 let onChange: ((l: Lang) => void) | undefined;
 
 /**
- * Chữ của ngôn ngữ đang dùng. Đọc lúc render, đừng chép ra hằng số cấp module: đổi ngôn ngữ là ghi
- * đè object này rồi dựng lại cây giao diện, bản đã chép sẽ nằm lại ở ngôn ngữ cũ.
+ * Text of the current language. Read it during render; never copy it into a module-level constant:
+ * switching languages overwrites this object and rebuilds the tree, so a copy stays in the old language.
  */
 export const t: Dictionary = { ...vi };
 
@@ -60,7 +60,7 @@ function apply(l: Lang) {
   setHandwriting(l);
 }
 
-/** Đổi ngôn ngữ từ Cài đặt: lưu lại, rồi báo _layout gốc dựng lại cây. */
+/** Language change from Settings: save it, then tell the root _layout to rebuild the tree. */
 export function setLanguage(l: Lang) {
   if (l === current) return;
   apply(l);
@@ -68,7 +68,7 @@ export function setLanguage(l: Lang) {
   onChange?.(l);
 }
 
-/** Chỉ _layout gốc nghe — nó giữ `key` của Stack. */
+/** Only the root _layout listens — it owns the Stack `key`. */
 export function subscribeLanguage(listener: (l: Lang) => void) {
   onChange = listener;
   return () => {
@@ -78,7 +78,7 @@ export function subscribeLanguage(listener: (l: Lang) => void) {
 
 export const tagLabel = (tag: TagId) => TAG_LABEL[current][tag];
 
-/** Vài nhãn có dấu phẩy bên trong, nên nhiều Tag nối bằng dấu riêng của từng tiếng (`tagSeparator`). */
+/** Some labels contain commas, so Tags are joined with a per-language separator (`tagSeparator`). */
 export const tagLabels = (tags: readonly TagId[]) => tags.map(tagLabel).join(t.tagSeparator);
 
 apply(pickLanguage(getSetting(LANG_SETTING_KEY), deviceLocale()));

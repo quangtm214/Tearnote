@@ -11,16 +11,16 @@ import { ScreenFooter, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, lea
 import { myComfortRows } from '@/validation';
 
 /**
- * Lời mình đã viết. overview.md §6 là ràng buộc bắt buộc: người viết phải thu hồi được.
+ * Comforts the user wrote. overview.md §6 requires that writers can retract them.
  *
- * Đây là chỗ DUY NHẤT app `select` vào bảng `comforts`, và không phạm ADR 0008:
- * policy `comfort_select_own` chỉ trả về dòng của chính mình. Pool của người khác
- * vẫn chỉ vào được qua `request_comfort()`.
+ * The ONLY place the app `select`s from `comforts`, and it does not break ADR 0008:
+ * policy `comfort_select_own` returns only the user's own rows. Other people's Comforts
+ * are still reachable only through `request_comfort()`.
  */
 type MyComfort = z.infer<typeof myComfortRows>[number];
 
 export default function MyComfortsScreen() {
-  // null = đang tải; 'signedOut' tách khỏi danh sách rỗng — RLS trả [] cho cả hai.
+  // null = loading; 'signedOut' is separate from an empty list because RLS returns [] for both.
   const [items, setItems] = useState<MyComfort[] | 'signedOut' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retractingId, setRetractingId] = useState<string | null>(null);
@@ -43,14 +43,14 @@ export default function MyComfortsScreen() {
     setItems(rows.data);
   }, []);
 
-  // Theo focus: đăng nhập xong quay lại đây thì tải lại.
+  // On focus, so it reloads when coming back from login.
   useFocusEffect(
     useCallback(() => {
       void load();
     }, [load]),
   );
 
-  // Thu hồi không hoàn tác được (RLS chỉ cho đổi sang 'retracted'), nên hỏi lại một lần.
+  // Retracting cannot be undone (RLS only allows changing to 'retracted'), so confirm once.
   function askRetract(id: string) {
     setDialog({
       question: t.myComforts.retractQuestion,
@@ -62,7 +62,7 @@ export default function MyComfortsScreen() {
 
   async function retract(id: string) {
     setRetractingId(id);
-    // RLS chỉ cho đổi cột status, và chỉ sang 'retracted'. Không cần kiểm lại ở đây.
+    // RLS only allows changing status, and only to 'retracted'. No need to check here.
     const { error } = await supabase.from('comforts').update({ status: 'retracted' }).eq('id', id);
     setRetractingId(null);
     if (error) {
@@ -96,7 +96,7 @@ export default function MyComfortsScreen() {
               <Text style={[pencil.note, s.muted]}>
                 {tagLabels(comfort.tags)} · {t.myComforts.status[comfort.status]}
               </Text>
-              {/* Thu hồi rồi thì thôi; bị từ chối cũng không còn trong pool để mà thu. */}
+              {/* Nothing to retract once retracted, or once rejected (no longer in the pool). */}
               {comfort.status === 'pending' || comfort.status === 'approved' ? (
                 <SecondaryButton
                   label={retractingId === comfort.id ? t.myComforts.retracting : t.myComforts.retract}

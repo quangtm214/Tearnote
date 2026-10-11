@@ -1,10 +1,10 @@
 import type { Lang } from './i18n';
 
 /**
- * Contract Tag. Nguồn sự thật: docs/tags.md và enum `tag` trong Postgres.
- * Ba chỗ này phải khớp — sửa một thì sửa cả ba. Đừng thêm/bớt mà không hỏi.
+ * Tag contract. Source of truth: docs/tags.md and the Postgres `tag` enum.
+ * All three must match — change one, change all. Do not add/remove Tags without asking.
  *
- * Tag mô tả HOÀN CẢNH, không mô tả mức độ cảm xúc (đã có thanh cường độ 1–5).
+ * Tags describe the SITUATION, not how strong the feeling is (that is intensity 1–5).
  */
 export const TAG_IDS = [
   'heartbreak',
@@ -22,9 +22,9 @@ export const TAG_IDS = [
 export type TagId = (typeof TAG_IDS)[number];
 
 /**
- * Nhãn theo ngôn ngữ — phải trùng các cột vi/en/ja trong docs/tags.md (tags.test.ts kiểm). Nhãn
- * quyết định người viết và người nhận hiểu Tag giống nhau, nên nó là một phần của cơ chế match chứ
- * không chỉ là chữ trên nút: en/ja dịch theo NGHĨA của cột vi, không dịch theo id.
+ * Labels per language — must equal the vi/en/ja columns of docs/tags.md (checked by tags.test.ts).
+ * Labels decide whether writer and reader understand a Tag the same way, so they are part of matching,
+ * not just button text: en/ja translate the MEANING of the vi column, not the id.
  */
 export const TAG_LABEL: Record<Lang, Record<TagId, string>> = {
   vi: {
@@ -65,14 +65,14 @@ export const TAG_LABEL: Record<Lang, Record<TagId, string>> = {
   },
 };
 
-/** Entry được gắn tối đa 3 tag, Comfort tối đa 2. Cả hai đều có CHECK tương ứng trong migration. */
+/** Max 3 Tags per Entry, 2 per Comfort. Both have a matching CHECK in the migration. */
 export const MAX_ENTRY_TAGS = 3;
 export const MAX_COMFORT_TAGS = 2;
 
 /**
- * Không chọn tag nào thì rơi về 'unknown' — 'unknown' là tag thật, không phải giá trị rỗng,
- * và pool có Comfort gắn 'unknown' để trả về. Cắt thừa thay vì báo lỗi: người vừa khóc xong
- * không cần bị một thông báo validate chặn lại.
+ * No Tag selected ⇒ 'unknown', a real Tag (not an empty value) with its own Comforts in the pool.
+ * Extra Tags are cut instead of rejected: someone who just cried should not be blocked by a
+ * validation error.
  */
 export function normalizeTags(picked: readonly TagId[]): TagId[] {
   const unique = [...new Set(picked)];

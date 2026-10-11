@@ -1,17 +1,17 @@
 import type { Lang } from './index';
 
 /**
- * Từ điển tiếng Việt — khuôn cho mọi từ điển khác. Giọng văn: PRODUCT.md (nhẹ, ít lời, không
- * khuyên, xưng "bạn"; "lần khóc", "lời từ / cho người lạ" thay Entry, Comfort).
+ * Vietnamese dictionary — the template for all others. Voice: PRODUCT.md (gentle, few words, no advice,
+ * address the user as "bạn"; "lần khóc" and "lời từ / cho người lạ" instead of Entry and Comfort).
  */
 const LANG_NAMES: Record<Lang, string> = { vi: 'tiếng Việt', en: 'tiếng Anh', ja: 'tiếng Nhật' };
 const joinList = (names: string[]) =>
   names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} và ${names[names.length - 1]}`;
 
 const vi = {
-  /** Locale cho Intl: ngày, giờ. */
+  /** Intl locale for dates and times. */
   locale: 'vi-VN',
-  /** Nối nhiều Tag — vài nhãn có dấu phẩy bên trong. */
+  /** Joins several Tags — some labels contain commas. */
   tagSeparator: '; ',
 
   common: {
@@ -37,7 +37,7 @@ const vi = {
 
   tab: { index: 'Nhật ký', write: 'Viết lời', calendar: 'Lịch', settings: 'Cài đặt' },
 
-  /** Tấm Entry và dải Nghe lại (ui.tsx). */
+  /** EntryCard and VoicePlayer (ui.tsx). */
   card: {
     photos: (n: number) => `${n} ảnh`,
     recording: 'ghi âm',
@@ -50,7 +50,7 @@ const vi = {
       `${label} đoạn ghi âm, dài ${seconds >= 60 ? `${Math.floor(seconds / 60)} phút ` : ''}${seconds % 60} giây`,
   },
 
-  /** Nhãn thời lượng đã chọn; giá trị lạ (không có trong DURATION_OPTIONS) thì ghi số phút. */
+  /** Label of the chosen duration; values not in DURATION_OPTIONS fall back to minutes. */
   duration: (minutes: number | null) =>
     minutes === null
       ? 'Không nhớ'
@@ -85,7 +85,7 @@ const vi = {
     whenLabel: 'Lúc nào?',
     howLongLabel: 'Kéo dài bao lâu?',
     howHeavyLabel: 'Nặng đến đâu?',
-    /** Slider cường độ: nhãn và giá trị cho screen reader. */
+    /** Intensity slider: label and value for screen readers. */
     intensityLabel: 'Cường độ',
     intensityValue: (n: number) => `${n} trên 5`,
     whyLabel: 'Vì chuyện gì?',
@@ -116,7 +116,7 @@ const vi = {
 
   calendar: {
     title: 'Lịch',
-    /** Nhãn cột tháng: ô rộng ~22, không được quá 3 ký tự hẹp. */
+    /** Month column labels: cells are ~22 wide, so at most 3 narrow characters. */
     monthLabel: (month: number) => `T${month}`,
     monthSummary: (month: number, days: number, max: number) =>
       `Tháng ${month}: khóc ${days} ngày. Ngày nặng nhất, cường độ cộng lại là ${max}.`,
@@ -142,7 +142,7 @@ const vi = {
     language: 'Ngôn ngữ',
   },
 
-  /** Màn một lần khóc (comfort/[entryId].tsx). */
+  /** Single Entry screen (comfort/[entryId].tsx). */
   entry: {
     receiveError: 'Chưa nhận được. Thử lại sau một lát.',
     poolEmpty: (joyOnly: boolean) =>
@@ -182,7 +182,7 @@ const vi = {
     topicLabel: 'Lời này dành cho chuyện gì?',
     pickTags: (max: number, unknownLabel: string) =>
       `Chọn 1 hoặc ${max}. Lời hợp với bất kỳ ai đang buồn thì chọn “${unknownLabel}”.`,
-    /** `khac`: các ngôn ngữ lời sẽ được dịch sang — mọi ngôn ngữ trừ ngôn ngữ người viết chọn. */
+    /** `others`: languages the Comfort will be translated into — every language except the one the writer chose. */
     consent: (others: Lang[]) =>
       `Bấm Gửi là bạn đồng ý: lời này được duyệt, dịch sang ${joinList(others.map((lang) => LANG_NAMES[lang]))}, rồi gửi ẩn danh tới người lạ. Thu hồi được trong Cài đặt → Lời bạn đã viết; ai đã nhận thì vẫn giữ bản của họ.`,
     signInAgain: 'Đăng nhập lại',
@@ -193,7 +193,7 @@ const vi = {
     needTag: 'Chọn ít nhất một chuyện ở trên.',
   },
 
-  /** Lời mình đã viết (comfort/mine.tsx). */
+  /** Comforts the user wrote (comfort/mine.tsx). */
   myComforts: {
     status: {
       pending: 'Đang chờ duyệt',
@@ -235,7 +235,7 @@ const vi = {
     haveAccount: 'Đã có tài khoản? Đăng nhập',
   },
 
-  /** Màn hotline (help.tsx). Tên đường dây và giờ trực nằm trong hotlines.ts. */
+  /** Hotline screen (help.tsx). Line names and hours are in hotlines.ts. */
   help: {
     intro: 'Nếu bạn hoặc ai đó đang gặp nguy hiểm ngay lúc này, gọi cấp cứu.',
     call: (phone: string) => `Gọi ${phone}`,

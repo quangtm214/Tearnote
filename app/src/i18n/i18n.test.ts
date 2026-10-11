@@ -4,7 +4,7 @@ import { join, relative } from 'path';
 import { pencil } from '../theme';
 import { pickLanguage, setLanguage, LANGS, currentLang, t } from './index';
 
-// db.ts mở SQLite ngay khi import — không có trong Jest.
+// db.ts opens SQLite on import, which Jest does not have.
 jest.mock('../db', () => ({ getSetting: () => null, setSetting: () => {} }));
 
 describe('chọn ngôn ngữ', () => {
@@ -37,8 +37,8 @@ describe('contract ngôn ngữ', () => {
   });
 
   it('màn hình không viết cứng chữ Việt — chữ UI phải nằm trong từ điển', () => {
-    // Nhánh tách từ trước khi có i18n hay mang chữ Việt thẳng vào JSX: người dùng en/ja sẽ thấy tiếng
-    // Việt mà tsc không báo. Bỏ qua comment và dữ liệu `Record<Lang, …>` (dòng có `vi: `).
+    // Branches older than i18n tend to bring Vietnamese straight into JSX: en/ja users would see it and
+    // tsc would not notice. Skips comments and `Record<Lang, …>` data (lines with `vi: `).
     const src = join(__dirname, '..');
     const files = [
       join(src, 'ui.tsx'),
@@ -50,7 +50,7 @@ describe('contract ngôn ngữ', () => {
     const vietnameseChars = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/iu;
     const hardcoded = files.flatMap((f) =>
       readFileSync(f, 'utf8')
-        // Xoá block comment nhưng giữ dòng trống, để số dòng báo ra vẫn đúng.
+        // Blank out block comments but keep their newlines so reported line numbers stay correct.
         .replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ''))
         .split(/\r?\n/)
         .map((line, i) => ({ line: line.replace(/\/\/.*$/, ''), lineNo: i + 1 }))
@@ -59,11 +59,26 @@ describe('contract ngôn ngữ', () => {
     );
     expect(hardcoded).toEqual([]);
   });
+
+  it('comment viết tiếng Anh (CLAUDE.md › Luật comment)', () => {
+    // Quoted examples ("l ần", "bạn") are allowed: they show Vietnamese text, not explain in it.
+    const src = join(__dirname, '..');
+    const vietnamese = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/iu;
+    const offenders = readdirSync(src, { recursive: true })
+      .map(String)
+      .filter((f) => /\.tsx?$/.test(f))
+      .flatMap((f) =>
+        (readFileSync(join(src, f), 'utf8').match(/\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/.*/gm) ?? [])
+          .filter((c) => vietnamese.test(c.replace(/"[^"\n]*"/g, '')))
+          .map((c) => `${f}: ${c.slice(0, 80)}`),
+      );
+    expect(offenders).toEqual([]);
+  });
 });
 
 describe('đổi ngôn ngữ', () => {
   it('ghi đè chữ và họ chữ tay ngay tại chỗ', () => {
-    // RN đóng băng style đã truyền qua prop — đổi ngôn ngữ phải thay object, không sửa bên trong.
+    // RN freezes styles passed as props — a language switch must replace objects, not mutate them.
     Object.values(pencil).forEach((style) => Object.freeze(style));
     setLanguage('ja');
     expect(currentLang()).toBe('ja');

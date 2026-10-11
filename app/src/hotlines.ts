@@ -1,17 +1,16 @@
 import type { Lang } from './i18n';
 
 /**
- * Bản dự phòng đóng gói trong app. ADR 0005: nút "cần trợ giúp ngay" phụ thuộc mạng
- * là một nút hỏng — đúng lúc cần nhất thì sóng yếu, hết data, hoặc server chết.
+ * Offline fallback bundled with the app. ADR 0005: a help button that needs the network is broken —
+ * signal, data or the server fail exactly when it is needed most.
  *
- * Bản trên server (bảng `hotlines`) mới là bản cập nhật; file này chỉ để app luôn
- * hiện được thứ gì đó. Khi lấy được từ server thì thay, còn không thì dùng cái này.
- * Bảng server hiện chỉ có một ngôn ngữ cho `name`/`hours` — phải thêm bản dịch trước khi
- * app đọc nó (docs/db.md).
+ * The server `hotlines` table is the up-to-date copy; use it when it loads, otherwise this.
+ * That table has only one language for `name`/`hours` — add translations before the app reads it
+ * (docs/db.md).
  *
- * Trong mỗi nước: cấp cứu trước, rồi số trực 24 giờ, rồi số có giờ trực — người mở màn này
- * lúc nửa đêm phải thấy số gọi được ngay trước. Giờ viết thành chữ cho screen reader đọc đúng.
- * Tên riêng giữ nguyên; phần mô tả thì dịch.
+ * Within a country: emergency first, then 24h lines, then lines with hours — at midnight the user
+ * must see a number they can call right now first. Hours are written as words so screen readers
+ * read them correctly. Proper names stay untranslated; descriptions are translated.
  */
 type Localized = Record<Lang, string>;
 
@@ -26,7 +25,7 @@ export type Hotline = {
 const ALL_DAY: Localized = { vi: '24 giờ, mọi ngày', en: '24 hours, every day', ja: '24時間・毎日' };
 const EMERGENCY: Localized = { vi: 'Cấp cứu', en: 'Emergency', ja: '救急' };
 
-/** Nước lên đầu màn hotline: vùng của máy nếu có trong danh sách, không thì theo ngôn ngữ app. */
+/** Country shown first: the device region if listed, otherwise by app language. */
 export const topCountry = (region: string | undefined, lang: Lang): string =>
   region && HOTLINES_FALLBACK.some((h) => h.country === region) ? region : ({ vi: 'VN', ja: 'JP', en: 'US' } as const)[lang];
 

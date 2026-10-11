@@ -17,8 +17,8 @@ import { ScreenFooter, LinkRow, PrimaryButton, TextField } from '@/ui';
 import { check, registerForm } from '@/validation';
 
 /**
- * Tạo tài khoản — mở từ màn Đăng nhập, xong thì quay về đó (dismissTo kèm param `tao`
- * để màn Đăng nhập biết báo gì hoặc tự thoát).
+ * Create account — opened from login and returns there when done (dismissTo with the `registered`
+ * param so login knows what to show, or closes itself).
  */
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -34,7 +34,7 @@ export default function RegisterScreen() {
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  // 'done' = đã có tài khoản thật và session; 'verify' = còn chờ xác minh email.
+  // 'done' = real account with a session; 'verify' = waiting for email verification.
   const backToLogin = (result: 'done' | 'verify') =>
     router.dismissTo({ pathname: '/login', params: { registered: result, email: email.trim() } });
 
@@ -48,17 +48,17 @@ export default function RegisterScreen() {
 
     setBusy(true);
     try {
-      // Đăng ký khi đang có session anonymous phải NÂNG CẤP chính user đó, không tạo user mới:
-      // deliveries neo vào user id: tạo mới là mất lịch sử "đã nhận Comfort nào", trần 3/24h
-      // reset, và người dùng nhận lại đúng lời đã đọc. signUp chỉ dùng khi chưa có session.
+      // With an anonymous session, UPGRADE that user instead of creating a new one: deliveries are keyed
+      // by user id, so a new user loses "which Comforts were received", resets the 3/24h quota, and may
+      // receive the same Comforts again. signUp is only for when there is no session.
       const { data: sessionData } = await supabase.auth.getSession();
 
       if (sessionData.session?.user.is_anonymous === true) {
         const { data, error } = await supabase.auth.updateUser(credentials);
         if (error) return reportError(t.register.createError);
-        // updateUser không bao giờ trả session. Còn chờ xác minh thì email mới nằm ở new_email;
-        // đã đổi ngay (dự án tắt xác minh) thì làm mới JWT để claim is_anonymous hết là true —
-        // không thì RLS vẫn coi đây là tài khoản ẩn danh và chặn viết.
+        // updateUser never returns a session. While verification is pending the address is in new_email;
+        // if it changed immediately (verification off), refresh the JWT so is_anonymous becomes false —
+        // otherwise RLS still treats the user as anonymous and blocks writing.
         if (data.user.new_email || !data.user.email) return backToLogin('verify');
         await supabase.auth.refreshSession();
         return backToLogin('done');
@@ -66,7 +66,7 @@ export default function RegisterScreen() {
 
       const { data, error } = await supabase.auth.signUp(credentials);
       if (error) return reportError(t.register.createError);
-      // Không có session trả về = dự án đang bật xác minh email.
+      // No session returned = email verification is on for the project.
       backToLogin(data.session ? 'done' : 'verify');
     } catch {
       reportError(t.common.networkError);
@@ -86,7 +86,7 @@ export default function RegisterScreen() {
           <Text style={s.explanation}>{t.register.explanation}</Text>
 
           <Text style={s.label}>{t.common.email}</Text>
-          {/* Enter đi qua đủ ba ô; ô cuối là tạo tài khoản. */}
+          {/* Enter moves through the three fields; on the last one it creates the account. */}
           <TextField
             value={email}
             onChangeText={setEmail}

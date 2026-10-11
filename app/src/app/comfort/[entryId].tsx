@@ -33,9 +33,7 @@ import {
 } from '@/ui';
 import { comfortRows } from '@/validation';
 
-/**
- * Mở một Entry: đọc lại đủ Reflection (Timeline cắt ở 6 dòng), rồi xem hoặc xin lời từ người lạ.
- */
+/** One Entry: the full Reflection (Timeline cuts at 6 lines), then its Comforts or a request button. */
 export default function EntryComfortScreen() {
   const { entryId } = useLocalSearchParams<{ entryId: string }>();
   const [entry, setEntry] = useState<Entry | null>(null);
@@ -56,7 +54,7 @@ export default function EntryComfortScreen() {
 
   useEffect(reload, [reload]);
 
-  // Thông báo mới mount thì TalkBack không chắc đọc — đọc thẳng cho chắc.
+  // TalkBack may skip a message that just mounted — announce it explicitly.
   const notify = (msg: string) => {
     setNotice(msg);
     AccessibilityInfo.announceForAccessibility(msg);
@@ -69,14 +67,14 @@ export default function EntryComfortScreen() {
     AccessibilityInfo.announceForAccessibility(t.entry.searching);
     try {
       await ensureSession();
-      // Lời trả về bằng ngôn ngữ app; pool chỉ gồm lời đã có bản ngôn ngữ đó (docs/db.md).
+      // Returned in the app language; the pool only includes Comforts that have that translation (docs/db.md).
       const { data, error } = await supabase.rpc('request_comfort', {
         p_tags: entry.tags,
         p_lang: currentLang(),
       });
 
       if (error) {
-        // supabase-js trả lỗi mạng qua `error` với code rỗng; có code là server từ chối.
+        // supabase-js reports network errors in `error` with an empty code; a code means the server refused.
         notify(error.code ? t.entry.receiveError : t.common.networkError);
         return;
       }
@@ -85,7 +83,7 @@ export default function EntryComfortScreen() {
       if (!parsed.success) return notify(t.entry.receiveError);
       const row = parsed.data[0];
       if (!row) {
-        // Hai lý do khác hẳn nhau, hai câu khác nhau (CLAUDE.md: edge case bắt buộc).
+        // Two different reasons, two different messages (required edge case, CLAUDE.md).
         const joyOnly = entry.tags.length === 1 && entry.tags[0] === 'moved';
         notify((await hitDailyLimit()) ? t.entry.limitReached : t.entry.poolEmpty(joyOnly));
         return;
@@ -107,8 +105,8 @@ export default function EntryComfortScreen() {
   }
 
   async function thank(comfortId: string) {
-    // Đánh dấu ở máy trước: cảm ơn hụt trên server không đáng để chặn người dùng lúc này,
-    // và supabase-js trả { error } chứ không throw nên try/catch ở đây là thừa.
+    // Mark locally first: a failed thank-you on the server is not worth blocking the user,
+    // and supabase-js returns { error } instead of throwing, so no try/catch.
     markThanked(entryId, comfortId);
     reload();
     AccessibilityInfo.announceForAccessibility(t.common.thanked);
@@ -117,7 +115,7 @@ export default function EntryComfortScreen() {
 
   const recording = attachments.find((att) => att.kind === 'audio');
 
-  // Xoá thật, không thùng rác, không hoàn tác: câu phụ nói rõ mất những gì.
+  // Hard delete, no trash, no undo: the detail line says exactly what is lost.
   const askRemove = () =>
     entry &&
     setDialog({
@@ -153,7 +151,7 @@ export default function EntryComfortScreen() {
           {formatDate(entry.occurredAt)}
         </Text>
         <EntryCard entry={entry} attachments={attachments} />
-        {/* Nằm ngoài tấm: tấm là một vùng đọc gộp cho screen reader, nút bên trong sẽ bị nuốt mất. */}
+        {/* Outside the card: the card is one merged screen-reader item and would swallow a button inside it. */}
         {recording ? <VoicePlayer uri={recording.uri} /> : null}
 
         <Text style={[pencil.date, s.section]} accessibilityRole="header">
@@ -164,7 +162,7 @@ export default function EntryComfortScreen() {
           <Text style={s.explanation}>{t.entry.noneYet}</Text>
         ) : (
           comforts.map((comfort) => (
-            // Mẩu giấy người lạ kẹp vào trang — cùng tông `album.clip` với mẩu nhỏ trên Timeline.
+            // Same `album.clip` tone as the small clip on the Timeline card.
             <ComfortCard key={comfort.comfortId}>
               <Text style={s.body}>{comfort.body}</Text>
               {comfort.translated ? <Text style={[pencil.note, s.muted]}>{t.common.autoTranslated}</Text> : null}
@@ -179,7 +177,7 @@ export default function EntryComfortScreen() {
 
         {notice ? <Text style={s.notice}>{notice}</Text> : null}
 
-        {/* Mỗi Entry một Comfort (ADR 0007), và công tắc tắt nhận thì không còn nút xin ở đâu cả. */}
+        {/* One Comfort per Entry (ADR 0007); with receiving turned off there is no request button anywhere. */}
         {comforts.length === 0 && receivingOn ? (
           <View style={s.requestButton}>
             <PrimaryButton label={t.entry.request} onPress={requestComfort} busy={requesting} busyLabel={t.entry.searching} />
@@ -202,13 +200,13 @@ export default function EntryComfortScreen() {
 }
 
 /**
- * Hàm trả rỗng vì hai lý do khác hẳn nhau: hết lượt 3/24h, hay pool không có gì hợp.
- * Đây là SUY LUẬN PHÍA CLIENT chỉ để chọn câu chữ — DB mới là chỗ ép luật thật
- * (xem request_comfort trong docs/db.md). Sai ở đây thì chỉ hiện nhầm một câu.
+ * request_comfort returns nothing for two different reasons: the 3/24h quota is used up, or the pool
+ * has no match. This is a CLIENT-SIDE GUESS only to pick the message — the DB enforces the rule
+ * (request_comfort in docs/db.md). Getting it wrong only shows the wrong message.
  *
- * Đếm trên `deliveries` chứ không trên SQLite: `listReceivedComforts` lọc theo entry và
- * không trả `received_at`, nên không đếm được "3 lời trong 24h qua" trên máy. RLS cho đọc
- * đúng dòng mình là người nhận, và ta vừa gọi mạng xong nên không tốn thêm vòng offline nào.
+ * Counts `deliveries`, not SQLite: `listReceivedComforts` filters by Entry and has no `received_at`,
+ * so "3 in the last 24h" cannot be counted locally. RLS allows reading the user's own rows, and we are
+ * already online from the previous call.
  */
 async function hitDailyLimit(): Promise<boolean> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -223,7 +221,7 @@ const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
   scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
   title: { color: album.ink, marginBottom: space.lg },
-  // Đáy `lg` để chiếc kẹp nhô 16 trên mẩu lời không chạm nhãn mục.
+  // Bottom `lg` so the paperclip (16 above the note) does not touch the section label.
   section: { color: album.pencil, marginTop: space.lg, marginBottom: space.lg },
   explanation: { ...text.body, color: album.pencil },
   body: { ...text.body, color: album.ink },
