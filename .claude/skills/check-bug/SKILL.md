@@ -50,7 +50,8 @@ Ngày ghi dạng `yyyy-mm-dd`. Sau mỗi lần ghi, đọc lại dòng đó đ�
       CLAUDE.md (đọc trước, không đoán). Mở lại (`Mở lại`) thì đọc Ghi chú sửa và commit cũ ở cột L trước.
    3. **Không đủ thông tin để tái hiện hoặc không chắc đó là bug** → không sửa bừa. Ghi J = trạng thái
       cũ, M = `Cần thêm: <thiếu gì>` rồi sang bug tiếp. Không tự chuyển sang `Không sửa` — việc đó của user.
-   4. Tạo nhánh từ master: `git checkout -b fix/bug-<ID>`.
+   4. Tạo nhánh từ master: `git checkout -b fix/bug-<ID>`. Bug thấy được trên màn hình thì chụp ảnh
+      **Trước** ngay lúc này, khi code chưa sửa (`.claude/rules/pull-requests.md`).
    5. Sửa theo mọi luật trong CLAUDE.md (phạm vi tối thiểu, không thêm dependency, v.v.).
    6. Validate thật: `cd app; npx tsc --noEmit` và `cd app; npm test`. Đỏ thì sửa tiếp; không xanh được
       thì không commit — ghi M = `Chưa sửa được: <lý do>`, trả J về trạng thái cũ, về master, sang bug tiếp.
@@ -58,7 +59,8 @@ Ngày ghi dạng `yyyy-mm-dd`. Sau mỗi lần ghi, đọc lại dòng đó đ�
       `fix(bug-<ID>): <tóm tắt tiếng Anh>` — ví dụ `fix(bug-7): keep selected tags when saving entry offline`.
       Không dùng `#<ID>` (GitHub sẽ link nhầm sang issue/PR số đó).
    8. `git push -u origin fix/bug-<ID>` rồi `gh pr create --base master --title "<message commit>" --body "<body>"`.
-      Body: bug nào (ID + màn hình + mô tả ngắn), nguyên nhân, cách sửa, cách user test lại trên máy.
+      Body: bug nào (ID + màn hình + mô tả ngắn), nguyên nhân, cách sửa, cách user test lại trên máy,
+      và ảnh Trước / Sau theo `.claude/rules/pull-requests.md` (hoặc dòng `Ảnh: bỏ qua — <lý do>`).
    9. Ghi sheet dòng `<ID+1>`:
       J = `Chờ xác nhận`, K = ngày hôm nay, L = `<sha 7 ký tự> · <URL PR>`,
       M = 1–2 câu tiếng Việt: nguyên nhân + đã sửa gì + test lại thế nào.
