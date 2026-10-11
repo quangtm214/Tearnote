@@ -17,8 +17,8 @@ import { ScreenFooter, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
 import { check, loginForm } from '@/validation';
 
 /**
- * Đăng nhập chỉ cần cho hai việc: VIẾT Comfort và bật sync. Nhật ký chạy không cần
- * tài khoản (ADR 0004) — màn này luôn phải có lối thoát.
+ * Login is only needed to WRITE Comforts and to turn on sync. The journal works without an
+ * account (ADR 0004) — this screen must always have a way out.
  */
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -27,7 +27,7 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const passwordRef = useRef<TextInput>(null);
-  // Do màn Tạo tài khoản gửi về khi xong (register.tsx).
+  // Sent back by register.tsx when it finishes.
   const { registered, email: newEmail } = useLocalSearchParams<{ registered?: string; email?: string }>();
 
   const reportError = (msg: string) => {
@@ -36,7 +36,7 @@ export default function LoginScreen() {
   };
 
   useEffect(() => {
-    // Đã có session thật thì màn này hết việc — trả người dùng về chỗ họ đến.
+    // With a real session this screen is done — send the user back where they came from.
     if (registered === 'done') return leave();
     if (registered !== 'verify') return;
     const msg = t.login.verificationSent;
@@ -77,7 +77,7 @@ export default function LoginScreen() {
           <Text style={s.explanation}>{t.login.explanation}</Text>
 
           <Text style={s.label}>{t.common.email}</Text>
-          {/* Enter ở ô email sang ô mật khẩu, Enter ở ô mật khẩu là đăng nhập. */}
+          {/* Enter on email moves to password; Enter on password logs in. */}
           <TextField
             value={email}
             onChangeText={setEmail}

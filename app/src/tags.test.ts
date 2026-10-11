@@ -3,8 +3,8 @@ import { join } from 'path';
 import { MAX_ENTRY_TAGS, normalizeTags, TAG_IDS, TAG_LABEL, type TagId } from './tags';
 
 /**
- * Tag là contract ba bên: docs/tags.md ⇄ enum `tag` trong Postgres ⇄ file này.
- * Test này đỏ nghĩa là ba bên đã lệch nhau — sửa cho khớp, đừng sửa test.
+ * Tags are a three-way contract: docs/tags.md ⇄ Postgres enum `tag` ⇄ tags.ts.
+ * A failure means they drifted apart — fix the sources, not the test.
  */
 describe('contract Tag', () => {
   const repoRoot = join(__dirname, '..', '..');

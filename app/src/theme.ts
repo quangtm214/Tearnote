@@ -1,45 +1,44 @@
 import type { Lang } from './i18n';
 
 /**
- * Token hệ thống của Tearnote. Chỉ hằng số — không component, không context, không hook. Ngoại lệ
- * duy nhất: họ chữ tay của `pencil` đổi theo ngôn ngữ (`setHandwriting`).
+ * Tearnote design tokens. Constants only — no components, context or hooks. The one exception:
+ * the `pencil` handwriting family changes with the language (`setHandwriting`).
  *
- * Bối cảnh chi phối mọi giá trị dưới đây: người dùng mở app lúc 2 giờ sáng, vừa khóc xong,
- * cầm máy bằng một tay, trong bóng tối, mắt nhoè. Nền tối là mặc định duy nhất, không có light mode.
+ * Every value below assumes: 2 a.m., just finished crying, one hand, in the dark, blurry eyes.
+ * Dark is the only theme; there is no light mode.
  */
 
 /**
- * World "album ảnh trang đen" — mọi màn dùng nó (DESIGN.md).
- * Trang giấy bồi đen ấm, mỗi Entry là một tấm dán giữ bằng bốn góc; chú thích viết bút chì trắng.
- * Ấm chứ không lạnh: mọi tông lệch về nâu, không có xám xanh.
+ * The "black-page photo album" world used by every screen (DESIGN.md).
+ * Warm, not cold: every tone leans brown, no blue-grey.
  */
 export const album = {
-  /** Trang album. */
+  /** Album page. */
   page: '#1A1614',
-  /** Tấm dán: Entry, nút chính. Sáng hơn trang vừa đủ để thấy nó nằm trên trang. */
+  /** Cards: Entry, primary button. Just light enough to read as lying on the page. */
   card: '#2B2622',
-  /** Tấm nhỏ người lạ kẹp vào: Comfort đã nhận. */
+  /** Small note clipped on by a stranger: a received Comfort. */
   clip: '#3A322C',
-  /** Chữ thân trên tấm. ~11:1 trên tấm — đủ qua mắt nhoè, chưa tới trắng gắt. */
+  /** Body text on cards. ~11:1 on `card` — readable with blurry eyes, not harsh white. */
   ink: '#E4DCCF',
-  /** Bút chì trắng: chú thích, ngày, giọt cường độ. ~7.8:1 trên trang. */
+  /** White pencil: captions, dates, intensity tear. ~7.8:1 on `page`. */
   pencil: '#B3AA9C',
-  /** Góc dán ảnh — cùng tông bút chì trắng. */
+  /** Photo corners — same tone as `pencil`. */
   corner: '#B3AA9C',
-  /** Giấy pơ-luya ngăn giữa các đêm: vệt sáng rất nhạt. */
+  /** Tissue paper between nights: a very faint light band. */
   tissue: 'rgba(228, 220, 207, 0.06)',
-  /** Hairline duy nhất được dùng: mép trên chân màn, khung trang trống. */
+  /** The only hairline: top edge of the footer, empty-page frame. */
   hairline: 'rgba(228, 220, 207, 0.12)',
-  /** Màu duy nhất được nổi: lối trợ giúp (~8:1 trên trang). */
+  /** The only accent color: the help button (~8:1 on `page`). */
   lamp: '#E2A55A',
-  /** Tấm Entry đang nhấn: giữa `card` và `clip` — trên nền đen bóng gần như không thấy, nhấn phải sáng lên. */
+  /** Pressed Entry card, between `card` and `clip`: shadows barely show on black, so pressing lightens. */
   cardLifted: '#322C27',
-  /** Nền che sau hộp thoại, nền dấu × trên ảnh nhỏ: đen ấm, không #000. */
+  /** Scrim behind dialogs and behind the × on thumbnails: warm black, not #000. */
   scrim: 'rgba(10, 8, 7, 0.72)',
   /**
-   * Bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục. Ô trống (ngày có thật, không Entry)
-   * rồi 5 mức theo `THRESHOLDS` trong `calendar.ts`: cùng tông chữ ngà, chỉ đổi độ đục, không thêm màu.
-   * Thanh chọn cường độ ở màn ghi dùng lại 5 mức này (`calendar[1..5]`).
+   * Year grid on the Calendar screen — the only exception to the One Axis rule (DESIGN.md).
+   * Index 0 = a real day with no Entry, then 5 levels from `THRESHOLDS` in `calendar.ts`: one tone,
+   * only the opacity changes. The intensity slider in new.tsx reuses `calendar[1..5]`.
    */
   calendar: [
     'rgba(228, 220, 207, 0.06)',
@@ -52,10 +51,9 @@ export const album = {
 } as const;
 
 /**
- * Chữ viết tay (nạp ở _layout) cho tiêu đề và chú thích. Reflection và nút bấm vẫn là font hệ
- * thống để đọc qua mắt nhoè. Patrick Hand cho tiếng Việt và tiếng Anh; Yomogi cho tiếng Nhật vì
- * Patrick Hand không có kana. Không dùng Yomogi cho tiếng Việt: chữ Latin của nó rộng cố định nên
- * tách chữ có dấu ("l ần").
+ * Handwriting (loaded in _layout) for titles and captions; Reflection and buttons stay on the system
+ * font for readability. Patrick Hand for vi/en; Yomogi for ja because Patrick Hand has no kana.
+ * Never Yomogi for Vietnamese: its Latin glyphs are fixed-width and split accented letters ("l ần").
  */
 const HANDWRITING_FONT: Record<Lang, string> = { vi: 'PatrickHand', en: 'PatrickHand', ja: 'Yomogi' };
 
@@ -68,67 +66,64 @@ const makePencil = (fontFamily: string) => ({
 export const pencil = makePencil('PatrickHand');
 
 /**
- * Chỉ i18n gọi, ngay trước khi dựng lại cây giao diện. Thay cả ba object chứ không sửa bên trong:
- * RN đóng băng style đã truyền qua prop (bản dev ném lỗi khi sửa). Vì vậy đừng trải `...pencil.x`
- * vào StyleSheet cấp module — bản trải giữ họ chữ cũ; dùng mảng style `[pencil.x, s.y]`.
+ * Called only by i18n, right before the UI tree is rebuilt. Replaces the three objects instead of
+ * mutating them: RN freezes styles passed as props (dev builds throw on mutation). So never spread
+ * `...pencil.x` into a module-level StyleSheet — the copy keeps the old font; use `[pencil.x, s.y]`.
  */
 export function setHandwriting(lang: Lang) {
   Object.assign(pencil, makePencil(HANDWRITING_FONT[lang]));
 }
 
 /**
- * Thang cỡ chữ. Font hệ thống, đúng mặc định của React Native, không khai báo family ở đâu cả.
- * (Nếu sau này thêm font cho chữ thân: cần một sans humanist hỗ trợ đủ dấu tiếng Việt và kana tiếng Nhật
- * trong CÙNG một family — ví dụ Noto Sans / Noto Sans JP. Đừng thêm trước khi có màn hình thật
- * để đo, và đừng dùng hai family cho ba ngôn ngữ vì nhịp chữ sẽ lệch giữa các locale.)
+ * Type scale on the system font (no family set anywhere). Titles and section labels use `pencil`.
+ * A body font, if ever added, must cover Vietnamese diacritics and Japanese kana in ONE family
+ * (e.g. Noto Sans / Noto Sans JP), so rhythm does not drift between locales.
  *
- * Thang bắt đầu từ 17 chứ không phải 16, và không có nấc nào dưới 14.
- * Mắt nhoè lúc nửa đêm không đọc được caption 12. lineHeight rộng (~1.5) vì tiếng Việt có dấu
- * chồng hai tầng, dòng sát nhau là dấu dính vào dòng trên. Chỉ 2 weight: font hệ thống Android
- * (Roboto) render '600' không ổn định, nên dừng ở 400 / 500. Tiêu đề và nhãn mục là
- * Patrick Hand (`pencil`).
+ * Starts at 17, nothing below 14: blurry eyes at midnight cannot read a 12pt caption.
+ * lineHeight ~1.5 because Vietnamese stacks two levels of diacritics; tighter lines make them touch
+ * the line above. Only weights 400 / 500: Android's Roboto renders '600' inconsistently.
  */
 export const text = {
-  /** Chữ thân: Reflection, nội dung Comfort. Đây là cỡ mặc định của app. */
+  /** Body: Reflection, Comfort text. The app's default size. */
   body: { fontSize: 17, fontWeight: '400', lineHeight: 26 },
-  /** Chữ trên nút bấm và tag. Đậm hơn thân một nấc để ngón tay biết chỗ bấm mà không cần viền. */
+  /** Buttons and tags. One weight heavier than body so touch targets read without borders. */
   button: { fontSize: 17, fontWeight: '500', lineHeight: 22 },
-  /** Chữ phụ: mốc thời gian, thời lượng. Nhỏ nhất được phép — không có nấc nào dưới đây. */
+  /** Secondary: time, duration. The smallest allowed size. */
   caption: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
 } as const;
 
 /**
- * Khoảng cách — thoáng hơn app thường. Khoảng trắng là thứ duy nhất báo "không có gì gấp cả",
- * và ngón cái cầm một tay cần biên an toàn giữa các vùng bấm để không bấm nhầm.
+ * Spacing, looser than usual: white space says "nothing is urgent", and a one-handed thumb needs
+ * margin between touch targets to avoid mis-taps.
  */
 export const space = {
   xs: 4,
   sm: 8,
   md: 16,
   lg: 24,
-  /** Khoảng nghỉ giữa các khối lớn / giữa các Entry khác ngày. */
+  /** Between large blocks / between Entries of different days. */
   xl: 40,
-  /** Lề ngang của mọi màn hình. */
+  /** Horizontal margin of every screen. */
   screen: 20,
 } as const;
 
 /**
- * Vùng bấm — 48dp là sàn tuyệt đối (khuyến nghị Android), không phải mục tiêu.
- * Bấm một tay trong bóng tối thì sai số cao hơn bình thường nhiều.
+ * Touch targets. 48dp (Android guideline) is the floor, not the goal:
+ * one-handed taps in the dark miss far more often.
  */
 export const touch = {
-  /** Sàn cho mọi thứ bấm được: icon, tag, nấc cường độ. */
+  /** Floor for anything pressable: icons, tags, intensity steps. */
   min: 48,
-  /** Nút hành động chính: lưu Entry, gửi Comfort. */
+  /** Primary actions: save Entry, send Comfort. */
   primary: 56,
-  /** Nút hotline. To hơn vì lúc cần tới nó là lúc tay run nhất. */
+  /** Hotline button. Bigger because hands shake most when it is needed. */
   hotline: 64,
 } as const;
 
 /**
- * Hình khối (DESIGN.md › Shapes): có góc dán thì vuông (0 — không cần token); thứ ngón tay chạm bo `touch`;
- * giấy rời (mẩu kẹp, tấm lời, thẻ hotline, hộp thoại) bo `paper`. Hình tròn (đĩa play, con trượt, dấu ×)
- * là hình, không phải mức bo thứ ba. Không có mức nào ≥ 20 (không viên thuốc).
+ * Corner radius (DESIGN.md › Shapes): photo corners ⇒ square (0, no token); touched by a finger ⇒ `touch`;
+ * loose paper (clip, Comfort note, hotline card, dialog) ⇒ `paper`. Circles are shapes, not a third
+ * radius. Nothing ≥ 20 (no pills).
  */
 export const radius = { paper: 6, touch: 14 } as const;
 

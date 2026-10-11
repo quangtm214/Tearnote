@@ -2,8 +2,8 @@ import type { Lang } from './index';
 import type { Dictionary } from './vi';
 
 /**
- * です・ます nhẹ, tránh あなた khi bỏ được. "泣いたこと" thay Entry, "見知らぬ人からの / へのことば"
- * thay Comfort (PRODUCT.md). Chưa có người bản ngữ soát — phải soát trước khi có người dùng Nhật.
+ * Light です・ます, avoid あなた where possible. "泣いたこと" instead of Entry, "見知らぬ人からの / へのことば"
+ * instead of Comfort (PRODUCT.md). Not yet reviewed by a native speaker — must be before Japanese users arrive.
  */
 const LANG_NAMES: Record<Lang, string> = { vi: 'ベトナム語', en: '英語', ja: '日本語' };
 const joinList = (names: string[]) =>
@@ -11,7 +11,7 @@ const joinList = (names: string[]) =>
 
 const ja: Dictionary = {
   locale: 'ja-JP',
-  // Vài nhãn có "、" bên trong.
+  // Some labels contain "、".
   tagSeparator: '／',
 
   common: {
@@ -112,7 +112,7 @@ const ja: Dictionary = {
 
   calendar: {
     title: 'カレンダー',
-    // "10月" không vừa ô 22 ở cỡ 14; 12 cột số là đủ hiểu, nhãn đọc cho screen reader vẫn có "月".
+    // "10月" does not fit a 22-wide cell at size 14; numbers alone are clear, and the spoken labels keep "月".
     monthLabel: (month) => String(month),
     monthSummary: (month, days, max) =>
       `${month}月：泣いた日は${days}日。いちばん強かった日の合計は${max}。`,

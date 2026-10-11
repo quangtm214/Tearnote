@@ -22,14 +22,15 @@ import { tagLabels, t } from './i18n';
 import { album, pencil, radius, space, text, touch } from './theme';
 
 /**
- * Chỗ duy nhất cho thứ đã lặp từ lần thứ hai. Đừng đẩy thêm gì vào đây trước khi
- * nó thật sự xuất hiện ở hai màn — file này không phải kho component.
+ * Only for pieces already used on at least two screens. Do not add anything here before
+ * its second use — this file is not a component library.
  */
 
-// Rời màn: quay lại, hoặc về trang chủ nếu mở thẳng từ deep link. `'/' as Href` là cách né typed routes sai trên Windows.
+// Go back, or go home when the screen was opened directly from a deep link.
+// `'/' as Href` works around typed routes generated wrong on Windows (CLAUDE.md).
 export const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
 
-/** Bóng mềm, thấp: tấm dán nằm trên trang chứ không bay. */
+/** Soft, low shadow: a card rests on the page, it does not float. */
 export const shadow = {
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 3 },
@@ -38,7 +39,7 @@ export const shadow = {
   elevation: 3,
 };
 
-/** Bốn góc dán ảnh giữ một tấm vào trang. */
+/** Four photo corners holding a card to the page. */
 export function PhotoCorners({ size = 14 }: { size?: number }) {
   const base = { width: 0, height: 0, position: 'absolute' as const, borderColor: 'transparent' };
   return (
@@ -51,19 +52,19 @@ export function PhotoCorners({ size = 14 }: { size?: number }) {
   );
 }
 
-/** Giọt nước mắt vẽ tay (hơi lệch hai bên), khung 20×28: chóp y=1.5, đáy y=26. */
+/** Hand-drawn tear (slightly asymmetric) in a 20×28 box: tip at y=1.5, bottom at y=26. */
 const TEAR_PATH = 'M10 1.5C8.6 5 2.2 11.4 2.2 17.8C2.2 22.3 5.7 26 10 26C14.4 26 17.9 22.3 17.8 17.7C17.7 11.6 11.5 5.1 10 1.5Z';
 
 /**
- * Cường độ 1–5 là một giọt nước mắt đầy dần: 1 là đáy giọt, 5 là đầy. Mặt nước gợn nhẹ để đọc
- * thành nước chứ không thành thanh đo. Viền và phần đầy cùng màu bút chì.
+ * Intensity 1–5 as a filling tear: 1 is the bottom, 5 is full. The surface is wavy so it reads
+ * as water, not as a progress bar.
  */
 export function TearDrop({ level }: { level: number }) {
   const y = 26 - (24.5 * level) / 5;
   return (
     <Svg width={20} height={28} viewBox="0 0 20 28">
       <Defs>
-        {/* id chỉ cần duy nhất trong một <Svg>: trên native mỗi <Svg> giữ defs riêng. */}
+        {/* The id only has to be unique inside one <Svg>: on native each <Svg> has its own defs. */}
         <ClipPath id="tear">
           <Path d={TEAR_PATH} />
         </ClipPath>
@@ -75,9 +76,8 @@ export function TearDrop({ level }: { level: number }) {
 }
 
 /**
- * Thời lượng ước lượng (phút), bỏ qua được (null). Người dùng chọn một khoảng chứ không đo, nên
- * tấm Entry hiện lại đúng nhãn đã chọn (`t.duration`) — không khẳng định "60 phút" khi họ chỉ nói
- * "lâu hơn".
+ * Estimated duration in minutes; null = skipped. The user picks a range instead of measuring, so the
+ * card shows the label they picked (`t.duration`), never "60 minutes" when they only said "longer".
  */
 export const DURATION_OPTIONS = [null, 5, 15, 30, 60];
 
@@ -85,7 +85,7 @@ let formatters:
   | { locale: string; time: Intl.DateTimeFormat; thisYear: Intl.DateTimeFormat; otherYear: Intl.DateTimeFormat }
   | undefined;
 
-/** Formatter theo ngôn ngữ đang dùng; tạo lại khi đổi ngôn ngữ, không tạo mỗi lần gọi. */
+/** Formatters for the current language; rebuilt when the language changes, not on every call. */
 function getFormatters() {
   if (formatters?.locale !== t.locale) {
     const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' } as const;
@@ -101,16 +101,16 @@ function getFormatters() {
 
 export const formatTime = (ms: number) => getFormatters().time.format(ms);
 
-/** "Thứ Bảy, 26 tháng 9"; khác năm nay thì thêm năm, để hai đêm ở hai năm không trùng tên. */
+/** "Saturday, September 26"; adds the year when it is not this year, so nights in two years never share a name. */
 export const formatDate = (ms: number) =>
   (new Date(ms).getFullYear() === new Date().getFullYear() ? getFormatters().thisYear : getFormatters().otherYear).format(ms);
 
-/** Trạng thái Comfort của một tấm: chưa xin thì không có gì kẹp vào. */
+/** Comfort state of a card; undefined = none requested, nothing clipped on. */
 export type ComfortState = 'clipped' | 'thanked' | undefined;
 
 /**
- * Tấm Entry. Có `onPress` (Timeline) thì bấm được, cắt ở 6 dòng và chỉ dán ảnh đầu; không có
- * (màn xem một Entry) thì là tấm để đọc, hiện đủ Reflection và mọi ảnh.
+ * Entry card. With `onPress` (Timeline) it is pressable, cut at 6 lines, and shows only the first photo.
+ * Without it (single Entry screen) it is read-only and shows the full Reflection and every photo.
  */
 export function EntryCard({
   entry,
@@ -125,7 +125,7 @@ export function EntryCard({
 }) {
   const tagText = tagLabels(entry.tags);
   const photoUris = attachments.filter((a) => a.kind === 'image').map((a) => a.uri);
-  // Không có Reflection thì Tag đã là thân tấm — chú thích không lặp lại. Chú thích viết thường hết.
+  // Without a Reflection the Tags are already the card body, so the caption does not repeat them.
   const parts = [
     formatTime(entry.occurredAt),
     entry.durationMin !== null && t.duration(entry.durationMin).toLowerCase(),
@@ -134,7 +134,7 @@ export function EntryCard({
     attachments.some((a) => a.kind === 'audio') && t.card.recording,
   ].filter(Boolean);
   const clipLabel = comfortState === 'clipped' ? t.card.clipped : comfortState === 'thanked' ? t.common.thanked : null;
-  // Mẩu kẹp là ẩn dụ cho người nhìn; screen reader nghe thẳng nghĩa của nó.
+  // The clip is a visual metaphor; screen readers get its plain meaning instead.
   const spokenLabel = [
     entry.reflection || tagText,
     ...parts,
@@ -152,8 +152,8 @@ export function EntryCard({
       <Text style={s.body} numberOfLines={onPress ? 6 : undefined}>
         {entry.reflection || tagText}
       </Text>
-      {/* Chú thích nằm trong tấm: để ngoài thì giờ và giọt cường độ lơ lửng giữa hai tấm, không rõ
-          của tấm trên hay tấm dưới. Đã đọc trong nhãn của tấm — ẩn khỏi screen reader để không đọc lặp. */}
+      {/* Caption stays inside the card: outside, it floats between two cards and belongs to neither.
+          Hidden from screen readers because `spokenLabel` already reads it. */}
       <View
         style={s.noteRow}
         importantForAccessibility="no-hide-descendants"
@@ -181,7 +181,7 @@ export function EntryCard({
           {content}
         </Pressable>
       ) : (
-        // Tấm để đọc: Pressable không có onPress vẫn bị TalkBack mời "nhấn đúp để kích hoạt".
+        // Not a Pressable: TalkBack says "double-tap to activate" even when onPress is missing.
         <View accessible accessibilityRole="text" accessibilityLabel={spokenLabel} style={s.card}>
           {content}
         </View>
@@ -191,8 +191,8 @@ export function EntryCard({
 }
 
 /**
- * Ảnh dán trên tấm. Timeline cắt 4:3 cho nhịp đều; tấm để đọc (`full`) giữ đúng tỉ lệ ảnh.
- * `resize` để Android giải mã ảnh ở cỡ hiển thị, không phải ảnh gốc 12MP.
+ * Photo on a card. Timeline crops to 4:3 for an even rhythm; the read-only card (`full`) keeps the ratio.
+ * `resize` makes Android decode at display size, not the original 12MP.
  */
 function CardPhoto({ uri, full }: { uri: string; full: boolean }) {
   const [ratio, setRatio] = useState(4 / 3);
@@ -206,18 +206,18 @@ function CardPhoto({ uri, full }: { uri: string; full: boolean }) {
   );
 }
 
-/** Giây → "4:05". */
+/** Seconds → "4:05". */
 export const formatClock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
-/** Nghe lại một đoạn ghi âm: dải giấy bo mềm với đĩa play tròn, bấm để nghe / tạm dừng. */
+/** Plays back a recording; tap to play / pause. */
 export function VoicePlayer({ uri }: { uri: string }) {
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
 
   async function toggle() {
     if (status.playing) return player.pause();
-    // Nghe hết thì máy phát đứng ở cuối — tua về đầu mới phát lại được.
+    // After the end the player stays there; seek to 0 or play() does nothing.
     if (status.duration > 0 && status.currentTime >= status.duration - 0.1) await player.seekTo(0);
     player.play();
   }
@@ -245,8 +245,8 @@ export function VoicePlayer({ uri }: { uri: string }) {
 export type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 /**
- * Dòng lối: không nền, không viền, cả hàng là vùng bấm; nhấn thì mờ đi. `icon` đứng trước khi lối làm một
- * việc ngay (Quay lại, Đăng xuất…); `chevron` là chevron cuối hàng khi lối dẫn sang màn khác.
+ * Text link row; the whole row is the touch target. `icon` goes first when the row acts right away
+ * (Back, Log out…); `chevron` goes last when the row opens another screen.
  */
 export function LinkRow({
   label,
@@ -282,8 +282,8 @@ export function LinkRow({
 }
 
 /**
- * Nút phụ: hành động tại chỗ (Chụp ảnh, Ghi âm, Cảm ơn, Thu hồi…). Mảnh tonal bo mềm — thấy được là bấm được
- * mà không tranh với nút chính. Hết lượt thì mờ và tắt, không ẩn, để vị trí không nhảy.
+ * Secondary button for in-place actions (Take photo, Record, Thank, Withdraw…). When unavailable it is
+ * faded and disabled, not hidden, so the layout does not jump.
  */
 export function SecondaryButton({
   label,
@@ -317,8 +317,8 @@ export function SecondaryButton({
 }
 
 /**
- * Nút chính: mảnh `card` bo mềm, không góc dán (góc dán chỉ dành cho thứ được dán). Nhấn thì sáng lên một bậc.
- * `busyLabel`: khi chờ lâu (xin lời) thì nói đang làm gì, đừng để một tấm trống với vòng quay.
+ * Primary button. No photo corners: those are only for things stuck on the page.
+ * `busyLabel`: for long waits (requesting a Comfort) say what is happening, not just a spinner.
  */
 export function PrimaryButton({
   label,
@@ -361,9 +361,9 @@ export function PrimaryButton({
 }
 
 /**
- * Chân màn cố định ngoài vùng cuộn, luôn kết thúc bằng lối trợ giúp — ADR 0005: lối này hiển thị
- * thường trực, ở mọi màn, cùng một chỗ. Màn hotline thì không cần chân màn này. Nút chính của màn
- * (Lưu lại, Gửi, Đăng nhập…) cũng nằm ở đây, ngay trên lối trợ giúp.
+ * Fixed footer outside the scroll area. Always ends with the help button: ADR 0005 requires it on
+ * every screen, in the same place (except the hotline screen itself). The screen's primary button
+ * (Save, Send, Log in…) goes here too, above the help button.
  */
 export function ScreenFooter({ children }: { children?: ReactNode }) {
   return (
@@ -379,7 +379,7 @@ export function ScreenFooter({ children }: { children?: ReactNode }) {
   );
 }
 
-/** Lối trợ giúp — chỗ duy nhất có màu `den`: viền khi nghỉ, tô kín khi nhấn. */
+/** Help button — the only place that uses `album.lamp`. */
 export function HelpButton({
   label,
   onPress,
@@ -397,7 +397,7 @@ export function HelpButton({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      // Nhãn đặt sẵn để screen reader không đọc ký tự của icon.
+      // Explicit label so screen readers do not read the icon glyph.
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       style={({ pressed }) => [s.helpButton, pressed && s.helpPressed]}
@@ -416,10 +416,7 @@ export function HelpButton({
   );
 }
 
-/**
- * Lựa chọn bấm được: Tag (chọn nhiều), thời điểm, thời lượng (chọn một — `mot`).
- * Chọn thì tô chữ ngà, chữ đổi sang màu trang.
- */
+/** Selectable option: Tags (multiple choice), time, duration (single choice — `single`). */
 export function Pill({
   label,
   selected,
@@ -452,8 +449,8 @@ export function Pill({
 }
 
 /**
- * Ô nhập: bo mềm, viền 2px luôn có — trong suốt khi nghỉ, bút chì khi đang gõ (focus thấy được mà
- * không xê dịch chữ). `ref` là prop thường ở React 19.
+ * Text input. The 2px border is always there (transparent until focused) so focus does not shift the text.
+ * `ref` is a normal prop in React 19.
  */
 export function TextField({
   ref,
@@ -483,12 +480,12 @@ export function TextField({
   );
 }
 
-/** Một câu hỏi xác nhận: `bo` chạy khi người dùng chọn hành động (nút trên); nút dưới là nút an toàn. */
+/** `onConfirm` runs when the user picks the action (top button); the bottom button is the safe choice. */
 export type ConfirmRequest = { question: string; detail?: string; confirmLabel: string; keepLabel?: string; onConfirm: () => void };
 
 /**
- * Hộp thoại xác nhận thay `Alert` hệ thống (Alert Android trắng giữa app tối lúc 2 giờ sáng). Tờ giấy neo
- * đáy; nút an toàn ở dưới cùng, đúng chỗ ngón cái; muốn bỏ thì phải với lên. Chạm nền / Back = giữ lại.
+ * Replaces the system `Alert`, which is white on Android inside a dark app. The safe button is at the
+ * bottom, under the thumb; the destructive one needs a reach. Tapping the backdrop or Back = keep.
  */
 export function ConfirmDialog({ request, onClose }: { request: ConfirmRequest | null; onClose: () => void }) {
   const insets = useSafeAreaInsets();
@@ -502,7 +499,7 @@ export function ConfirmDialog({ request, onClose }: { request: ConfirmRequest | 
       onRequestClose={onClose}
     >
       <View style={[s.backdrop, { paddingBottom: space.md + insets.bottom }]}>
-        {/* Nền đứng riêng, không bọc tờ giấy: bọc thì screen reader gộp cả tờ, không chạm được từng nút. */}
+        {/* Backdrop is a sibling, not a wrapper: wrapping makes screen readers merge the dialog into one item. */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} />
         {request ? (
           <View style={s.dialog} accessibilityViewIsModal>
@@ -541,7 +538,7 @@ export function ConfirmDialog({ request, onClose }: { request: ConfirmRequest | 
   );
 }
 
-/** Lời từ người lạ (đã nhận, hoặc mình đã viết): mẩu giấy rời bo nhẹ, có một chiếc kẹp giữ vào trang. */
+/** A Comfort (received, or written by the user), drawn as a loose note with a paperclip. */
 export function ComfortCard({ children }: { children: ReactNode }) {
   return (
     <View style={s.comfortCard}>
@@ -567,7 +564,7 @@ const s = StyleSheet.create({
     paddingVertical: space.lg,
     minHeight: touch.min,
   },
-  // Chạm là nhấc tấm khỏi trang: sáng lên một bậc, nâng lên một chút, bóng đậm và xa hơn.
+  // Pressed = lifted off the page: lighter, raised, deeper shadow.
   lifted: {
     backgroundColor: album.cardLifted,
     transform: [{ translateY: -3 }],
@@ -577,9 +574,9 @@ const s = StyleSheet.create({
     elevation: 10,
   },
   body: { ...text.body, color: album.ink },
-  // Hạ sáng một chút: ảnh chụp sáng rực giữa trang đen lúc 2 giờ sáng là chói.
+  // Dimmed: a bright photo on a black page at 2 a.m. is glaring.
   photo: { width: '100%', marginBottom: space.md, opacity: 0.85, backgroundColor: album.page },
-  // Mẩu giấy người lạ kẹp vào: chờm qua góc dán dưới phải, hơi nghiêng, bóng riêng.
+  // Comfort clip: overlaps the bottom-right corner, slightly rotated.
   clip: {
     ...shadow,
     position: 'absolute',
@@ -594,13 +591,13 @@ const s = StyleSheet.create({
   },
   clipText: { color: album.ink },
   noteRow: {
-    // Không wrap: chú thích tự xuống dòng bên trong, giọt luôn nằm cuối dòng đầu, không tách ra.
+    // No flexWrap: the caption wraps inside itself so the tear stays on the first line.
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: space.md,
     marginTop: space.md,
   },
-  // Mẩu kẹp chờm 18 xuống dưới tấm — chừa chỗ để nó không chạm tấm kế tiếp.
+  // The clip hangs 18 below the card (`clip.bottom`); leave room so it does not touch the next card.
   belowClip: { marginBottom: space.xl },
   note: { color: album.pencil, flex: 1 },
 
@@ -631,14 +628,14 @@ const s = StyleSheet.create({
     borderRadius: radius.touch,
     backgroundColor: album.card,
   },
-  // Nhấn là sáng lên một bậc: bóng trên trang đen gần như không thấy, độ sáng thì thấy.
+  // Pressed = one step lighter: shadows barely show on a black page, brightness does.
   pressedButton: { backgroundColor: album.clip },
   pressedSelected: { opacity: 0.85 },
   faded: { opacity: 0.35 },
   waitRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   primaryText: { ...text.button, color: album.ink, textAlign: 'center' },
 
-  // Dải giấy trơn, không góc dán: nó là thứ để bấm, không phải thứ được dán.
+  // No photo corners: it is a control, not something stuck on the page.
   player: {
     ...shadow,
     minHeight: touch.primary,

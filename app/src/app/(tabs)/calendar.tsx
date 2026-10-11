@@ -11,15 +11,15 @@ import { album, pencil, space, text, touch } from '@/theme';
 import { ScreenFooter, type IconName } from '@/ui';
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
-/** "1–2" … "10+", suy từ THRESHOLDS để chú thích không lệch ngưỡng. */
+/** "1–2" … "10+", derived from THRESHOLDS so the legend never drifts from them. */
 const LEVEL_LABELS = THRESHOLDS.map((n, i) => (i === THRESHOLDS.length - 1 ? `${n}+` : `${n}–${THRESHOLDS[i + 1] - 1}`));
-/** Cùng các mức, viết thành lời cho screen reader — không đoán được giọng đọc xử lý "–" và "+". */
+/** The same levels in words for screen readers, which read "–" and "+" unpredictably. */
 const spokenLevels = () =>
   THRESHOLDS.map((n, i) => (i === THRESHOLDS.length - 1 ? t.calendar.levelRange(n) : t.calendar.levelRange(n, THRESHOLDS[i + 1] - 1)));
 
 /**
- * Bảng cường độ cả năm: 12 cột tháng × 31 hàng ngày, màu theo tổng cường độ trong ngày.
- * Chỉ để nhìn — ô không bấm được, không có số. Ngoại lệ luật Một Trục, xem DESIGN.md.
+ * Year intensity grid: 12 month columns × 31 day rows, colored by the daily intensity sum.
+ * View only — cells are not pressable and show no numbers. Exception to the One Axis rule, see DESIGN.md.
  */
 export default function CalendarScreen() {
   const today = new Date();
@@ -29,20 +29,20 @@ export default function CalendarScreen() {
 
   useFocusEffect(useCallback(() => setEntries(listEntries()), []));
 
-  // listEntries sắp giảm dần: phần tử cuối là Entry đầu tiên.
+  // listEntries is sorted newest first: the last item is the first Entry.
   const firstYear = Math.min(
     entries.length ? new Date(entries[entries.length - 1].occurredAt).getFullYear() : thisYear,
     thisYear,
   );
   const totals = dailyTotals(entries, year);
-  // Hôm nay chỉ đánh dấu trên bảng của năm nay.
+  // Today is marked only on the current year's grid.
   const currentMonth = year === thisYear ? today.getMonth() : -1;
   const currentDay = today.getDate() - 1;
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <ScrollView contentContainerStyle={s.scroll}>
-        {/* Năm nằm cùng hàng tiêu đề: không mở hộp chọn, và trả lại chỗ để thấy đủ 31 hàng trong một màn. */}
+        {/* Year sits on the title row: no picker, and it saves room to fit all 31 rows on one screen. */}
         <View style={s.header}>
           <Text style={[pencil.title, s.title]} accessibilityRole="header">
             {t.calendar.title}
@@ -70,8 +70,8 @@ export default function CalendarScreen() {
           </View>
         </View>
 
-        {/* Nhãn hàng/cột cao đúng một ô nên không theo cỡ chữ hệ thống: ở 200% "10" còn "1", "T10" thành
-            "T…". Screen reader đọc tóm tắt từng tháng, không mất thông tin. */}
+        {/* Row/column labels are one cell tall, so they ignore system font scaling: at 200% "10" shows as "1".
+            Screen readers get a per-month summary, so nothing is lost. */}
         <View style={s.grid}>
           <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <Text style={[pencil.note, s.columnLabel, s.rowLabelSpacer]} allowFontScaling={false}> </Text>
@@ -89,7 +89,7 @@ export default function CalendarScreen() {
             const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
             const cryDays = monthTotals.filter(Boolean);
             return (
-              // Screen reader đọc tóm tắt từng tháng, không đọc 31 ô.
+              // Screen readers read one summary per month, not 31 cells.
               <View
                 key={monthIndex}
                 style={s.column}
@@ -110,13 +110,13 @@ export default function CalendarScreen() {
                 {monthTotals.map((dayTotal, dayIndex) => {
                   const level = colorLevel(dayTotal);
                   return (
-                    // Ngày không tồn tại (30/2…) không tô gì, khác ô trống của ngày có thật.
+                    // Non-existent days (Feb 30…) are blank, unlike a real day with no Entry.
                     <View
                       key={dayIndex}
                       style={[
                         s.cell,
                         dayIndex < daysInMonth && { backgroundColor: album.calendar[level] },
-                        // Hôm nay: vòng bút chì; ô đã đậm (mức ≥ 3) thì vòng màu trang để còn thấy.
+                        // Today: pencil ring; on dark cells (level ≥ 3) a page-colored ring so it stays visible.
                         monthIndex === currentMonth && dayIndex === currentDay && [s.cellToday, { borderColor: level >= 3 ? album.page : album.ink }],
                       ]}
                     />
@@ -142,7 +142,7 @@ export default function CalendarScreen() {
   );
 }
 
-/** Nút lùi / tới một năm: chỉ hiện khi có từ hai năm; hết đầu / cuối thì mờ và tắt. */
+/** Previous / next year button: shown only with two or more years; faded and disabled at either end. */
 function YearButton({ icon, label, disabled, onPress }: { icon: IconName; label: string; disabled: boolean; onPress: () => void }) {
   return (
     <Pressable
@@ -180,7 +180,7 @@ const s = StyleSheet.create({
 
   grid: { flexDirection: 'row', gap: GAP },
   column: { flex: 1, gap: GAP },
-  // Đi sau pencil.note trong mảng style: pencil đổi họ chữ theo ngôn ngữ, không trải vào đây được.
+  // Used after pencil.note in a style array: pencil changes font per language, so it cannot be spread here.
   columnLabel: { fontSize: 14, lineHeight: 20, color: album.pencil, textAlign: 'center' },
   rowLabelSpacer: { width: 20 },
   rowLabel: {

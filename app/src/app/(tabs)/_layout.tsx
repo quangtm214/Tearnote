@@ -8,9 +8,9 @@ import { album, radius, space, text, touch } from '@/theme';
 import type { IconName } from '@/ui';
 
 /**
- * "Viết lời" không phải tab: nó mở màn viết đè lên, để luồng đăng nhập / Gửi / Xong của màn đó
- * giữ nguyên. Tab đang mở thì icon tô đặc — chữ ngà và bút chì quá gần nhau để chỉ đổi màu.
- * Nhãn lấy từ `t.tab[name]` lúc render.
+ * "For strangers" is not a tab: it opens the write screen on top, keeping that screen's
+ * login / Send / Done flow. The active tab gets a filled icon — `ink` and `pencil` are too close
+ * to rely on color alone. Labels come from `t.tab[name]` at render time.
  */
 const TABS: { name: keyof typeof t.tab; icon: IconName; iconSelected?: IconName; href?: Href }[] = [
   { name: 'index', icon: 'notebook-outline', iconSelected: 'notebook' },
@@ -20,8 +20,8 @@ const TABS: { name: keyof typeof t.tab; icon: IconName; iconSelected?: IconName;
 ];
 
 /**
- * Thanh điều hướng tự dựng thay thanh mặc định: thanh mặc định cao cố định 49 nên vỡ khi tăng
- * cỡ chữ hệ thống, và nhãn 10–12 dưới sàn 14 của DESIGN.md. Nằm dưới chân màn (ScreenFooter) của mỗi tab.
+ * Custom tab bar: the default one has a fixed height of 49, breaks with large system fonts, and its
+ * 10–12 labels are below the 14 floor in DESIGN.md. Sits below each tab's ScreenFooter.
  */
 export default function TabLayout() {
   return (
@@ -53,7 +53,7 @@ export default function TabLayout() {
         </View>
       )}
     >
-      {/* Khai báo đủ để Nhật ký là tab đầu: Back ở tab khác quay về đây. */}
+      {/* Declared so the Journal is the first tab: Back on another tab returns here. */}
       <Tabs.Screen name="index" />
       <Tabs.Screen name="calendar" />
       <Tabs.Screen name="settings" />
@@ -62,13 +62,13 @@ export default function TabLayout() {
 }
 
 const s = StyleSheet.create({
-  // Không hairline riêng: hairline của chân màn ngay trên đã tách trang khỏi phần cố định.
+  // No hairline: the footer's hairline right above already separates the page from the fixed area.
   bar: { flexDirection: 'row', backgroundColor: album.page },
   item: {
     flex: 1,
     minHeight: touch.min,
     alignItems: 'center',
-    // Canh trên: nhãn hai dòng ("For / strangers") không đẩy icon lệch hàng với các mục khác.
+    // Top-aligned: a two-line label ("For / strangers") does not push its icon out of line.
     justifyContent: 'flex-start',
     gap: space.xs,
     paddingVertical: space.xs,

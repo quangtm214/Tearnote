@@ -45,13 +45,13 @@ import {
   type ConfirmRequest,
 } from '@/ui';
 
-/** Lùi thời điểm (phút) — thay cho date picker, không thêm dependency. */
+/** Time offsets in minutes — instead of a date picker, to avoid a dependency. */
 const BACKDATE_MINUTES = [0, 60, 180, 60 * 24];
 
 const INTENSITY_LEVELS = [1, 2, 3, 4, 5];
 const clamp = (n: number) => Math.min(5, Math.max(1, n));
 
-/** Giới hạn đính kèm mỗi lần khóc — chỉ app ép, DB không có CHECK (docs/db.md). */
+/** Attachment limits per Entry — enforced only here, the DB has no CHECK (docs/db.md). */
 const MAX_PHOTOS = 3;
 const MAX_RECORDING_SECONDS = 5 * 60;
 
@@ -61,7 +61,7 @@ export default function NewEntryScreen() {
   const [intensity, setIntensity] = useState(3);
   const [tags, setTags] = useState<TagId[]>([]);
   const [reflection, setReflection] = useState('');
-  // uri tạm trong cache — Lưu mới chép vào máy, bỏ ngang thì không để lại gì.
+  // Temporary cache URIs — copied to storage only on Save, so abandoning leaves nothing behind.
   const [photos, setPhotos] = useState<string[]>([]);
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -73,7 +73,7 @@ export default function NewEntryScreen() {
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
-  // Dừng tay hay tự dừng ở 5 phút đều về đây.
+  // Both a manual stop and the 5-minute auto-stop end up here.
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY, (status) => {
     if (!status.isFinished) return;
     setIsRecording(false);
@@ -83,18 +83,18 @@ export default function NewEntryScreen() {
   });
   const recorderState = useAudioRecorderState(recorder);
 
-  // Chặn bấm Lưu hai lần liên tiếp trước khi kịp rời màn — mỗi lần bấm là một Entry.
+  // Blocks a double tap on Save before the screen closes — each tap would create an Entry.
   const saved = useRef(false);
 
-  // Slider: bề rộng thanh, và mép trái của nó trên màn — đo lúc chạm, rồi quy pageX ra vị trí trên thanh
-  // (locationX lúc kéo có thể tính theo view đang nằm dưới ngón tay, không phải thanh).
+  // Slider width and left edge on screen, measured on touch; pageX is converted to a bar position
+  // (while dragging, locationX may be relative to whatever view is under the finger, not the bar).
   const sliderWidth = useRef(0);
   const sliderLeft = useRef(0);
   const setIntensityAt = (x: number) =>
     sliderWidth.current > 0 && setIntensity(clamp(Math.floor((x / sliderWidth.current) * 5) + 1));
 
   const tagsFull = tags.length >= MAX_ENTRY_TAGS;
-  // Cùng cách viết thời điểm với Timeline: "Thứ Bảy, 26 tháng 9 · 00:05".
+  // Same format as the Timeline: "Saturday, September 26 · 00:05".
   const when = Date.now() - backMinutes * 60_000;
 
   const toggleTag = (tag: TagId) =>
@@ -103,26 +103,26 @@ export default function NewEntryScreen() {
   const askDiscard = (question: string, onConfirm: () => void) =>
     setDialog({ question, confirmLabel: t.newEntry.discard, onConfirm });
 
-  // Rời màn (Thôi, Back hệ thống) khi còn chữ, ảnh hay ghi âm chưa lưu thì hỏi lại: ảnh chụp trong app và
-  // đoạn ghi âm không lấy lại được. Cường độ, Tag, thời điểm chọn lại mất vài giây nên không tính.
+  // Confirm before leaving (Cancel, system Back) with unsaved text, photos or a recording: in-app photos
+  // and recordings cannot be recovered. Intensity, Tags and time take seconds to redo, so they do not count.
   const navigation = useNavigation();
   const dirty = reflection.trim() !== '' || photos.length > 0 || recordingUri !== null || isRecording;
   usePreventRemove(dirty, ({ data }) => {
-    if (saved.current) return navigation.dispatch(data.action); // Lưu xong thì đi thẳng
+    if (saved.current) return navigation.dispatch(data.action); // already saved: leave without asking
     setDialog({
       question: t.newEntry.leaveQuestion,
       detail: t.newEntry.leaveDetail,
       confirmLabel: t.common.leave,
       keepLabel: t.newEntry.keepWriting,
       onConfirm: async () => {
-        if (isRecording) await recorder.stop().catch(() => {}); // nhả micro trước khi rời
+        if (isRecording) await recorder.stop().catch(() => {}); // release the mic before leaving
         navigation.dispatch(data.action);
       },
     });
   });
 
-  // Camera ghi thẳng vào cache của app nên ảnh thường không vào thư viện máy — riêng tư hơn
-  // chụp bằng app camera rồi chọn lại.
+  // The camera writes into the app cache, so the photo usually stays out of the device gallery —
+  // more private than shooting with the camera app and picking it.
   async function pickPhoto(camera: boolean) {
     setError(null);
     const remaining = MAX_PHOTOS - photos.length;
@@ -144,14 +144,14 @@ export default function NewEntryScreen() {
 
   async function startRecording() {
     setError(null);
-    // Ẩn nút Ghi âm ngay: bấm hai lần thì lần sau chuẩn bị máy ghi lần nữa và ném lỗi.
+    // Hide the Record button at once: a second tap would prepare the recorder again and throw.
     setIsRecording(true);
     try {
       if (!(await requestRecordingPermissionsAsync()).granted) {
         setIsRecording(false);
         return reportError(t.newEntry.noMicPermission);
       }
-      // iOS không cho ghi nếu phiên âm thanh chưa bật ghi; Android bỏ qua cờ này.
+      // iOS refuses to record unless the audio session allows it; Android ignores this flag.
       await setAudioModeAsync({ allowsRecording: true });
       await recorder.prepareToRecordAsync();
       recorder.record({ forDuration: MAX_RECORDING_SECONDS });
@@ -166,7 +166,7 @@ export default function NewEntryScreen() {
     if (saved.current) return;
     saved.current = true;
     try {
-      // Bấm Lưu khi còn đang ghi: dừng rồi lưu luôn đoạn đó, đừng bắt người ta bấm Dừng trước.
+      // Save while recording: stop and keep the clip instead of making the user press Stop first.
       let audioUri = recordingUri;
       if (isRecording) {
         await recorder.stop();
@@ -195,10 +195,10 @@ export default function NewEntryScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      {/* Android edge-to-edge không tự co cửa sổ khi bàn phím mở: thiếu cái này là bàn phím che ô nhập. */}
+      {/* Android edge-to-edge does not resize for the keyboard: without this the keyboard covers the input. */}
       <KeyboardAvoidingView style={styles.screen} behavior="padding">
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          {/* Nửa trên: chỉ để đọc. Mọi vùng bấm nằm nửa dưới, tầm ngón cái. */}
+          {/* Top half is read-only; every touch target is in the bottom half, within thumb reach. */}
           <View style={styles.upperHalf}>
             <Text style={[pencil.title, styles.title]} accessibilityRole="header">
               {t.newEntry.title}
@@ -243,10 +243,10 @@ export default function NewEntryScreen() {
             {t.newEntry.howHeavyLabel}
           </Text>
           <View style={styles.row}>
-            {/* Kéo hoặc chạm, bắt vào 5 nấc. Không nhả cho ScrollView giữa chừng, để kéo ngang không thành cuộn. */}
+            {/* Drag or tap, snapping to 5 steps. Never yields to the ScrollView, so a horizontal drag does not scroll. */}
             <View
               style={styles.slider}
-              // Chỉ thanh nhận chạm, để locationX luôn tính từ mép trái thanh.
+              // Only the bar takes touches, so locationX is always from the bar's left edge.
               pointerEvents="box-only"
               onLayout={(e) => (sliderWidth.current = e.nativeEvent.layout.width)}
               onStartShouldSetResponder={() => true}
@@ -266,7 +266,7 @@ export default function NewEntryScreen() {
                 setIntensity((n) => clamp(n + (e.nativeEvent.actionName === 'increment' ? 1 : -1)))
               }
             >
-              {/* Đoạn tới mức chọn đậm dần theo thang của bảng năm — cùng một nghĩa "nặng hơn"; đoạn trên mức chỉ mờ. */}
+              {/* Segments up to the value use the year-grid scale (same "heavier" meaning); the rest stay faint. */}
               <View style={styles.track}>
                 {INTENSITY_LEVELS.map((n) => (
                   <View
@@ -277,7 +277,7 @@ export default function NewEntryScreen() {
               </View>
               <View style={[styles.thumb, { left: `${(intensity - 0.5) * 20}%` }]} />
             </View>
-            {/* Đúng hình sẽ nằm trên tấm: kéo tới đâu, giọt đầy tới đó. */}
+            {/* The same tear that will appear on the card. */}
             <View style={styles.tearPreview} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
               <TearDrop level={intensity} />
             </View>
@@ -332,9 +332,9 @@ export default function NewEntryScreen() {
                   accessibilityHint={t.newEntry.removePhotoHint}
                 >
                   <Image source={{ uri }} resizeMethod="resize" style={styles.thumbnail} />
-                  {/* Sau ảnh để góc dán đè lên mép ảnh, như ảnh thật giữ trong album. */}
+                  {/* After the image so the corners overlap its edges. */}
                   <PhotoCorners size={10} />
-                  {/* Dấu × chỉ để thấy "bấm là bỏ"; cả ảnh vẫn là một vùng bấm. */}
+                  {/* The × only signals "tap to remove"; the whole photo is the touch target. */}
                   <View style={styles.removeMark} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
                     <MaterialCommunityIcons name="close" size={16} color={album.ink} />
                   </View>
@@ -370,7 +370,7 @@ export default function NewEntryScreen() {
               </View>
             </View>
           ) : null}
-          {/* Luôn đủ ba nút, hết lượt thì mờ chứ không ẩn — vị trí không nhảy. Đang ghi thì không mở camera. */}
+          {/* Always three buttons; at the limit they fade, not hide, so nothing jumps. No camera while recording. */}
           <View style={styles.attachRow}>
             <SecondaryButton
               icon="camera-outline"
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   slider: { flex: 1, height: touch.min, justifyContent: 'center' },
   track: { flexDirection: 'row', gap: 3, height: 8 },
   segment: { flex: 1, borderRadius: 4 },
-  // Con trượt tròn nằm trên thanh, tâm ở giữa đoạn đang chọn; viền màu trang như khoét khỏi thanh.
+  // Round thumb centered on the selected segment; the page-colored border cuts it out of the bar.
   thumb: {
     ...shadow,
     position: 'absolute',
@@ -431,10 +431,10 @@ const styles = StyleSheet.create({
     backgroundColor: album.ink,
   },
   tearPreview: { alignSelf: 'center', marginLeft: space.sm },
-  // Rộng cố định: "1 / 5" hẹp hơn "5 / 5", để chữ co giãn thì thanh bị kéo ngắn dài trong lúc kéo.
+  // Fixed width: "1 / 5" is narrower than "5 / 5"; a flexible width would resize the bar while dragging.
   levelText: { color: album.pencil, alignSelf: 'center', marginLeft: space.sm, minWidth: 40, textAlign: 'right' },
   input: { minHeight: 120, paddingVertical: space.md - 2, marginTop: space.md },
-  // Khe 12 để góc dán của hai ảnh cạnh nhau không chạm nhau.
+  // Gap of 12 so the corners of adjacent photos do not touch.
   photoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm + space.xs, marginTop: space.md },
   thumbnail: { width: 96, height: 96, opacity: 0.85 },
   removeMark: {

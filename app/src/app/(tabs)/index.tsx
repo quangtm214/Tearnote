@@ -17,10 +17,10 @@ import { album, pencil, space } from '@/theme';
 import { ScreenFooter, PhotoCorners, formatDate, PrimaryButton, EntryCard, type ComfortState } from '@/ui';
 
 
-/** Khoá nhóm theo ngày địa phương. */
+/** Group key by local date. */
 const dayKey = (ms: number) => new Date(ms).toDateString();
 
-/** Entry mở gần nhất — mở lại app thì album cuộn về đêm đó. */
+/** Last opened Entry — on app start the album scrolls back to that night. */
 const LAST_OPENED_KEY = 'timeline_dung';
 
 export default function Timeline() {
@@ -28,9 +28,9 @@ export default function Timeline() {
   const [comfortStates, setComfortStates] = useState<Record<string, ComfortState>>({});
   const [attachments, setAttachments] = useState<Record<string, Attachment[]>>({});
   const scrollRef = useRef<ScrollView>(null);
-  /** Khoá đêm cần cuộn tới ở lần dựng kế tiếp; cuộn xong thì về null. */
+  /** Night key to scroll to on the next render; null after scrolling. */
   const scrollTarget = useRef<string | null>(null);
-  /** Entry đã hiện ở lần focus trước — null là lần đầu mở màn. */
+  /** Entries shown on the previous focus — null on first open. */
   const seenIds = useRef<Set<string> | null>(null);
 
   useFocusEffect(
@@ -43,8 +43,8 @@ export default function Timeline() {
         if (received.length) states[e.id] = received.every((c) => c.thanked) ? 'thanked' : 'clipped';
         atts[e.id] = listAttachments(e.id);
       }
-      // Mở app: về đêm của Entry mở gần nhất. Quay về sau khi Lưu: về đêm của lần khóc vừa ghi — không thì
-      // trang đứng ở chỗ cuộn cũ và người vừa ghi không thấy nó đâu.
+      // On app start: scroll to the last opened Entry's night. After Save: scroll to the new Entry's night —
+      // otherwise the page keeps its old position and the user cannot see what they just saved.
       const seen = seenIds.current;
       const target = seen ? list.find((e) => !seen.has(e.id)) : list.find((e) => e.id === getSetting(LAST_OPENED_KEY));
       scrollTarget.current = target ? dayKey(target.occurredAt) : null;
@@ -60,7 +60,7 @@ export default function Timeline() {
     router.push(`/comfort/${id}` as Href);
   };
 
-  // Entry đã sắp xếp giảm dần từ DB — chỉ cần cắt nhóm khi đổi ngày.
+  // Entries come sorted newest first from the DB — just start a new group when the day changes.
   const groups: Entry[][] = [];
   for (const e of entries) {
     const last = groups[groups.length - 1];
@@ -87,11 +87,11 @@ export default function Timeline() {
               <View
                 key={key}
                 onLayout={(ev) => {
-                  // Chỉ cuộn khi có đích (mở app, vừa Lưu), không giật trang mỗi lần quay về.
+                  // Scroll only when there is a target (app start, just saved), not on every return.
                   if (key !== scrollTarget.current) return;
                   scrollTarget.current = null;
-                  // Chờ một frame: gọi ngay trong onLayout thì ScrollView native chưa biết chiều
-                  // cao nội dung mới và kẹp về 0 — mở lại app vẫn đứng ở đầu trang.
+                  // Wait one frame: inside onLayout the native ScrollView does not know the new content
+                  // height yet and clamps to 0.
                   const y = i > 0 ? ev.nativeEvent.layout.y : 0;
                   requestAnimationFrame(() => scrollRef.current?.scrollTo({ y, animated: false }));
                 }}
@@ -128,8 +128,7 @@ const s = StyleSheet.create({
   title: { color: album.ink, marginBottom: space.lg },
   date: { color: album.pencil, marginBottom: space.md },
 
-  // Tờ pơ-luya giữa hai đêm: chỉ thấy mép giấy mỏng chìa ra — một mép sáng, hơi lệch,
-  // chờm quá lề trang, phần thân mờ dần vào nền. Không có khung, để không thành ô nhập.
+  // Tissue sheet between two nights: only a thin light edge shows. No frame, so it does not look like an input.
   tissue: {
     height: 10,
     backgroundColor: album.tissue,

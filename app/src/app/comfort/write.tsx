@@ -20,14 +20,14 @@ import { check, comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH
 import { ScreenFooter, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, leave, type ConfirmRequest } from '@/ui';
 
 /**
- * Viết Comfort. Hai luật quan trọng nhất KHÔNG nằm ở đây mà ở DB:
- * "chỉ tài khoản thật" và "tối đa 5 / 24h" do RLS ép (docs/db.md). App chỉ dịch lỗi ra lời.
+ * Write a Comfort. The two key rules are NOT here: "real accounts only" and "max 5 / 24h" are
+ * enforced by RLS (docs/db.md). The app only turns the errors into messages.
  */
 export default function WriteComfortScreen() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [body, setBody] = useState('');
   const [tags, setTags] = useState<TagId[]>([]);
-  // source_lang: batch dịch từ đây. Mặc định ngôn ngữ app, nhưng người viết có thể viết tiếng khác.
+  // source_lang: the translation batch translates from it. Defaults to the app language; the writer can change it.
   const [sourceLang, setSourceLang] = useState<Lang>(currentLang);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +36,8 @@ export default function WriteComfortScreen() {
   const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
   const sentToLogin = useRef(false);
 
-  // Lời đang viết mất vì chạm nhầm Back cũng đau như một Reflection: hỏi lại trước khi rời.
-  // Sang màn Đăng nhập (đăng nhập lại) là push, không phải rời, nên không hỏi.
+  // Losing a draft to an accidental Back hurts as much as losing a Reflection: confirm before leaving.
+  // Going to login is a push, not a leave, so it does not ask.
   const navigation = useNavigation();
   usePreventRemove(body.trim() !== '' && !done, ({ data }) =>
     setDialog({
@@ -49,14 +49,14 @@ export default function WriteComfortScreen() {
     }),
   );
 
-  // push chứ không replace: đăng nhập xong thì quay về đúng màn này, chữ đã gõ còn nguyên.
+  // push, not replace: after login the user returns here with the draft intact.
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
       isRealAccount().then((isReal) => {
         if (cancelled) return;
         if (isReal) return setCheckingAuth(false);
-        // Lần đầu thì sang đăng nhập; quay về mà vẫn chưa đăng nhập ("Để sau") thì rời màn viết.
+        // First time: go to login. Back here still logged out ("Later"): leave the write screen.
         if (sentToLogin.current) leave();
         else {
           sentToLogin.current = true;
@@ -93,7 +93,7 @@ export default function WriteComfortScreen() {
     setSessionExpired(false);
     setSending(true);
     try {
-      // Session trên máy, không gọi mạng: mất mạng thì để insert báo lỗi mạng, đừng đá sang login.
+      // Local session, no network call: when offline, let the insert report a network error instead of opening login.
       const { data } = await supabase.auth.getSession();
       const user = data.session?.user;
       if (!user) {
@@ -102,7 +102,7 @@ export default function WriteComfortScreen() {
         return;
       }
 
-      // author_id là cột not null nên vẫn phải truyền, dù RLS ép nó = auth.uid().
+      // author_id is not null, so it must be sent even though RLS forces it to auth.uid().
       const { error } = await supabase.from('comforts').insert({
         author_id: user.id,
         body: body.trim(),
@@ -111,16 +111,16 @@ export default function WriteComfortScreen() {
       });
 
       if (error) {
-        // 42501 = RLS chặn, và policy comfort_insert có ba điều kiện. Hết lượt 5/24h là
-        // lý do hay gặp nhất, nhưng tài khoản anonymous hoặc session hết hạn cũng trả
-        // đúng mã này — hỏi lại để khỏi hiện một câu sai.
+        // 42501 = blocked by RLS; policy comfort_insert has three conditions. The 5/24h quota is the
+        // most common, but an anonymous account or an expired session returns the same code —
+        // check again to avoid showing the wrong message.
         if (error.code === '42501' && (await isRealAccount())) {
           reportError(t.write.limitReached);
         } else if (error.code === '42501') {
           setSessionExpired(true);
           reportError(t.write.sessionExpired);
         } else {
-          // supabase-js trả lỗi mạng qua `error` với code rỗng; có code là server từ chối.
+          // supabase-js reports network errors in `error` with an empty code; a code means the server refused.
           reportError(error.code ? t.write.sendError : t.common.networkError);
         }
         return;
@@ -219,7 +219,7 @@ export default function WriteComfortScreen() {
             })}
           </View>
 
-          {/* Đồng ý rõ ràng trước khi lời vào pool — overview.md §6. */}
+          {/* Explicit consent before the Comfort enters the pool — overview.md §6. */}
           {length >= MIN_COMFORT_LENGTH && tags.length === 0 ? <Text style={s.caption}>{t.write.needTag}</Text> : null}
           <Text style={[s.caption, s.consent]}>{t.write.consent(LANGS.filter((l) => l !== sourceLang))}</Text>
 
