@@ -43,6 +43,7 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Chặn rời màn có nhập liệu | `usePreventRemove` từ `expo-router/react-navigation`, `useNavigation` từ `expo-router` | Có sẵn trong expo-router 57, bắt cả Back hệ thống; không thêm dependency |
 | Xoá lần khóc | Xoá thật (`deleteEntry` trong `app/src/db.ts`: dòng + file); `deleted_at` để dành cho sync | Chưa có sync; xoá mềm để nội dung nhạy cảm nằm lại máy. Xem docs/db.md |
 | Validation | zod (`app/src/validation.ts`) | Một chỗ giữ luật dùng chung cho form, và parse có kiểu dữ liệu server (`comfortRows`, "lời của tôi") thay cho `as`. Schema trả mã ổn định, chữ hiện qua `t.validation[code]` nên i18n vẫn nằm trong từ điển. Đăng nhập chỉ đòi mật khẩu không rỗng, email kiểm lỏng — Supabase mới là nơi quyết định |
+| Ảnh Trước / Sau trên PR | PR một commit, một vấn đề, thấy được trên màn hình ⇒ chụp emulator qua `adb`; ảnh đẩy lên nhánh mồ côi `pr-screenshots`, link theo sha. Luật ở `.claude/rules/pull-requests.md` | User review bằng mắt nhanh hơn đọc diff; ảnh không vào nhánh code để PR giữ đúng một commit |
 | Tên định danh | Tiếng Anh; comment cũng tiếng Anh (`.claude/rules/comments.md`); chuỗi lưu bền (khoá/giá trị `settings` như `nhan_comfort`, `ngon_ngu`, `timeline_dung`, `bat`/`tat`, tên SQL) giữ nguyên | Đổi chuỗi lưu bền là mất cài đặt trên máy người dùng và lệch schema. Xem commit 0671284 |
 
 Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi để cả repo bám theo.
