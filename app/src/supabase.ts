@@ -1,5 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { type AuthError, createClient, isAuthRetryableFetchError } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+
+import { t } from './i18n';
 
 /**
  * The server does 4 things: the Comfort pool, translations, hotlines, and an Entry copy for users who
@@ -65,4 +67,24 @@ export async function ensureSession(): Promise<void> {
 export async function isRealAccount(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
   return !!data.session && data.session.user.is_anonymous !== true;
+}
+
+/**
+ * Every Supabase Auth error code the app shows its own text for — the one place to edit when Supabase
+ * renames a code. Codes not listed fall back to the screen's general message.
+ */
+const AUTH_ERROR_KEY = new Map<string, keyof typeof t.authError>([
+  ['email_address_invalid', 'emailRejected'],
+  ['email_exists', 'emailExists'],
+  ['user_already_exists', 'emailExists'],
+  ['weak_password', 'weakPassword'],
+  ['over_email_send_rate_limit', 'emailNotSent'],
+  ['email_address_not_authorized', 'emailNotSent'],
+]);
+
+/** Network failures come back in `error` instead of being thrown, so a screen's catch never sees them. */
+export function authErrorText(error: AuthError, fallback: string): string {
+  if (isAuthRetryableFetchError(error)) return t.common.networkError;
+  const key = AUTH_ERROR_KEY.get(error.code ?? '');
+  return key ? t.authError[key] : fallback;
 }

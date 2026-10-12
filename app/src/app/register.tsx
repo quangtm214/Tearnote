@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
-import { supabase } from '@/supabase';
+import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
 import { ScreenFooter, LinkRow, PrimaryButton, TextField } from '@/ui';
 import { check, registerForm } from '@/validation';
@@ -55,7 +55,7 @@ export default function RegisterScreen() {
 
       if (sessionData.session?.user.is_anonymous === true) {
         const { data, error } = await supabase.auth.updateUser(credentials);
-        if (error) return reportError(t.register.createError);
+        if (error) return reportError(authErrorText(error, t.register.createError));
         // updateUser never returns a session. While verification is pending the address is in new_email;
         // if it changed immediately (verification off), refresh the JWT so is_anonymous becomes false —
         // otherwise RLS still treats the user as anonymous and blocks writing.
@@ -65,7 +65,9 @@ export default function RegisterScreen() {
       }
 
       const { data, error } = await supabase.auth.signUp(credentials);
-      if (error) return reportError(t.register.createError);
+      if (error) return reportError(authErrorText(error, t.register.createError));
+      // With email verification on, Supabase hides an existing address: no error, but a user with no identities.
+      if (data.user?.identities?.length === 0) return reportError(t.authError.emailExists);
       // No session returned = email verification is on for the project.
       backToLogin(data.session ? 'done' : 'verify');
     } catch {

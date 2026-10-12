@@ -235,6 +235,14 @@ const vi = {
     haveAccount: 'Đã có tài khoản? Đăng nhập',
   },
 
+  /** Supabase Auth errors; which code shows which text is AUTH_ERROR_KEY in supabase.ts. */
+  authError: {
+    emailRejected: 'Email này không dùng được. Kiểm tra lại địa chỉ, hoặc dùng email khác.',
+    emailExists: 'Email này đã có tài khoản. Bấm "Đã có tài khoản? Đăng nhập" để vào.',
+    weakPassword: 'Mật khẩu này quá dễ đoán. Thử mật khẩu dài hơn, trộn chữ và số.',
+    emailNotSent: 'Chưa gửi được thư xác minh, có thể vì đã gửi quá nhiều lần. Đợi một lúc rồi thử lại.',
+  },
+
   /** Hotline screen (help.tsx). Line names and hours are in hotlines.ts. */
   help: {
     intro: 'Nếu bạn hoặc ai đó đang gặp nguy hiểm ngay lúc này, gọi cấp cứu.',

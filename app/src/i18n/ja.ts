@@ -229,6 +229,14 @@ const ja: Dictionary = {
     haveAccount: 'アカウントをお持ちの方はログイン',
   },
 
+  /** Supabase Auth errors; which code shows which text is AUTH_ERROR_KEY in supabase.ts. */
+  authError: {
+    emailRejected: 'このメールアドレスは使えません。アドレスを確認するか、別のメールアドレスを使ってください。',
+    emailExists: 'このメールアドレスはすでに登録されています。「アカウントをお持ちの方はログイン」からログインしてください。',
+    weakPassword: 'このパスワードは推測されやすいです。文字と数字をまぜて、もっと長くしてください。',
+    emailNotSent: '確認メールを送れませんでした。送信回数が多すぎたのかもしれません。少し待ってから試してください。',
+  },
+
   help: {
     intro: '自分や誰かが今まさに危険な状態なら、救急に電話してください。',
     call: (phone) => `${phone} に電話`,
