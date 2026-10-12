@@ -237,13 +237,17 @@ const en: Dictionary = {
     title: 'Create account',
     createError:
       "Couldn't create the account. This email may already have one — try signing in. Or check your connection.",
+    explanation: 'An account is only for writing to strangers. Readers never see your email.',
+    confirmPassword: 'Confirm password',
+    haveAccount: 'Already have an account? Sign in',
+  },
+
+  /** Supabase Auth errors; which code shows which text is AUTH_ERROR_KEY in supabase.ts. */
+  authError: {
     emailRejected: "This email can't be used. Check the address, or use another email.",
     emailExists: 'This email already has an account. Tap "Already have an account? Sign in".',
     weakPassword: 'This password is too easy to guess. Try a longer one that mixes letters and numbers.',
     emailNotSent: "Couldn't send the verification email, maybe because of too many tries. Wait a while and try again.",
-    explanation: 'An account is only for writing to strangers. Readers never see your email.',
-    confirmPassword: 'Confirm password',
-    haveAccount: 'Already have an account? Sign in',
   },
 
   help: {

@@ -70,23 +70,21 @@ export async function isRealAccount(): Promise<boolean> {
 }
 
 /**
- * Text for a failed Supabase Auth call; `fallback` covers codes not listed here.
- * Network failures come back in `error` instead of being thrown, so a screen's catch never sees them.
+ * Every Supabase Auth error code the app shows its own text for — the one place to edit when Supabase
+ * renames a code. Codes not listed fall back to the screen's general message.
  */
+const AUTH_ERROR_KEY = new Map<string, keyof typeof t.authError>([
+  ['email_address_invalid', 'emailRejected'],
+  ['email_exists', 'emailExists'],
+  ['user_already_exists', 'emailExists'],
+  ['weak_password', 'weakPassword'],
+  ['over_email_send_rate_limit', 'emailNotSent'],
+  ['email_address_not_authorized', 'emailNotSent'],
+]);
+
+/** Network failures come back in `error` instead of being thrown, so a screen's catch never sees them. */
 export function authErrorText(error: AuthError, fallback: string): string {
   if (isAuthRetryableFetchError(error)) return t.common.networkError;
-  switch (error.code) {
-    case 'email_address_invalid':
-      return t.register.emailRejected;
-    case 'email_exists':
-    case 'user_already_exists':
-      return t.register.emailExists;
-    case 'weak_password':
-      return t.register.weakPassword;
-    case 'over_email_send_rate_limit':
-    case 'email_address_not_authorized':
-      return t.register.emailNotSent;
-    default:
-      return fallback;
-  }
+  const key = AUTH_ERROR_KEY.get(error.code ?? '');
+  return key ? t.authError[key] : fallback;
 }

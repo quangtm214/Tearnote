@@ -67,7 +67,7 @@ export default function RegisterScreen() {
       const { data, error } = await supabase.auth.signUp(credentials);
       if (error) return reportError(authErrorText(error, t.register.createError));
       // With email verification on, Supabase hides an existing address: no error, but a user with no identities.
-      if (data.user?.identities?.length === 0) return reportError(t.register.emailExists);
+      if (data.user?.identities?.length === 0) return reportError(t.authError.emailExists);
       // No session returned = email verification is on for the project.
       backToLogin(data.session ? 'done' : 'verify');
     } catch {
