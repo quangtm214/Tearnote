@@ -109,7 +109,7 @@ export const formatDate = (ms: number) =>
 export type ComfortState = 'clipped' | 'thanked' | undefined;
 
 /**
- * Entry card. With `onPress` (Timeline) it is pressable, cut at 6 lines, and shows only the first photo.
+ * Entry card. With `onPress` (Timeline) it is pressable, cut at 6 lines, and shows its photos as small polaroids.
  * Without it (single Entry screen) it is read-only and shows the full Reflection and every photo.
  */
 export function EntryCard({
@@ -146,9 +146,15 @@ export function EntryCard({
   const content = (
     <>
       <PhotoCorners />
-      {(onPress ? photoUris.slice(0, 1) : photoUris).map((uri) => (
-        <CardPhoto key={uri} uri={uri} full={!onPress} />
-      ))}
+      {onPress
+        ? photoUris.length > 0 && (
+            <View style={s.polaroidRow}>
+              {photoUris.map((uri, i) => (
+                <Polaroid key={uri} uri={uri} index={i} />
+              ))}
+            </View>
+          )
+        : photoUris.map((uri) => <CardPhoto key={uri} uri={uri} />)}
       <Text style={s.body} numberOfLines={onPress ? 6 : undefined}>
         {entry.reflection || tagText}
       </Text>
@@ -191,18 +197,39 @@ export function EntryCard({
 }
 
 /**
- * Photo on a card. Timeline crops to 4:3 for an even rhythm; the read-only card (`full`) keeps the ratio.
+ * Photo on the read-only card, at its own ratio.
  * `resize` makes Android decode at display size, not the original 12MP.
  */
-function CardPhoto({ uri, full }: { uri: string; full: boolean }) {
+function CardPhoto({ uri }: { uri: string }) {
   const [ratio, setRatio] = useState(4 / 3);
   return (
     <Image
       source={{ uri }}
       resizeMethod="resize"
-      onLoad={full ? (ev) => setRatio(ev.nativeEvent.source.width / ev.nativeEvent.source.height) : undefined}
+      onLoad={(ev) => setRatio(ev.nativeEvent.source.width / ev.nativeEvent.source.height)}
       style={[s.photo, { aspectRatio: ratio }]}
     />
+  );
+}
+
+// Fixed tilt per position, so a card looks the same on every render (DESIGN.md › Shapes).
+const POLAROID_TILT = ['-3deg', '2deg', '-1.5deg'];
+
+/** Timeline photo: a loose square polaroid; up to three overlap in a row. */
+function Polaroid({ uri, index }: { uri: string; index: number }) {
+  return (
+    <View
+      style={[
+        s.polaroid,
+        index > 0 && s.polaroidOverlap,
+        { transform: [{ rotate: POLAROID_TILT[index % POLAROID_TILT.length] }] },
+      ]}
+      // iOS antialiases only the rotated view's own edge, so the photo inside shows jagged edges;
+      // rasterizing flattens frame + photo into one bitmap before it is rotated.
+      shouldRasterizeIOS
+    >
+      <Image source={{ uri }} resizeMethod="resize" style={s.polaroidPhoto} />
+    </View>
   );
 }
 
@@ -579,6 +606,21 @@ const s = StyleSheet.create({
   body: { ...text.body, color: album.ink },
   // Dimmed: a bright photo on a black page at 2 a.m. is glaring.
   photo: { width: '100%', marginBottom: space.md, opacity: 0.85, backgroundColor: album.page },
+  polaroidRow: { flexDirection: 'row', marginBottom: space.md, paddingTop: space.xs },
+  // `pencil`, not white: a bright frame on a black page at 2 a.m. is glaring.
+  polaroid: {
+    ...shadow,
+    flex: 1,
+    maxWidth: 120,
+    padding: 5,
+    paddingBottom: 16,
+    backgroundColor: album.pencil,
+    borderRadius: radius.paper,
+    elevation: 4,
+  },
+  // Each polaroid lies partly over the one before it.
+  polaroidOverlap: { marginLeft: -10 },
+  polaroidPhoto: { width: '100%', aspectRatio: 1, opacity: 0.85, backgroundColor: album.page },
   // Comfort clip: overlaps the bottom-right corner, slightly rotated.
   clip: {
     ...shadow,
