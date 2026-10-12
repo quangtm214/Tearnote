@@ -80,6 +80,8 @@ const AUTH_ERROR_KEY = new Map<string, keyof typeof t.authError>([
   ['weak_password', 'weakPassword'],
   ['over_email_send_rate_limit', 'emailNotSent'],
   ['email_address_not_authorized', 'emailNotSent'],
+  ['invalid_credentials', 'wrongCredentials'],
+  ['email_not_confirmed', 'emailNotConfirmed'],
 ]);
 
 /** Network failures come back in `error` instead of being thrown, so a screen's catch never sees them. */

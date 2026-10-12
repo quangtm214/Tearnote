@@ -248,6 +248,8 @@ const en: Dictionary = {
     emailExists: 'This email already has an account. Tap "Already have an account? Sign in".',
     weakPassword: 'This password is too easy to guess. Try a longer one that mixes letters and numbers.',
     emailNotSent: "Couldn't send the verification email, maybe because of too many tries. Wait a while and try again.",
+    wrongCredentials: "The email or password isn't right. Check them and try again.",
+    emailNotConfirmed: "This email isn't verified yet. Open the verification email in your inbox, tap the link in it, then sign in again.",
   },
 
   help: {
