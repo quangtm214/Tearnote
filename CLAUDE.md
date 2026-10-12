@@ -72,6 +72,10 @@ Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi đ
 * **Toàn bộ bằng tiếng Anh**, kể cả khi mọi thứ khác trong repo là tiếng Việt.
 * **Không `Co-Authored-By`, không trailer nào cả.** Commit đứng tên chủ repo, không đứng tên Claude hay bất kỳ agent nào.
 * Không `--no-verify`. Hook chặn thì sửa message, đừng đi vòng.
+* **Mỗi PR một commit.** Nhiều commit chỉ khi mỗi commit là một ticket khác nhau (PR chồng lên nhánh của
+  ticket khác). Sửa tiếp trong cùng ticket (review, validate đỏ) → `git commit --amend`, rồi
+  `git push --force-with-lease`; không thêm commit "fix review", không merge nhánh khác vào nhánh PR —
+  cần code của ticket khác thì rebase lên nhánh đó.
 
 ```
 feat(app): add settings screen with comfort opt-out switch
