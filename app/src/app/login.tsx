@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
-import { supabase } from '@/supabase';
+import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
 import { ScreenFooter, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
 import { check, loginForm } from '@/validation';
@@ -57,7 +57,7 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const { error } = await supabase.auth.signInWithPassword(form.data);
-      if (error) return reportError(t.login.error);
+      if (error) return reportError(authErrorText(error, t.login.error));
       leave();
     } catch {
       reportError(t.common.networkError);

@@ -241,6 +241,8 @@ const vi = {
     emailExists: 'Email này đã có tài khoản. Bấm "Đã có tài khoản? Đăng nhập" để vào.',
     weakPassword: 'Mật khẩu này quá dễ đoán. Thử mật khẩu dài hơn, trộn chữ và số.',
     emailNotSent: 'Chưa gửi được thư xác minh, có thể vì đã gửi quá nhiều lần. Đợi một lúc rồi thử lại.',
+    wrongCredentials: 'Email hoặc mật khẩu chưa đúng. Kiểm tra lại rồi thử lần nữa.',
+    emailNotConfirmed: 'Email này chưa được xác minh. Mở thư xác minh trong hộp thư của bạn, bấm vào liên kết trong đó rồi đăng nhập lại.',
   },
 
   /** Hotline screen (help.tsx). Line names and hours are in hotlines.ts. */
