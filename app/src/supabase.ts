@@ -1,5 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { type AuthError, createClient, isAuthRetryableFetchError } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+
+import { t } from './i18n';
 
 /**
  * The server does 4 things: the Comfort pool, translations, hotlines, and an Entry copy for users who
@@ -65,4 +67,26 @@ export async function ensureSession(): Promise<void> {
 export async function isRealAccount(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
   return !!data.session && data.session.user.is_anonymous !== true;
+}
+
+/**
+ * Text for a failed Supabase Auth call; `fallback` covers codes not listed here.
+ * Network failures come back in `error` instead of being thrown, so a screen's catch never sees them.
+ */
+export function authErrorText(error: AuthError, fallback: string): string {
+  if (isAuthRetryableFetchError(error)) return t.common.networkError;
+  switch (error.code) {
+    case 'email_address_invalid':
+      return t.register.emailRejected;
+    case 'email_exists':
+    case 'user_already_exists':
+      return t.register.emailExists;
+    case 'weak_password':
+      return t.register.weakPassword;
+    case 'over_email_send_rate_limit':
+    case 'email_address_not_authorized':
+      return t.register.emailNotSent;
+    default:
+      return fallback;
+  }
 }
