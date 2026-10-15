@@ -47,6 +47,8 @@ const ja: Dictionary = {
     pause: '一時停止',
     listenA11y: (label, seconds) =>
       `${label}、録音、${seconds >= 60 ? `${Math.floor(seconds / 60)}分` : ''}${seconds % 60}秒`,
+    openPhotoHint: '写真を大きく表示します',
+    closePhoto: '写真を閉じる',
   },
 
   duration: (minutes) =>
