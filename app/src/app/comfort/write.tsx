@@ -5,6 +5,7 @@ import {
   AccessibilityInfo,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -161,8 +162,9 @@ export default function WriteComfortScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={s.screen} behavior="padding">
-        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      {/* Android: KAV, iOS: ScrollView keyboard insets. Why both: new.tsx. */}
+      <KeyboardAvoidingView style={s.screen} behavior="padding" enabled={Platform.OS === 'android'}>
+        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
           <Text style={[pencil.title, s.title]} accessibilityRole="header">
             {t.write.title}
           </Text>

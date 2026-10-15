@@ -14,6 +14,7 @@ import {
   AccessibilityInfo,
   Image,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -196,9 +197,11 @@ export default function NewEntryScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      {/* Android edge-to-edge does not resize for the keyboard: without this the keyboard covers the input. */}
-      <KeyboardAvoidingView style={styles.screen} behavior="padding">
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      {/* Android edge-to-edge does not resize for the keyboard: without this the keyboard covers the input.
+          iOS does not scroll to the focused input by itself; only automaticallyAdjustKeyboardInsets does, and it
+          measures against the keyboard, so KAV padding on top would leave the input behind the footer. */}
+      <KeyboardAvoidingView style={styles.screen} behavior="padding" enabled={Platform.OS === 'android'}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
           {/* Top half is read-only; every touch target is in the bottom half, within thumb reach. */}
           <View style={styles.upperHalf}>
             <Text style={[pencil.title, styles.title]} accessibilityRole="header">
