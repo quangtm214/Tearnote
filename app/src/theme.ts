@@ -33,6 +33,11 @@ export const album = {
   lamp: '#E2A55A',
   /** Pressed Entry card, between `card` and `clip`: shadows barely show on black, so pressing lightens. */
   cardLifted: '#322C27',
+  /**
+   * Errors only: text and border of a field that failed validation, and form error lines (~7:1 on `page`).
+   * Warm terracotta, not alarm red; never for selection or emphasis — `lamp` stays the only accent.
+   */
+  alert: '#E38B76',
   /** Scrim behind dialogs and behind the × on thumbnails: warm black, not #000. */
   scrim: 'rgba(10, 8, 7, 0.72)',
   /**
