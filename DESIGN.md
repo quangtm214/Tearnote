@@ -18,6 +18,7 @@ colors:
   den: "#E2A55A"
   tam-nhac: "#322C27"
   che: "rgba(10, 8, 7, 0.72)"
+  dat-nung: "#E38B76"
 typography:
   tieu-de:
     fontFamily: "PatrickHand"
@@ -165,6 +166,9 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 ### Primary
 - **Đèn Còn Sáng** (`den`): hổ phách ấm, chỉ cho lối "Cần trợ giúp ngay" (~8:1 trên trang). Viền 1.5px khi nghỉ, tô kín khi nhấn. Cố ý không phải đỏ cảnh báo.
 
+### Báo lỗi
+- **Đất Nung** (`dat-nung`, `album.alert` trong theme): đỏ đất nung ấm, chỉ cho lỗi — chữ và viền ô nhập sai, dòng lỗi của form (~7:1 trên trang). Không phải đỏ cảnh báo chói; không dùng cho trạng thái chọn, nhấn mạnh hay trang trí. Không tính là màu nổi thứ hai của luật Một Ngọn Đèn: nó chỉ hiện khi có sự cố.
+
 ### Neutral
 - **Trang Giấy Bồi** (`trang`): nền mọi màn trong world, và nền chân màn cố định.
 - **Tấm Dán** (`tam`): mặt Entry và nút chính. Sáng hơn trang vừa đủ để thấy nó nằm trên trang.
@@ -248,7 +252,7 @@ Dưới cùng, sau chân màn; nền `trang`, **không** hairline riêng (hairli
 - **Lựa chọn** (Tag, thời điểm, thời lượng, ngôn ngữ): mảnh `tam` bo 14 cao 48, chữ `nut` màu `but-chi`; nhấn thì nền `kep` (đang chọn thì mờ 0.85). Lựa chọn ngôn ngữ (Cài đặt; "Bạn viết bằng tiếng gì?" ở màn viết lời) ghi tên ngôn ngữ bằng chính nó: Tiếng Việt · English · 日本語. Chọn thì tô `chu`, chữ đổi sang `trang` — tương phản đủ để thấy qua mắt nhoè mà không cần màu thứ hai. Hết lượt chọn thì các lựa chọn còn lại mờ 0.35. Screen reader: chọn một là `radio`, chọn nhiều (Tag) là `checkbox`.
 - **Nhãn mục** ("Lúc nào?", "Vì chuyện gì?"): `ngay` (Patrick Hand) màu `but-chi`, vai trò header.
 - **Chọn cường độ**: slider tự dựng (Gesture Responder của RN core), vùng chạm cao 48 chiếm hết bề ngang. Thanh là 5 đoạn cao 8, khe 3, bo 4; đoạn tới mức đã chọn tô `album.calendar[1..5]` (đậm dần về cuối), đoạn trên mức là `vien-mo`. Con trượt tròn 28 màu `chu`, viền 2 màu `trang` như khoét khỏi thanh, bóng "nằm trên trang", tâm ở giữa đoạn đang chọn. Kéo hoặc chạm, bắt vào 5 nấc; cạnh đó là giọt cường độ xem trước (đầy dần khi kéo — đúng hình sẽ nằm trên tấm) rồi "3 / 5" bằng `chu-thich`. Screen reader: `adjustable`, vuốt lên/xuống để tăng/giảm.
-- **Ô nhập** (`TextField`, mọi ô dùng nó): nền `tam`, bo 14, chữ `than` màu `chu`, placeholder và con trỏ `but-chi`. Viền 2px luôn có — trong suốt khi nghỉ, `but-chi` khi đang gõ (focus thấy được mà không xê dịch chữ).
+- **Ô nhập** (`TextField`, mọi ô dùng nó): nền `tam`, bo 14, chữ `than` màu `chu`, placeholder và con trỏ `but-chi`. Viền 2px luôn có — trong suốt khi nghỉ, `but-chi` khi đang gõ (focus thấy được mà không xê dịch chữ). Sai luật kiểm (prop `error`): viền `dat-nung`, ngay dưới ô (cách `xs`) là icon `alert-circle-outline` 18 + câu lỗi `phu` màu `dat-nung`; screen reader được đọc câu lỗi khi bấm gửi. Mỗi lần gửi chỉ báo lỗi đầu tiên. Lỗi từ server (sai mật khẩu, mất mạng…) vẫn là dòng `than` màu `dat-nung` cuối form.
 - **Kèm ảnh hay ghi âm** (màn ghi, sau ô Reflection): ba nút phụ có icon "Chụp ảnh" (`camera-outline`) · "Chọn ảnh" (`image-outline`) · "Ghi âm" (`microphone-outline`) nằm một hàng (xuống dòng khi chật), khe `sm`, luôn hiện. Ảnh đã chọn là ảnh nhỏ vuông 96, hạ sáng 0.85, góc dán 10 vẽ **đè** lên mép ảnh như ảnh thật giữ trong album, dấu × tròn 24 nền `che` ở góc trên phải (trang trí; cả ảnh là một vùng bấm), khe giữa ảnh 12; bấm ảnh thì hộp thoại "Bỏ ảnh này?" (Bỏ / Giữ lại). Đủ 3 ảnh thì hai nút ảnh mờ 0.35; đang ghi thì cả ba mờ. Đang ghi: chú thích `chu-thich` màu `chu` "Đang ghi âm · 0:12 / 5:00", dưới là nút phụ "Dừng ghi"; ghi xong thì thay bằng dải Nghe lại và nút phụ "Bỏ ghi âm".
 - **Nút gạt** (Cài đặt): Switch của nền tảng; bật: track `but-chi`, thumb `chu`; tắt: track `kep`, thumb `but-chi`. Cả hàng (nhãn + dòng phụ + công tắc) là một vùng bấm vai trò `switch`.
 - **Ngôn ngữ** (cuối Cài đặt): nhãn mục `ngay` màu `but-chi` "Ngôn ngữ" rồi một hàng lựa chọn (chọn một). Bấm là cả giao diện dựng lại ở ngôn ngữ mới, vẫn đứng ở Cài đặt.

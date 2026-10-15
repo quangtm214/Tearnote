@@ -26,6 +26,8 @@ export default function RegisterScreen() {
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Validation error, shown under its own field; `error` is the server's answer.
+  const [invalid, setInvalid] = useState<{ field: string; message: string } | null>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
 
@@ -41,9 +43,14 @@ export default function RegisterScreen() {
   async function register() {
     if (busy) return;
     setError(null);
+    setInvalid(null);
 
     const form = check(registerForm, { email, password, confirm });
-    if ('code' in form) return reportError(t.validation[form.code]);
+    if ('code' in form) {
+      const message = t.validation[form.code];
+      setInvalid({ field: form.field, message });
+      return AccessibilityInfo.announceForAccessibility(message);
+    }
     const credentials = { email: form.data.email, password: form.data.password };
 
     setBusy(true);
@@ -99,6 +106,7 @@ export default function RegisterScreen() {
             textContentType="emailAddress"
             autoComplete="email"
             placeholder={t.common.emailPlaceholder}
+            error={invalid?.field === 'email' ? invalid.message : null}
             returnKeyType="next"
             submitBehavior="submit"
             onSubmitEditing={() => passwordRef.current?.focus()}
@@ -117,6 +125,7 @@ export default function RegisterScreen() {
             textContentType="newPassword"
             autoComplete="new-password"
             placeholder={t.common.passwordHint}
+            error={invalid?.field === 'password' ? invalid.message : null}
             returnKeyType="next"
             submitBehavior="submit"
             onSubmitEditing={() => confirmRef.current?.focus()}
@@ -134,6 +143,7 @@ export default function RegisterScreen() {
             secureTextEntry
             textContentType="newPassword"
             autoComplete="new-password"
+            error={invalid?.field === 'confirm' ? invalid.message : null}
             returnKeyType="go"
             onSubmitEditing={() => void register()}
             editable={!busy}
@@ -157,5 +167,5 @@ const s = StyleSheet.create({
   title: { color: album.ink },
   explanation: { ...text.body, color: album.pencil },
   label: { ...text.caption, color: album.pencil, marginTop: space.sm },
-  error: { ...text.body, color: album.ink },
+  error: { ...text.body, color: album.alert },
 });

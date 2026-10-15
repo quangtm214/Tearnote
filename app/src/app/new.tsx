@@ -453,6 +453,6 @@ const styles = StyleSheet.create({
   recordingBox: { marginTop: space.md },
   buttonRow: { marginTop: space.sm },
   attachRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
-  error: { ...text.body, color: album.ink, marginTop: space.md },
+  error: { ...text.body, color: album.alert, marginTop: space.md },
   cancelRow: { marginTop: space.lg },
 });

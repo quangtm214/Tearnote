@@ -25,6 +25,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Validation error, shown under its own field; `error` is the server's answer.
+  const [invalid, setInvalid] = useState<{ field: string; message: string } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const passwordRef = useRef<TextInput>(null);
   // Sent back by register.tsx when it finishes.
@@ -49,10 +51,15 @@ export default function LoginScreen() {
   async function signIn() {
     if (busy) return;
     setError(null);
+    setInvalid(null);
     setNotice(null);
 
     const form = check(loginForm, { email, password });
-    if ('code' in form) return reportError(t.validation[form.code]);
+    if ('code' in form) {
+      const message = t.validation[form.code];
+      setInvalid({ field: form.field, message });
+      return AccessibilityInfo.announceForAccessibility(message);
+    }
 
     setBusy(true);
     try {
@@ -88,6 +95,7 @@ export default function LoginScreen() {
             textContentType="emailAddress"
             autoComplete="email"
             placeholder={t.common.emailPlaceholder}
+            error={invalid?.field === 'email' ? invalid.message : null}
             returnKeyType="next"
             submitBehavior="submit"
             onSubmitEditing={() => passwordRef.current?.focus()}
@@ -105,13 +113,14 @@ export default function LoginScreen() {
             secureTextEntry
             autoComplete="password"
             placeholder={t.common.passwordHint}
+            error={invalid?.field === 'password' ? invalid.message : null}
             returnKeyType="go"
             onSubmitEditing={() => void signIn()}
             editable={!busy}
           />
 
           {error ? <Text style={s.error}>{error}</Text> : null}
-          {notice ? <Text style={s.error}>{notice}</Text> : null}
+          {notice ? <Text style={s.notice}>{notice}</Text> : null}
 
           <LinkRow label={t.login.createAccount} chevron onPress={() => router.push('/register')} />
           <LinkRow icon="arrow-left" label={t.login.later} onPress={leave} />
@@ -130,5 +139,6 @@ const s = StyleSheet.create({
   title: { color: album.ink },
   explanation: { ...text.body, color: album.pencil },
   label: { ...text.caption, color: album.pencil, marginTop: space.sm },
-  error: { ...text.body, color: album.ink },
+  error: { ...text.body, color: album.alert },
+  notice: { ...text.body, color: album.ink },
 });

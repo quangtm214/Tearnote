@@ -258,5 +258,5 @@ const s = StyleSheet.create({
   consent: { marginTop: space.md },
   textArea: { minHeight: 160, paddingVertical: space.md - 2 },
   counter: { ...text.caption, color: album.pencil },
-  error: { ...text.body, color: album.ink },
+  error: { ...text.body, color: album.alert },
 });

@@ -480,33 +480,42 @@ export function Pill({
 
 /**
  * Text input. The 2px border is always there (transparent until focused) so focus does not shift the text.
- * `ref` is a normal prop in React 19.
+ * `error` turns the border `alert` and shows the message right under the field. `ref` is a normal prop in React 19.
  */
 export function TextField({
   ref,
   style,
+  error,
   onFocus,
   onBlur,
   ...rest
-}: TextInputProps & { ref?: Ref<TextInput> }) {
+}: TextInputProps & { ref?: Ref<TextInput>; error?: string | null }) {
   const [focus, setFocus] = useState(false);
   return (
-    <TextInput
-      ref={ref}
-      placeholderTextColor={album.pencil}
-      selectionColor={album.pencil}
-      keyboardAppearance="dark"
-      {...rest}
-      onFocus={(e) => {
-        setFocus(true);
-        onFocus?.(e);
-      }}
-      onBlur={(e) => {
-        setFocus(false);
-        onBlur?.(e);
-      }}
-      style={[s.input, focus && s.inputFocus, style]}
-    />
+    <View>
+      <TextInput
+        ref={ref}
+        placeholderTextColor={album.pencil}
+        selectionColor={album.pencil}
+        keyboardAppearance="dark"
+        {...rest}
+        onFocus={(e) => {
+          setFocus(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocus(false);
+          onBlur?.(e);
+        }}
+        style={[s.input, focus && s.inputFocus, error && s.inputError, style]}
+      />
+      {error ? (
+        <View style={s.fieldError}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={18} color={album.alert} style={s.fieldErrorIcon} />
+          <Text style={s.fieldErrorText}>{error}</Text>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -749,6 +758,11 @@ const s = StyleSheet.create({
     minHeight: touch.min,
   },
   inputFocus: { borderColor: album.pencil },
+  inputError: { borderColor: album.alert },
+  fieldError: { flexDirection: 'row', gap: space.xs, marginTop: space.xs },
+  // Centers the 18 icon on the first 20-high caption line.
+  fieldErrorIcon: { marginTop: 1 },
+  fieldErrorText: { ...text.caption, color: album.alert, flex: 1 },
 
   backdrop: {
     flex: 1,

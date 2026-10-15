@@ -132,5 +132,5 @@ const s = StyleSheet.create({
   explanation: { ...text.body, color: album.pencil },
   body: { ...text.body, color: album.ink },
   muted: { color: album.pencil },
-  error: { ...text.body, color: album.ink, marginTop: space.md },
+  error: { ...text.body, color: album.alert, marginTop: space.md },
 });
