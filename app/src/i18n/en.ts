@@ -58,6 +58,8 @@ const en: Dictionary = {
     pause: 'Pause',
     listenA11y: (label, seconds) =>
       `${label}, voice note, ${seconds >= 60 ? `${count(Math.floor(seconds / 60), 'minute', 'minutes')} ` : ''}${count(seconds % 60, 'second', 'seconds')}`,
+    openPhotoHint: 'Opens the photo full size',
+    closePhoto: 'Close photo',
   },
 
   duration: (minutes) =>

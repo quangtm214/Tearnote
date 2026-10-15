@@ -109,8 +109,9 @@ export const formatDate = (ms: number) =>
 export type ComfortState = 'clipped' | 'thanked' | undefined;
 
 /**
- * Entry card. With `onPress` (Timeline) it is pressable, cut at 6 lines, and shows its photos as small polaroids.
- * Without it (single Entry screen) it is read-only and shows the full Reflection and every photo.
+ * Entry card; photos are a row of small polaroids. With `onPress` (Timeline) the whole card is pressable
+ * and cut at 6 lines. Without it (single Entry screen) it shows the full Reflection, and each photo opens
+ * full size.
  */
 export function EntryCard({
   entry,
@@ -123,6 +124,7 @@ export function EntryCard({
   comfortState?: ComfortState;
   onPress?: () => void;
 }) {
+  const [openPhoto, setOpenPhoto] = useState<string | null>(null);
   const tagText = tagLabels(entry.tags);
   const photoUris = attachments.filter((a) => a.kind === 'image').map((a) => a.uri);
   // Without a Reflection the Tags are already the card body, so the caption does not repeat them.
@@ -143,18 +145,15 @@ export function EntryCard({
   ]
     .filter(Boolean)
     .join(', ');
-  const content = (
+  const photoRow = photoUris.length > 0 && (
+    <View style={s.polaroidRow}>
+      {photoUris.map((uri, i) => (
+        <Polaroid key={uri} uri={uri} index={i} onPress={onPress ? undefined : () => setOpenPhoto(uri)} />
+      ))}
+    </View>
+  );
+  const words = (
     <>
-      <PhotoCorners />
-      {onPress
-        ? photoUris.length > 0 && (
-            <View style={s.polaroidRow}>
-              {photoUris.map((uri, i) => (
-                <Polaroid key={uri} uri={uri} index={i} />
-              ))}
-            </View>
-          )
-        : photoUris.map((uri) => <CardPhoto key={uri} uri={uri} />)}
       <Text style={s.body} numberOfLines={onPress ? 6 : undefined}>
         {entry.reflection || tagText}
       </Text>
@@ -168,12 +167,12 @@ export function EntryCard({
         <Text style={[pencil.note, s.note]}>{parts.join(' · ')}</Text>
         <TearDrop level={entry.intensity} />
       </View>
-      {clipLabel && (
-        <View style={s.clip}>
-          <Text style={[pencil.note, s.clipText]}>{clipLabel}</Text>
-        </View>
-      )}
     </>
+  );
+  const clip = clipLabel && (
+    <View style={s.clip}>
+      <Text style={[pencil.note, s.clipText]}>{clipLabel}</Text>
+    </View>
   );
   return (
     <View style={[s.cardSlot, clipLabel ? s.belowClip : null]}>
@@ -184,51 +183,96 @@ export function EntryCard({
           accessibilityLabel={spokenLabel}
           style={({ pressed }) => [s.card, pressed && s.lifted]}
         >
-          {content}
+          <PhotoCorners />
+          {photoRow}
+          {words}
+          {clip}
         </Pressable>
       ) : (
-        // Not a Pressable: TalkBack says "double-tap to activate" even when onPress is missing.
-        <View accessible accessibilityRole="text" accessibilityLabel={spokenLabel} style={s.card}>
-          {content}
+        <View style={s.card}>
+          <PhotoCorners />
+          {/* Photos stay outside the merged screen-reader item, or it would swallow their buttons. */}
+          {photoRow}
+          {/* Not a Pressable: TalkBack says "double-tap to activate" even when onPress is missing. */}
+          <View accessible accessibilityRole="text" accessibilityLabel={spokenLabel}>
+            {words}
+          </View>
+          {clip}
+          <PhotoViewer uri={openPhoto} onClose={() => setOpenPhoto(null)} />
         </View>
       )}
     </View>
   );
 }
 
-/**
- * Photo on the read-only card, at its own ratio.
- * `resize` makes Android decode at display size, not the original 12MP.
- */
-function CardPhoto({ uri }: { uri: string }) {
-  const [ratio, setRatio] = useState(4 / 3);
+/** One photo full size over the dimmed page. Tapping anywhere or Back closes it. */
+function PhotoViewer({ uri, onClose }: { uri: string | null; onClose: () => void }) {
+  const insets = useSafeAreaInsets();
+  const [area, setArea] = useState({ width: 0, height: 0 });
+  // Width / height of the photo; square until it loads.
+  const [loaded, setLoaded] = useState({ uri: '', ratio: 1 });
+  const ratio = loaded.uri === uri ? loaded.ratio : 1;
+  // Sized to the photo itself, not `contain` in the whole area: the round corners must sit on the photo's edge.
+  const width = Math.min(area.width, area.height * ratio);
   return (
-    <Image
-      source={{ uri }}
-      resizeMethod="resize"
-      onLoad={(ev) => setRatio(ev.nativeEvent.source.width / ev.nativeEvent.source.height)}
-      style={[s.photo, { aspectRatio: ratio }]}
-    />
+    <Modal
+      visible={!!uri}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onClose}
+    >
+      <Pressable
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel={t.card.closePhoto}
+        style={[s.viewer, { paddingTop: insets.top + space.sm, paddingBottom: insets.bottom + space.md }]}
+      >
+        <MaterialCommunityIcons name="close" size={28} color={album.ink} style={s.viewerClose} />
+        <View style={s.viewerArea} onLayout={(e) => setArea(e.nativeEvent.layout)}>
+          {/* `resize` makes Android decode at display size, not the original 12MP. */}
+          {uri ? (
+            <Image
+              source={{ uri }}
+              resizeMethod="resize"
+              onLoad={(e) => setLoaded({ uri, ratio: e.nativeEvent.source.width / e.nativeEvent.source.height })}
+              style={[s.viewerPhoto, { width, height: width / ratio }]}
+            />
+          ) : null}
+        </View>
+      </Pressable>
+    </Modal>
   );
 }
 
 // Fixed tilt per position, so a card looks the same on every render (DESIGN.md › Shapes).
 const POLAROID_TILT = ['-3deg', '2deg', '-1.5deg'];
 
-/** Timeline photo: a loose square polaroid; up to three overlap in a row. */
-function Polaroid({ uri, index }: { uri: string; index: number }) {
-  return (
-    <View
-      style={[
-        s.polaroid,
-        index > 0 && s.polaroidOverlap,
-        { transform: [{ rotate: POLAROID_TILT[index % POLAROID_TILT.length] }] },
-      ]}
-      // iOS antialiases only the rotated view's own edge, so the photo inside shows jagged edges;
-      // rasterizing flattens frame + photo into one bitmap before it is rotated.
+/** A loose square polaroid; up to three overlap in a row. With `onPress` it is a button on its own. */
+function Polaroid({ uri, index, onPress }: { uri: string; index: number; onPress?: () => void }) {
+  const frame = [
+    s.polaroid,
+    index > 0 && s.polaroidOverlap,
+    { transform: [{ rotate: POLAROID_TILT[index % POLAROID_TILT.length] }] },
+  ];
+  const photo = <Image source={{ uri }} resizeMethod="resize" style={s.polaroidPhoto} />;
+  // shouldRasterizeIOS: iOS antialiases only the rotated view's own edge, so the photo inside shows jagged
+  // edges; rasterizing flattens frame + photo into one bitmap before it is rotated.
+  return onPress ? (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={t.newEntry.photoN(index + 1)}
+      accessibilityHint={t.card.openPhotoHint}
+      style={({ pressed }) => [frame, pressed && s.dim]}
       shouldRasterizeIOS
     >
-      <Image source={{ uri }} resizeMethod="resize" style={s.polaroidPhoto} />
+      {photo}
+    </Pressable>
+  ) : (
+    <View style={frame} shouldRasterizeIOS>
+      {photo}
     </View>
   );
 }
@@ -604,8 +648,6 @@ const s = StyleSheet.create({
     elevation: 10,
   },
   body: { ...text.body, color: album.ink },
-  // Dimmed: a bright photo on a black page at 2 a.m. is glaring.
-  photo: { width: '100%', marginBottom: space.md, opacity: 0.85, backgroundColor: album.page },
   polaroidRow: { flexDirection: 'row', marginBottom: space.md, paddingTop: space.xs },
   // `pencil`, not white: a bright frame on a black page at 2 a.m. is glaring.
   polaroid: {
@@ -620,7 +662,14 @@ const s = StyleSheet.create({
   },
   // Each polaroid lies partly over the one before it.
   polaroidOverlap: { marginLeft: -10 },
-  polaroidPhoto: { width: '100%', aspectRatio: 1, opacity: 0.85, backgroundColor: album.page },
+  // Dimmed: a bright photo on a black page at 2 a.m. is glaring.
+  // Radius 3: half the frame's 6, so the photo's corners follow the frame (DESIGN.md › Shapes).
+  polaroidPhoto: { width: '100%', aspectRatio: 1, opacity: 0.85, backgroundColor: album.page, borderRadius: 3 },
+  viewer: { flex: 1, backgroundColor: album.scrim, paddingHorizontal: space.md },
+  viewerClose: { alignSelf: 'flex-end', padding: space.sm },
+  viewerArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // Not dimmed like the polaroids: at 0.85 the page behind shows through the photo.
+  viewerPhoto: { borderRadius: radius.paper },
   // Comfort clip: overlaps the bottom-right corner, slightly rotated.
   clip: {
     ...shadow,

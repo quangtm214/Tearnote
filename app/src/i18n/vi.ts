@@ -48,6 +48,8 @@ const vi = {
     pause: 'Tạm dừng',
     listenA11y: (label: string, seconds: number) =>
       `${label} đoạn ghi âm, dài ${seconds >= 60 ? `${Math.floor(seconds / 60)} phút ` : ''}${seconds % 60} giây`,
+    openPhotoHint: 'Mở ảnh lớn',
+    closePhoto: 'Đóng ảnh',
   },
 
   /** Label of the chosen duration; values not in DURATION_OPTIONS fall back to minutes. */
