@@ -1,6 +1,6 @@
 # Tag — contract giữa Entry và Comfort
 
-Đây là nguồn sự thật cho danh sách Tag. Entry và Comfort dùng chung đúng danh sách này — đó là toàn bộ cơ chế match. Đổi danh sách sau khi có dữ liệu là migrate đau, nên coi nó là contract.
+Đây là source of truth cho danh sách Tag. Entry và Comfort dùng chung đúng danh sách này — đó là toàn bộ cơ chế match. Đổi danh sách sau khi có dữ liệu là migrate đau, nên coi nó là contract.
 
 ## Danh sách
 
@@ -21,17 +21,17 @@ Tag mô tả **hoàn cảnh**, không mô tả cảm xúc. Cường độ cảm 
 
 `id` là thứ lưu trong DB và dùng để match. Nhãn hiển thị nằm trong app, không lưu trong DB.
 
-Ba cột `vi`, `en`, `ja` phải trùng từng chữ với `TAG_LABEL` trong `app/src/tags.ts` (test kiểm). Nhãn là thứ khiến người viết và người nhận hiểu một Tag giống nhau — kể cả khi hai người dùng hai ngôn ngữ — nên đổi nhãn cũng là đổi contract: `grief` là mất người thân chứ không phải mọi mất mát; `moved` phải nói rõ là vì vui, vì "xúc động" trong tiếng Việt dùng được cả cho buồn — mà `moved` không lùi về `unknown`.
+Ba cột `vi`, `en`, `ja` phải trùng từng chữ với `TAG_LABEL` trong `app/src/tags.ts` (test check). Nhãn là thứ khiến người viết và người nhận hiểu một Tag giống nhau — kể cả khi hai người dùng hai ngôn ngữ — nên đổi nhãn cũng là đổi contract: `grief` là mất người thân chứ không phải mọi mất mát; `moved` phải nói rõ là vì vui, vì "xúc động" trong tiếng Việt dùng được cả cho buồn — mà `moved` không fallback về `unknown`.
 
 Cột `vi` là nghĩa gốc; `en` và `ja` dịch theo nghĩa đó, không dịch theo id. Vì vậy không dùng "Grief" / 喪失 (mọi mất mát), "Heartbreak" / 失恋 (chỉ chia tay), "Moved" (tiếng Anh còn là "chuyển nhà", và không nói là vì vui), và không dùng "Anxiety" — nghe như tên một chẩn đoán (overview.md §6: không chẩn đoán).
 
-## Luật
+## Rule
 
 - **Entry** chọn tối đa 3 Tag. Không chọn gì thì mặc định là `unknown` — không ép người đang khóc phải phân loại mình.
 - **Comfort** chọn tối đa 2 Tag. Ít Tag hơn thì pool đầy hơn.
 - **Match**: Comfort có ít nhất một Tag trùng với Entry.
-- **Pool trống thì lùi về `unknown`.** Comfort gắn `unknown` là lời động viên chung, không gắn hoàn cảnh cụ thể — nó vừa là một pool thật, vừa là lưới đỡ cho những Tag còn ít Comfort.
-- **`moved` không lùi về `unknown`.** Người khóc vì hạnh phúc không nên nhận một lời an ủi viết cho nỗi buồn. Không có Comfort `moved` thì không trả gì cả.
+- **Pool trống thì fallback về `unknown`.** Comfort gắn `unknown` là lời động viên chung, không gắn hoàn cảnh cụ thể — nó vừa là một pool thật, vừa là lưới đỡ cho những Tag còn ít Comfort.
+- **`moved` không fallback về `unknown`.** Người khóc vì hạnh phúc không nên nhận một lời an ủi viết cho nỗi buồn. Không có Comfort `moved` thì không trả gì cả.
 
 ## Vì sao không có Tag cho khủng hoảng / tự hại
 

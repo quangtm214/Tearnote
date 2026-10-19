@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Sheet: `TearNote-Bug-Change`, spreadsheet id `1nErKf9eBY7PCtQAnMxMjh5pCqzQ2on4zk0MdR24HOEM`, tab `Bug`.
 Ghi/đọc qua **Zapier Google Sheets** (Google Drive MCP chỉ đọc được). Tool Zapier là deferred —
-nạp bằng ToolSearch `select:mcp__Zapier-MCP__execute_zapier_read_action,mcp__Zapier-MCP__execute_zapier_write_action`.
+load bằng ToolSearch `select:mcp__Zapier-MCP__execute_zapier_read_action,mcp__Zapier-MCP__execute_zapier_write_action`.
 
 ## Cột tab Bug
 
@@ -34,7 +34,7 @@ Mọi lệnh dùng `selected_api: "GoogleSheetsV2CLIAPI"`, `action: "_zap_raw_re
   `method: PUT`, `url: .../values/Bug!J<row>:M<row>`, `querystring: {"valueInputOption":"USER_ENTERED"}`,
   `body: {"range":"Bug!J<row>:M<row>","values":[["<J>","<K>","<L>","<M>"]]}`
 
-Locale sheet là `vi_VN`: nếu có ghi công thức thì ngăn đối số bằng `;`, không phải `,`.
+Locale sheet là `vi_VN`: nếu có ghi công thức thì phân cách đối số bằng `;`, không phải `,`.
 Ngày ghi dạng `yyyy-mm-dd`. Sau mỗi lần ghi, đọc lại dòng đó để chắc đã vào.
 
 ## Quy trình

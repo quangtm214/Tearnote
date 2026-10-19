@@ -28,7 +28,7 @@ if [ -z "$title" ]; then
 fi
 
 if [ "$extra" -ne 0 ]; then
-  fail "chi duoc co title, khong duoc them noi dung phia sau"
+  fail "chi duoc co title, khong duoc co body"
 fi
 
 if [ "$len" -gt 100 ]; then

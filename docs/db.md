@@ -2,10 +2,10 @@
 
 Hai kho tách biệt. Đọc [ADR 0004](./adr/0004-luu-tru-local-first.md) trước để hiểu vì sao.
 
-- **SQLite trên máy** — nguồn sự thật của Entry. Luôn có, kể cả khi không đăng nhập.
+- **SQLite trên máy** — source of truth của Entry. Luôn có, kể cả khi không đăng nhập.
 - **Supabase (Postgres)** — pool Comfort, bản dịch, hotline, và bản sao Entry cho ai bật sync.
 
-Đã apply lên project thật và kiểm bằng SQL — xem cuối mục `request_comfort()`.
+Đã apply lên project thật và verify bằng SQL — xem cuối mục `request_comfort()`.
 
 ## Về "tài khoản"
 
@@ -30,9 +30,9 @@ Xoá dữ liệu ⇒ `on delete cascade` ⇒ Comfort của họ biến mất kh�
 | `lang` | `en` `vi` `ja` |
 | `comfort_status` | `pending` `approved` `rejected` `retracted` |
 
-Enum chứ không phải text tự do: contract ở [tags.md](./tags.md) do DB ép, không phải app tự giữ. Thêm giá trị về sau là `alter type ... add value`.
+Enum chứ không phải text tự do: contract ở [tags.md](./tags.md) do DB enforce, không phải app tự giữ. Thêm giá trị về sau là `alter type ... add value`.
 
-Thêm một ngôn ngữ = một giá trị `lang` (migration một dòng) + `LANGS` và một file từ điển trong app (`app/src/i18n/`). Không thêm cột, không thêm bảng; batch đêm tự dịch backlog sang giá trị mới ([ADR 0003](./adr/0003-dich-comfort-theo-batch.md)). `LANGS` phải khớp enum (`i18n.test.ts` kiểm).
+Thêm một ngôn ngữ = một giá trị `lang` (migration một dòng) + `LANGS` và một file dịch trong app (`app/src/i18n/`). Không thêm cột, không thêm bảng; batch đêm tự dịch backlog sang giá trị mới ([ADR 0003](./adr/0003-dich-comfort-theo-batch.md)). `LANGS` phải khớp enum (`i18n.test.ts` check).
 
 ---
 
@@ -55,7 +55,7 @@ Lời động viên ẩn danh, bản gốc, bằng ngôn ngữ người viết.
 
 **Index:** GIN trên `tags` (partial, `status='approved'`) · `(status, created_at)`
 
-**Chỉ tài khoản thật, tối đa 5 Comfort / 24h** — ép ở tầng RLS, không phải trong app:
+**Chỉ tài khoản thật, tối đa 5 Comfort / 24h** — enforce ở tầng RLS, không phải trong app:
 
 ```sql
 create policy comfort_insert on comforts for insert to authenticated
@@ -68,7 +68,7 @@ with check (
 );
 ```
 
-Cửa sổ trượt 24h chứ không phải "mỗi ngày" — tránh phải chọn ngày theo múi giờ nào cho một app đa quốc gia.
+Sliding window 24h chứ không phải "mỗi ngày" — tránh phải chọn ngày theo múi giờ nào cho một app đa quốc gia.
 
 ## `comfort_translations`
 
@@ -83,7 +83,7 @@ Bảng riêng chứ không phải cột trong `comforts` — thêm ngôn ngữ t
 
 ## `deliveries`
 
-Đã gửi Comfort nào cho ai. **Khoá chính chính là luật "không gửi lại lần hai"** — không phải một câu `if` trong code.
+Đã gửi Comfort nào cho ai. **Khoá chính chính là rule "không gửi lại lần hai"** — không phải một câu `if` trong code.
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
@@ -114,7 +114,7 @@ Admin cập nhật; app vẫn đóng gói sẵn bản dự phòng — [ADR 0005]
 
 ## `entries`
 
-**Chỉ tồn tại cho người đã bật sync.** Bản sao của SQLite, không phải nguồn sự thật.
+**Chỉ tồn tại cho người đã bật sync.** Bản sao của SQLite, không phải source of truth.
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
@@ -184,7 +184,7 @@ language sql security definer as $fn$
 $fn$;
 ```
 
-Năm luật hàm này ép: không nhận Comfort của chính mình · không nhận lại cái đã nhận · tối đa 3 lần / 24h · không trả bản chưa dịch sang ngôn ngữ người đọc · `moved` không lùi về `unknown`.
+Năm rule hàm này enforce: không nhận Comfort của chính mình · không nhận lại cái đã nhận · tối đa 3 lần / 24h · không trả bản chưa dịch sang ngôn ngữ người đọc · `moved` không fallback về `unknown`.
 
 App truyền `p_lang` là ngôn ngữ app đang dùng.
 
@@ -192,7 +192,7 @@ Chỉ `authenticated` gọi được. Supabase cấp `execute` cho `anon` theo m
 (`0002_revoke_request_comfort_from_anon.sql`); chưa đăng nhập thì `auth.uid()` là null nên hàm
 vốn đã không trả gì, nhưng để `anon` gọi được một `security definer` là thừa bề mặt tấn công.
 
-**Đã kiểm bằng SQL thật trên project, không phải suy đoán.** Cả năm luật đều đúng như thiết kế.
+**Đã verify bằng SQL thật trên project, không phải suy đoán.** Cả năm rule đều đúng như thiết kế.
 Điểm từng nghi ngờ: CTE `insert ... returning` **có** ghi `deliveries` — Postgres đảm bảo CTE
 sửa dữ liệu chạy đúng một lần dù không được tham chiếu, nên không cần viết lại bằng `plpgsql`.
 
@@ -202,7 +202,7 @@ sửa dữ liệu chạy đúng một lần dù không được tham chiếu, n�
 
 ## `entries`
 
-Nguồn sự thật. Tồn tại kể cả khi không có mạng, không có tài khoản.
+Source of truth. Tồn tại kể cả khi không có mạng, không có tài khoản.
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
@@ -213,11 +213,11 @@ Nguồn sự thật. Tồn tại kể cả khi không có mạng, không có tà
 | `tags` | text | not null | JSON array các tag id |
 | `reflection` | text | | Không rời khỏi máy trừ khi bật sync |
 | `synced_at` | integer | | `null` = chưa sao lưu lên server |
-| `deleted_at` | integer | | Để dành cho sync (chưa làm): Entry đã sync thì xoá = giữ dòng mộ bia với `deleted_at`, nội dung xoá sạch. Hiện chưa dùng |
+| `deleted_at` | integer | | Để dành cho sync (chưa làm): Entry đã sync thì xoá = giữ tombstone row với `deleted_at`, nội dung xoá sạch. Hiện chưa dùng |
 
 `synced_at` là **toàn bộ** cơ chế sync: null thì đẩy lên, khác null thì thôi. Không vector clock, không resolve conflict — local luôn thắng, server chỉ là bản sao.
 
-**Xoá một Entry** (`deleteEntry`, `app/src/db.ts`): khi `synced_at` null là xoá thật — `delete from entries` (`attachments`, `received_comforts` đi theo `on delete cascade`, cần `pragma foreign_keys = ON`) rồi xoá các file `attachments/…`. Server không có gì để xoá: Delivery vẫn còn và vẫn tính vào trần 3 / 24h. Schema không đổi ⇒ migration Supabase không đổi (contract ba chỗ vẫn khớp).
+**Xoá một Entry** (`deleteEntry`, `app/src/db.ts`): khi `synced_at` null là hard delete — `delete from entries` (`attachments`, `received_comforts` đi theo `on delete cascade`, cần `pragma foreign_keys = ON`) rồi xoá các file `attachments/…`. Server không có gì để xoá: Delivery vẫn còn và vẫn tính vào limit 3 / 24h. Schema không đổi ⇒ migration Supabase không đổi (contract ba chỗ vẫn khớp).
 
 ## `attachments`
 
@@ -229,29 +229,29 @@ Nguồn sự thật. Tồn tại kể cả khi không có mạng, không có tà
 | `path` | text | not null | Tương đối so với thư mục document của app: `attachments/<id>.<đuôi>`. Không lưu đường dẫn tuyệt đối — iOS đổi đường dẫn container sau mỗi lần cập nhật app |
 | `remote` | text | | Đường dẫn Storage, `null` nếu chưa sync |
 
-Tối đa 3 ảnh và 1 ghi âm ≤ 5 phút mỗi Entry — chỉ app ép (`app/src/app/new.tsx`), không có CHECK: SQLite không đếm qua bảng được trong CHECK. File từ picker / máy ghi âm nằm trong cache cho tới lúc bấm Lưu; Lưu mới chép vào `attachments/` rồi ghi Entry và các dòng này trong một transaction. Thứ tự ảnh = thứ tự thêm (`rowid`); Timeline xếp polaroid theo thứ tự này.
+Tối đa 3 ảnh và 1 ghi âm ≤ 5 phút mỗi Entry — chỉ app enforce (`app/src/app/new.tsx`), không có CHECK: SQLite không đếm qua bảng được trong CHECK. File từ picker / máy ghi âm nằm trong cache cho tới lúc bấm Lưu; Lưu mới chép vào `attachments/` rồi ghi Entry và các dòng này trong một transaction. Thứ tự ảnh = thứ tự thêm (`rowid`); Timeline xếp polaroid theo thứ tự này.
 
 ## `settings`
 
-Cài đặt của người dùng. Chỉ ở máy, không đồng bộ, không lên server.
+Cài đặt của người dùng. Chỉ ở máy, không sync, không lên server.
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
 | `key` | text | PK | |
 | `value` | text | not null | |
 
-Khoá đang dùng:
+Key đang dùng:
 
-- `nhan_comfort` = `bat` \| `tat`. Thiếu khoá ⇒ coi như `bat`.
+- `nhan_comfort` = `bat` \| `tat`. Thiếu key ⇒ coi như `bat`.
   Tắt thì không còn nút xin Comfort ở bất kỳ Entry nào — overview.md §6.
 - `timeline_dung` = id của Entry mở gần nhất. Mở lại app thì Timeline cuộn về đêm của Entry đó
-  (DESIGN.md, Layout). Thiếu khoá hoặc Entry không còn ⇒ đứng ở đầu trang.
-- `ngon_ngu` = `vi` \| `en` \| `ja` — ngôn ngữ chọn trong Cài đặt. Thiếu khoá ⇒ theo ngôn ngữ máy;
+  (DESIGN.md, Layout). Thiếu key hoặc Entry không còn ⇒ đứng ở đầu trang.
+- `ngon_ngu` = `vi` \| `en` \| `ja` — ngôn ngữ chọn trong Cài đặt. Thiếu key ⇒ theo ngôn ngữ máy;
   máy dùng tiếng khác ⇒ `en` (`app/src/i18n/index.ts`).
 
 ## `received_comforts`
 
-Comfort đã nhận, giữ để xem lại offline. Bản sao, không phải nguồn sự thật.
+Comfort đã nhận, giữ để xem lại offline. Bản sao, không phải source of truth.
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
@@ -262,10 +262,10 @@ Comfort đã nhận, giữ để xem lại offline. Bản sao, không phải ngu
 | `received_at` | integer | not null | |
 | `thanked` | integer | not null, default 0 | Để UI không cho cảm ơn hai lần |
 
-Khoá là `(entry_id, comfort_id)`, không phải `comfort_id`: server chỉ chặn giao lại trong cùng một danh tính,
+Khoá chính là `(entry_id, comfort_id)`, không phải `comfort_id`: server chỉ chặn giao lại trong cùng một danh tính,
 nên máy đổi danh tính (đăng xuất rồi thành anonymous mới, đăng nhập tài khoản khác) vẫn nhận lại được một lời
-đã kẹp ở lần khóc khác. Khoá cũ làm `insert or ignore` nuốt mất lời đó — server đã trừ lượt mà màn hình trống.
-Máy có bảng khoá cũ được chép sang khoá mới khi mở app (`app/src/db.ts`).
+đã kẹp ở lần khóc khác. Khoá chính cũ làm `insert or ignore` nuốt mất lời đó — server đã trừ lượt mà màn hình trống.
+Máy có bảng khoá chính cũ được chép sang khoá chính mới khi mở app (`app/src/db.ts`).
 
 ---
 

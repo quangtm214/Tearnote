@@ -19,8 +19,8 @@ Mỗi comment phải thuộc ít nhất một loại:
 
 1. **Vì sao chọn cách này** khi cách hiển nhiên hơn đã bị loại. `// No date picker: avoids a dependency.`
 2. **Bẫy nền tảng / thư viện**: hành vi lạ của RN, Android, TalkBack, Hermes, OkHttp, Expo… mà sửa "cho gọn" sẽ vỡ.
-3. **Ràng buộc nằm ngoài file**: phải khớp chỗ khác (migration, `docs/db.md`, từ điển), hoặc luật thật do server/RLS ép.
-   Trỏ tới nơi giữ luật, đừng chép lại nội dung.
+3. **Ràng buộc nằm ngoài file**: phải khớp chỗ khác (migration, `docs/db.md`, file dịch), hoặc rule thật do server/RLS enforce.
+   Trỏ tới nơi giữ rule, đừng chép lại nội dung.
 4. **Nghĩa của giá trị không tự giải thích**: đơn vị, `null` nghĩa là gì, số "lạ" (`bottom: -18`).
 5. **Đường tắt có chủ đích**: tiền tố `ponytail:` + giới hạn + cách nâng cấp.
 6. **Header `/** */`** cho file và cho export dùng chung, khi tên + kiểu chưa đủ nói vai trò.

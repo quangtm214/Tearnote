@@ -1,7 +1,7 @@
 # CLAUDE.md — Tearnote
 
 **Trạng thái: schema đã deploy, app chạy được lát cắt Entry + Comfort. Chưa launch.**
-File này cố tình ngắn. Mỗi khi chốt một quyết định hoặc dựng xong một tầng, cập nhật đúng mục tương ứng bên dưới — không viết trước.
+File này cố tình ngắn. Mỗi khi chốt một quyết định hoặc làm xong một tầng, cập nhật đúng mục tương ứng bên dưới — không viết trước.
 
 ## Sản phẩm
 
@@ -21,40 +21,40 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Ngôn ngữ + framework | TypeScript + React Native (Expo managed) | Dev trên Windows không build được iOS tại máy; Expo + EAS build cloud. Xem ADR 0001 |
 | Lưu trữ dữ liệu | Local-first (SQLite trên máy); sync lên server là opt-in, cần đăng nhập | Entry là dữ liệu tâm lý nhạy cảm. Xem ADR 0004 |
 | Auth | Supabase anonymous auth cho phần nhật ký; tài khoản thật bắt buộc để **viết** Comfort hoặc bật sync | Không ép đăng ký để dùng app, nhưng viết cho người lạ đọc thì cần danh tính bền. Xem ADR 0002, 0004, 0006 |
-| Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 4 việc nhỏ, không đáng tự dựng |
+| Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 4 việc nhỏ, không đáng tự build |
 | Test runner | jest-expo | Đi kèm Expo, không thêm dependency |
-| Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 khoá react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
-| Chạy app khi máy tính tắt | EAS Update vào Expo Go: `expo-updates`, project `@quangtm/tearnote`, `runtimeVersion` policy `sdkVersion` (ra `exposdk:57.0.0`). Đẩy bản mới: `cd app; npx eas-cli update --branch preview --environment preview --message "<msg>"`, mở trong Expo Go (đăng nhập tài khoản `quangtm`) › project › branch `preview` | User dùng iOS, không có Apple Developer nên không build được app iOS. Expo Go chỉ nhận update có runtime `exposdk:<sdk>`; policy `appVersion` thì Expo Go từ chối. `--environment preview` bỏ qua `app/.env`: biến `EXPO_PUBLIC_SUPABASE_*` lấy từ EAS env `preview` (`eas env:list preview`); đổi `.env` thì sửa cả bên đó |
-| Visual world | "Album ảnh trang đen": `album` + `pencil` trong `app/src/theme.ts` | Chọn qua `/impeccable` (thay world một-bit — bị bỏ vì lạnh, retro, khó đọc); hướng chi tiết ở `.impeccable/surfaces/`. Đã phủ mọi màn; mảnh dùng chung ở `app/src/ui.tsx`, world cũ đã xoá |
+| Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 pin react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
+| Chạy app khi máy tính tắt | EAS Update vào Expo Go: `expo-updates`, project `@quangtm/tearnote`, `runtimeVersion` policy `sdkVersion` (ra `exposdk:57.0.0`). Publish bản update mới: `cd app; npx eas-cli update --branch preview --environment preview --message "<msg>"`, mở trong Expo Go (đăng nhập tài khoản `quangtm`) › project › branch `preview` | User dùng iOS, không có Apple Developer nên không build được app iOS. Expo Go chỉ nhận update có runtime `exposdk:<sdk>`; policy `appVersion` thì Expo Go từ chối. `--environment preview` bỏ qua `app/.env`: biến `EXPO_PUBLIC_SUPABASE_*` lấy từ EAS env `preview` (`eas env:list preview`); đổi `.env` thì sửa cả bên đó |
+| Visual world | "Album ảnh trang đen": `album` + `pencil` trong `app/src/theme.ts` | Chọn qua `/impeccable` (thay world một-bit — bị bỏ vì lạnh, retro, khó đọc); hướng chi tiết ở `.impeccable/surfaces/`. Đã phủ mọi màn; component dùng chung ở `app/src/ui.tsx`, world cũ đã xoá |
 | Lưới / heatmap | Chỉ bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục (DESIGN.md) | Nhìn cả năm một lượt mới thấy mùa nào dày. Màu = tổng cường độ trong ngày, ngưỡng cố định ở `app/src/calendar.ts` để màu cùng nghĩa giữa các năm |
 | Từ vựng trên UI | "lần khóc" thay "Entry", "lời từ/cho người lạ" thay "Comfort"; bản en/ja ("a cry", "words from/for a stranger"; "泣いたこと", "見知らぬ人から/へのことば") cũng ở PRODUCT.md | Screen reader đọc chữ Anh sai giữa câu Việt; các khái niệm khác vốn đã Việt hoá trên UI |
-| Nhãn Tag | Cột `vi` / `en` / `ja` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL` trong `app/src/tags.ts` (test kiểm); en/ja dịch theo nghĩa cột vi | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau, kể cả khi khác ngôn ngữ — đổi nhãn là đổi contract |
-| Đa ngôn ngữ | Từ điển TS tự dựng ở `app/src/i18n/` (`vi.ts` là khuôn; `en.ts` / `ja.ts` thiếu khoá thì tsc đỏ), không thư viện. Mặc định theo ngôn ngữ máy (`I18nManager` / Intl của RN), máy dùng tiếng khác ⇒ `en`; đổi được ở Cài đặt (`settings.ngon_ngu`). Đổi = ghi đè `t` tại chỗ rồi đổi `key` của Stack ở `_layout` gốc | Không thêm dependency (không i18next, không expo-localization); ba ngôn ngữ không cần plural rules. Đổi `key` dựng lại mọi màn mà vẫn giữ màn đang đứng. iOS chưa kiểm: lệch ngôn ngữ máy thì thay bằng expo-localization |
+| Nhãn Tag | Cột `vi` / `en` / `ja` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL` trong `app/src/tags.ts` (có test check); en/ja dịch theo nghĩa cột vi | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau, kể cả khi khác ngôn ngữ — đổi nhãn là đổi contract |
+| Đa ngôn ngữ | File dịch TS tự viết ở `app/src/i18n/` (`vi.ts` là khuôn; `en.ts` / `ja.ts` thiếu key thì tsc đỏ), không thư viện. Mặc định theo ngôn ngữ máy (`I18nManager` / Intl của RN), máy dùng tiếng khác ⇒ `en`; đổi được ở Cài đặt (`settings.ngon_ngu`). Đổi = ghi đè `t` tại chỗ rồi đổi `key` của Stack ở `_layout` gốc | Không thêm dependency (không i18next, không expo-localization); ba ngôn ngữ không cần plural rules. Đổi `key` remount mọi màn mà vẫn giữ màn đang đứng. iOS chưa test: lệch ngôn ngữ máy thì thay bằng expo-localization |
 | `source_lang` khi viết lời | Người viết chọn ở màn viết ("Bạn viết bằng tiếng gì?"), mặc định là ngôn ngữ app | Dùng app tiếng Nhật vẫn có thể viết tiếng Việt; `source_lang` sai là batch dịch sai nguồn |
-| Điều hướng | `Tabs` của `expo-router/js-tabs`, thanh tự dựng; tab = Nhật ký · Lịch · Cài đặt (`app/src/app/(tabs)/`), "Viết lời" (en "For strangers", ja "見知らぬ人へ", icon `note-edit-outline`) là nút mở màn viết — en/ja không dùng động từ "viết" để khỏi trùng nút "Ghi lại nhật ký". Icon: `@expo/vector-icons` (MaterialCommunityIcons) | Thanh mặc định cao cố định 49, nhãn dưới 14 — vỡ luật chữ của DESIGN.md. Viết lời giữ nguyên luồng đăng nhập / Gửi / Xong nên không làm tab |
-| Dropdown / select | Tự dựng bằng `Modal` của RN core, không thêm `@react-native-picker/picker` | Không thêm dependency; style được theo world album |
-| Slider (chọn cường độ) | Tự dựng bằng Gesture Responder của RN core trong `app/src/app/new.tsx`, không thêm `@react-native-community/slider`; màu đoạn dùng lại `album.calendar[1..5]` | Không thêm dependency; slider có sẵn không tô thanh nhiều nấc màu được |
+| Điều hướng | `Tabs` của `expo-router/js-tabs`, thanh tự viết; tab = Nhật ký · Lịch · Cài đặt (`app/src/app/(tabs)/`), "Viết lời" (en "For strangers", ja "見知らぬ人へ", icon `note-edit-outline`) là nút mở màn viết — en/ja không dùng động từ "viết" để khỏi trùng nút "Ghi lại nhật ký". Icon: `@expo/vector-icons` (MaterialCommunityIcons) | Thanh mặc định cao cố định 49, nhãn dưới 14 — vỡ luật chữ của DESIGN.md. Viết lời giữ nguyên luồng đăng nhập / Gửi / Xong nên không làm tab |
+| Dropdown / select | Tự viết bằng `Modal` của RN core, không thêm `@react-native-picker/picker` | Không thêm dependency; style được theo world album |
+| Slider (chọn cường độ) | Tự viết bằng Gesture Responder của RN core trong `app/src/app/new.tsx`, không thêm `@react-native-community/slider`; màu đoạn dùng lại `album.calendar[1..5]` | Không thêm dependency; slider có sẵn không tô thanh nhiều nấc màu được |
 | Icon SVG tự vẽ | `react-native-svg` (cài bằng `npx expo install`); icon là component `.tsx` dùng `Svg`/`Path` ngay trong source, không thêm `react-native-svg-transformer` | RN không tự vẽ SVG; Expo Go có sẵn native của gói này. Viết path trong `.tsx` thì không phải sửa metro config |
 | Ảnh & ghi âm trong lần khóc | `expo-image-picker` (thư viện + chụp trong app), `expo-audio`, `expo-file-system`; tối đa 3 ảnh + 1 ghi âm ≤ 5 phút; Timeline hiện mọi ảnh thành hàng polaroid (DESIGN.md › Tấm Entry) | Chụp trong app thì ảnh thường không vào thư viện máy. File nằm cache tới lúc Lưu mới chép vào `attachments/`, `path` lưu tương đối (docs/db.md) |
-| Font | `expo-font` + Patrick Hand (OFL) cho tiêu đề/chú thích tiếng Việt và tiếng Anh, Yomogi cho tiếng Nhật — Yomogi (~4MB) chỉ nạp khi app ở tiếng Nhật; Reflection và nút bấm là font hệ thống | Yomogi rộng cố định với chữ Latin nên tách chữ có dấu ("l ần"); Patrick Hand không có kana |
+| Font | `expo-font` + Patrick Hand (OFL) cho tiêu đề/chú thích tiếng Việt và tiếng Anh, Yomogi cho tiếng Nhật — Yomogi (~4MB) chỉ load khi app ở tiếng Nhật; Reflection và nút bấm là font hệ thống | Yomogi rộng cố định với chữ Latin nên tách chữ có dấu ("l ần"); Patrick Hand không có kana |
 | Theo dõi bug / thay đổi | Google Sheet `TearNote-Bug-Change`: tab Bug → `/check-bug`, tab Change → `/check-change` (`.claude/skills/`) | Mỗi mục một nhánh + PR (`fix/bug-<ID>` commit `fix(bug-<ID>): ...`; `change/<ID>` commit `<type>(change-<ID>): ...`); Claude ghi sheet qua Zapier, user xác nhận |
-| `@react-native/jest-preset` ghim đúng version RN | `0.86.3`, không để `^` | `legacy-peer-deps` cho npm tự lấy 0.87.1 và jest chết ngay. Nâng RN thì nâng cả gói này |
+| `@react-native/jest-preset` pin đúng version RN | `0.86.3`, không để `^` | `legacy-peer-deps` cho npm tự lấy 0.87.1 và jest chết ngay. Upgrade RN thì upgrade cả gói này |
 | Hình khối | Token `radius` trong `app/src/theme.ts`: có góc dán ⇒ vuông; ngón tay chạm ⇒ `radius.touch` 14; giấy rời ⇒ `radius.paper` 6; hình tròn không tính | Góc dán che mọi bo ≤ 10, bo lớn làm mất silhouette; bo phân vai điều khiển ↔ nội dung. Review 2026-10-06, DESIGN.md › Shapes |
 | Hộp xác nhận | `ConfirmDialog` trong `app/src/ui.tsx` (Modal của RN core), không `Alert.alert` | Alert Android trắng giữa app tối; làm nó tối cần `expo-system-ui` (dependency mới) |
 | Báo lỗi validate | Ngay dưới ô sai, qua prop `error` của `TextField` (`app/src/ui.tsx`); màu `album.alert` (đất nung `#E38B76`, `dat-nung` trong DESIGN.md) cho viền ô sai, câu lỗi dưới ô và dòng lỗi server cuối form | User chọn ở Change 12: lỗi phải thấy ngay chỗ sai và trông như sự cố. Không dùng `lamp` (luật Một Ngọn Đèn); thêm prop thay vì component mới vì mọi ô đã đi qua `TextField` |
 | Chặn rời màn có nhập liệu | `usePreventRemove` từ `expo-router/react-navigation`, `useNavigation` từ `expo-router` | Có sẵn trong expo-router 57, bắt cả Back hệ thống; không thêm dependency |
-| Xoá lần khóc | Xoá thật (`deleteEntry` trong `app/src/db.ts`: dòng + file); `deleted_at` để dành cho sync | Chưa có sync; xoá mềm để nội dung nhạy cảm nằm lại máy. Xem docs/db.md |
-| Mã lỗi Supabase Auth | Một bảng `AUTH_ERROR_KEY` trong `app/src/supabase.ts` (mã → khoá `t.authError`), màn gọi `authErrorText(error, fallback)` | Supabase đổi tên mã thì chỉ sửa một chỗ; mã lạ rơi về câu chung của màn |
-| Validation | zod (`app/src/validation.ts`) | Một chỗ giữ luật dùng chung cho form, và parse có kiểu dữ liệu server (`comfortRows`, "lời của tôi") thay cho `as`. Schema trả mã ổn định, chữ hiện qua `t.validation[code]` nên i18n vẫn nằm trong từ điển. Đăng nhập chỉ đòi mật khẩu không rỗng, email kiểm lỏng — Supabase mới là nơi quyết định |
-| Ảnh Trước / Sau trên PR | PR một commit, một vấn đề, thấy được trên màn hình ⇒ chụp emulator qua `adb`; ảnh đẩy lên nhánh mồ côi `pr-screenshots`, link theo sha. Luật ở `.claude/rules/pull-requests.md` | User review bằng mắt nhanh hơn đọc diff; ảnh không vào nhánh code để PR giữ đúng một commit |
-| Tên định danh | Tiếng Anh; comment cũng tiếng Anh (`.claude/rules/comments.md`); chuỗi lưu bền (khoá/giá trị `settings` như `nhan_comfort`, `ngon_ngu`, `timeline_dung`, `bat`/`tat`, tên SQL) giữ nguyên | Đổi chuỗi lưu bền là mất cài đặt trên máy người dùng và lệch schema. Xem commit 0671284 |
+| Xoá lần khóc | Hard delete (`deleteEntry` trong `app/src/db.ts`: dòng + file); `deleted_at` để dành cho sync | Chưa có sync; soft delete để nội dung nhạy cảm nằm lại máy. Xem docs/db.md |
+| Mã lỗi Supabase Auth | Một bảng `AUTH_ERROR_KEY` trong `app/src/supabase.ts` (mã → key `t.authError`), màn gọi `authErrorText(error, fallback)` | Supabase đổi tên mã thì chỉ sửa một chỗ; mã lạ fallback về câu chung của màn |
+| Validation | zod (`app/src/validation.ts`) | Một chỗ giữ rule dùng chung cho form, và parse có kiểu dữ liệu server (`comfortRows`, "lời của tôi") thay cho `as`. Schema trả mã ổn định, chữ hiện qua `t.validation[code]` nên i18n vẫn nằm trong file dịch. Đăng nhập chỉ đòi mật khẩu không rỗng, email chỉ check lỏng — Supabase mới là nơi quyết định |
+| Ảnh Trước / Sau trên PR | PR một commit, một vấn đề, thấy được trên màn hình ⇒ chụp emulator qua `adb`; ảnh push lên orphan branch `pr-screenshots`, link theo sha. Luật ở `.claude/rules/pull-requests.md` | User review bằng mắt nhanh hơn đọc diff; ảnh không vào nhánh code để PR giữ đúng một commit |
+| Tên định danh | Tiếng Anh; comment cũng tiếng Anh (`.claude/rules/comments.md`); chuỗi lưu bền (key/value `settings` như `nhan_comfort`, `ngon_ngu`, `timeline_dung`, `bat`/`tat`, tên SQL) giữ nguyên | Đổi chuỗi lưu bền là mất cài đặt trên máy người dùng và lệch schema. Xem commit 0671284 |
 
 Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi để cả repo bám theo.
 
 ## Luật không được vi phạm
 
 * Không thêm dependency mới khi chưa hỏi. Stdlib / tính năng có sẵn của nền tảng trước đã.
-* Không dựng abstraction cho thứ mới dùng một lần. Chờ đến chỗ dùng thứ hai.
+* Không tạo abstraction cho thứ mới dùng một lần. Chờ đến chỗ dùng thứ hai.
 * Không "cải thiện" code lân cận, comment, format ngoài phạm vi yêu cầu.
 * Chỉ xoá import/biến mà **thay đổi của bạn** làm thừa. Dead code có sẵn thì báo, đừng xoá.
 * Bug phát hiện ngoài scope → ghi nhận, không tự sửa.
@@ -62,11 +62,11 @@ Chưa chốt ⇒ **hỏi trước khi code**, đừng tự chọn giúp rồi đ
 
 ## Luật comment
 
-Ở [.claude/rules/comments.md](.claude/rules/comments.md) — Claude Code tự nạp khi làm việc với code. Tóm tắt: comment tiếng Anh, chỉ nói *vì sao* / *đừng làm gì*.
+Ở [.claude/rules/comments.md](.claude/rules/comments.md) — Claude Code tự load khi làm việc với code. Tóm tắt: comment tiếng Anh, chỉ nói *vì sao* / *đừng làm gì*.
 
 ## Luật commit
 
-Ép bằng `.husky/commit-msg`, nhưng đừng để hook phải chặn — viết đúng ngay từ đầu.
+Enforce bằng `.husky/commit-msg`, nhưng đừng để hook phải chặn — viết đúng ngay từ đầu.
 
 * **Một dòng title, hết.** Không phần thân, không bullet, không giải thích bên dưới. Lý do của thay đổi nằm ở code, comment và `docs/`, không nằm ở commit message.
 * **Tối đa 100 ký tự.**
@@ -100,7 +100,7 @@ Verify:
 
 ## Validate — chạy thật, không đoán
 
-<!-- Điền ngay khi dựng xong scaffold. Lệnh phải copy-paste chạy được.
+<!-- Điền ngay khi setup xong scaffold. Lệnh phải copy-paste chạy được.
      Kèm điều kiện bỏ qua, nếu không agent sẽ chạy full suite cho mọi sửa đổi nhỏ. -->
 
 ```powershell
@@ -110,12 +110,12 @@ cd app; npx expo start      # quét QR bằng Expo Go trên máy thật
 cd app; npx eas-cli update --branch preview --environment preview --message "<msg>"  # chạy không cần máy tính
 ```
 
-Phần server không có lệnh chạy được ở máy: kiểm bằng MCP Supabase (`execute_sql` cho luật pool,
+Phần server không có lệnh chạy được ở máy: check bằng MCP Supabase (`execute_sql` cho rule pool,
 `get_advisors` cho RLS hở) rồi dán kết quả thật.
 
-Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào**, đừng báo xong suông.
+Không có lệnh verify được thì **nói rõ đã verify bằng cách nào**, đừng báo xong suông.
 
-## Contract — nguồn sự thật
+## Contract — source of truth
 
 <!-- Điền khi xuất hiện cặp file BẮT BUỘC khớp nhau: types ⇄ schema DB,
      model ⇄ migration, proto ⇄ client, API spec ⇄ client types.
@@ -123,7 +123,7 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
 
 * [docs/tags.md](docs/tags.md) — danh sách Tag. Entry và Comfort dùng chung; đây là toàn bộ cơ chế match. Đừng thêm/bớt Tag mà không hỏi.
 * [docs/db.md](docs/db.md) ⇄ migration Supabase ⇄ schema SQLite trong app. Ba chỗ này phải khớp; sửa một thì sửa cả ba.
-* [DESIGN.md](DESIGN.md) — nguồn sự thật cho giao diện. Mọi màn mới hoặc chỉnh UI dùng token
+* [DESIGN.md](DESIGN.md) — source of truth cho giao diện. Mọi màn mới hoặc chỉnh UI dùng token
   `album` / `pencil` trong `app/src/theme.ts` và luật trong DESIGN.md; không dùng token `color` cũ
   (chỉ còn cho các màn chưa chuyển). Đổi world hay thêm token thì cập nhật DESIGN.md cùng lúc.
 
@@ -135,7 +135,7 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
 * Pool rỗng, và "hết lượt 3 Comfort / 24h" — hai chuyện khác nhau, phải là hai thông báo khác nhau.
 * Mất mạng ở màn hotline: vẫn phải hiện được danh sách đóng gói sẵn (ADR 0005).
 * Entry không chọn tag nào → `unknown`, không phải mảng rỗng.
-* `moved` không bao giờ lùi về `unknown` khi tìm Comfort.
+* `moved` không bao giờ fallback về `unknown` khi tìm Comfort.
 
 ## Chỗ dễ vỡ
 
@@ -144,15 +144,15 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
 * **Contract Tag nằm ở ba chỗ**: `docs/tags.md` ⇄ enum `tag` trong `supabase/migrations/0001_init.sql`
   ⇄ `app/src/tags.ts`. Lệch một chỗ thì `app/src/tags.test.ts` đỏ — đó là việc của nó.
 * **Danh sách ngôn ngữ nằm ở ba chỗ**: enum `lang` trong migration ⇄ `LANGS` trong
-  `app/src/i18n/index.ts` ⇄ một file từ điển mỗi ngôn ngữ. Lệch enum ⇄ `LANGS` thì
-  `app/src/i18n/i18n.test.ts` đỏ; thiếu khoá từ điển hay thiếu `Record<Lang, …>` thì tsc đỏ.
-* **Đừng chép `t.…` hay trải `...pencil.x` ra hằng số cấp module.** Đổi ngôn ngữ là ghi đè `t` /
-  `pencil` tại chỗ rồi dựng lại cây — bản đã chép kẹt ở ngôn ngữ cũ. Và thay object, đừng sửa bên
-  trong: RN đóng băng style đã truyền qua prop (bản dev ném lỗi).
-* **Chữ UI mới vào cả ba từ điển, không viết thẳng vào JSX.** Nhánh tách từ trước khi có i18n hay
-  mang chữ Việt cứng vào — `i18n.test.ts` quét `app/src/app/` và `ui.tsx` rồi đỏ. Chữ Anh cứng thì
+  `app/src/i18n/index.ts` ⇄ một file dịch mỗi ngôn ngữ. Lệch enum ⇄ `LANGS` thì
+  `app/src/i18n/i18n.test.ts` đỏ; thiếu key trong file dịch hay thiếu `Record<Lang, …>` thì tsc đỏ.
+* **Đừng chép `t.…` hay spread `...pencil.x` ra hằng số cấp module.** Đổi ngôn ngữ là ghi đè `t` /
+  `pencil` tại chỗ rồi remount cây — bản đã chép kẹt ở ngôn ngữ cũ. Và thay object, đừng sửa bên
+  trong: RN freeze style đã truyền qua prop (bản dev throw lỗi).
+* **Chữ UI mới vào cả ba file dịch, không hardcode vào JSX.** Nhánh tách từ trước khi có i18n hay
+  mang chữ Việt hardcode vào — `i18n.test.ts` quét `app/src/app/` và `ui.tsx` rồi đỏ. Chữ Anh hardcode thì
   test không bắt được: tự soát khi merge.
-* **Luật pool nằm trong `request_comfort()`, không nằm trong app.** Đổi cách chọn Comfort thì viết
+* **Rule pool nằm trong `request_comfort()`, không nằm trong app.** Đổi cách chọn Comfort thì viết
   migration, đừng sửa client.
 * **`received_comforts.entry_id` chỉ tồn tại trên máy.** Server không biết Comfort nào thuộc Entry
   nào, và cố ý như vậy.
@@ -161,22 +161,22 @@ Không có lệnh verify được thì **nói rõ đã kiểm bằng cách nào*
   thì viết `'/' as Href`, đừng đổi sang `'/index'` — máy không phải Windows sẽ đỏ.
 * **Giới hạn độ dài Comfort có ở hai nơi**: CHECK `char_length(body) between 20 and 500` và
   `array_length(tags,1) between 1 and 2` trong migration, lặp lại thành hằng số trong
-  `app/src/validation.ts` (`MIN_COMFORT_LENGTH`, `MAX_COMFORT_LENGTH`, `MAX_COMFORT_TAGS` từ `tags.ts`) để hiện bộ đếm. Sửa CHECK mà quên sửa hằng số thì người dùng
+  `app/src/validation.ts` (`MIN_COMFORT_LENGTH`, `MAX_COMFORT_LENGTH`, `MAX_COMFORT_TAGS` từ `tags.ts`) để hiện counter ký tự. Sửa CHECK mà quên sửa hằng số thì người dùng
   gõ xong mới bị server từ chối.
-* **Chữ `validation.passwordTooShort` / `validation.tagsTooMany` trong từ điển có số 6 / 2 viết thẳng.** Đổi `MIN_PASSWORD` / `MAX_COMFORT_TAGS` thì sửa cả ba từ điển cùng lúc.
+* **Chữ `validation.passwordTooShort` / `validation.tagsTooMany` trong file dịch có số 6 / 2 hardcode.** Đổi `MIN_PASSWORD` / `MAX_COMFORT_TAGS` thì sửa cả ba file dịch cùng lúc.
 * **Màn có nhập liệu chặn rời bằng `usePreventRemove`** (`new.tsx`, `comfort/write.tsx`). Lưu / Gửi xong phải đi qua `saved.current` / `done`, không thì hộp "Thoát mà chưa lưu?" hiện ngay sau khi lưu.
 * **`maxFontSizeMultiplier` chỉ ở chrome** (`PrimaryButton`, `HelpButton`, `ConfirmDialog`, nhãn tab). Đừng lan sang nội dung hay `LinkRow` — DESIGN.md › Typography.
-* **Xoá lần khóc phải xoá cả file** trong `attachments/` (`deleteEntry`). Ba khoá ja có `\n` (`newEntry.title`, `write.title`, `write.doneTitle`) chỉ dùng một chỗ — dùng lại ở chỗ khác là xuống dòng sai.
-* **fetch của RN không có hạn chờ.** Mọi request Supabase đi qua `fetchWithTimeout` (20 giây) trong `app/src/supabase.ts`;
+* **Xoá lần khóc phải xoá cả file** trong `attachments/` (`deleteEntry`). Ba key ja có `\n` (`newEntry.title`, `write.title`, `write.doneTitle`) chỉ dùng một chỗ — dùng lại ở chỗ khác là xuống dòng sai.
+* **fetch của RN không có timeout.** Mọi request Supabase đi qua `fetchWithTimeout` (20 giây) trong `app/src/supabase.ts`;
   bỏ nó là nút "Nhận một lời" quay mãi khi mất mạng giữa chừng. Kết nối chết vẫn nằm trong pool OkHttp tới khi mở
   lại app — chỉ sửa dứt điểm được ở native (dev client), không phải trong JS.
-* **`received_comforts` khoá `(entry_id, comfort_id)`**, không phải `comfort_id`: máy đổi danh tính trên server thì
+* **`received_comforts` khoá chính `(entry_id, comfort_id)`**, không phải `comfort_id`: máy đổi danh tính trên server thì
   cùng một lời có thể tới hai lần khóc (docs/db.md). Đổi bảng này thì nhớ đoạn chép bảng cũ ở đầu `app/src/db.ts`.
 
 ## Trước khi báo DONE
 
 * [ ] Đủ yêu cầu, không dư.
-* [ ] Lệnh validate pass, **có output thật** dán kèm — hoặc nói rõ đã kiểm thủ công thế nào.
+* [ ] Lệnh validate pass, **có output thật** dán kèm — hoặc nói rõ đã test thủ công thế nào.
 * [ ] Không sửa file ngoài scope.
 * [ ] Quyết định kỹ thuật mới phát sinh đã ghi vào bảng "Quyết định đã chốt".
 * [ ] Nói rõ cái gì đã bỏ qua và vì sao.

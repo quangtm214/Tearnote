@@ -2,7 +2,7 @@
 
 Tài liệu này mô tả Tearnote là gì, MVP gồm những gì và cố tình bỏ những gì. Từ vựng chuẩn nằm ở [CONTEXT.md](../CONTEXT.md); lý do đằng sau từng quyết định nằm ở [docs/adr/](./adr/).
 
-Trạng thái: schema đã deploy và kiểm bằng SQL thật; app đã có timeline, ghi Entry, hotline, đăng nhập, viết/nhận Comfort, giao diện Anh / Việt / Nhật. Chưa chạy trên thiết bị thật, chưa launch. Mục 8 liệt kê phần còn thiếu.
+Trạng thái: schema đã deploy và verify bằng SQL thật; app đã có timeline, ghi Entry, hotline, đăng nhập, viết/nhận Comfort, giao diện Anh / Việt / Nhật. Chưa chạy trên thiết bị thật, chưa launch. Mục 8 liệt kê phần còn thiếu.
 
 ## 1. Sản phẩm
 
@@ -18,7 +18,7 @@ Nếu Comfort bị cắt, Tearnote không còn lý do tồn tại.
 - Người muốn quan sát sức khoẻ tinh thần của mình theo thời gian
 - Người cần một chút kết nối, nhưng không muốn chia sẻ với người quen
 
-Đa quốc gia. Ba ngôn ngữ ở v1: **Anh, Việt, Nhật**. Thêm ngôn ngữ không được đòi thêm cột hay bảng: chỉ một giá trị enum `lang` (migration một dòng), một file từ điển trong app, rồi batch đêm dịch lại backlog ([ADR 0003](./adr/0003-dich-comfort-theo-batch.md), [db.md](./db.md)).
+Đa quốc gia. Ba ngôn ngữ ở v1: **Anh, Việt, Nhật**. Thêm ngôn ngữ không được đòi thêm cột hay bảng: chỉ một giá trị enum `lang` (migration một dòng), một file dịch trong app, rồi batch đêm dịch lại backlog ([ADR 0003](./adr/0003-dich-comfort-theo-batch.md), [db.md](./db.md)).
 
 ## 3. Phạm vi MVP
 
@@ -50,7 +50,7 @@ Nếu Comfort bị cắt, Tearnote không còn lý do tồn tại.
 
 ```
 app/      Expo (React Native + TypeScript), Android trước
-          SQLite = nguồn sự thật cho Entry
+          SQLite = source of truth cho Entry
 supabase/   Supabase: Postgres + auth + storage
           Pool Comfort, bản dịch, hàng đợi kiểm duyệt, hotline, backup Entry
 batch     Routine Claude chạy đêm: kiểm duyệt rồi dịch Comfort — tạm thời
@@ -89,7 +89,7 @@ Ghi lại để không quên, không phải để bào chữa.
 - **Batch dịch chạy bằng routine Claude.** Không phải hạ tầng. Cần một chỗ nhìn được số Comfort chưa dịch để biết khi nào nó chết. Thay bằng job tự host trước khi launch.
 - **Không có phát hiện khủng hoảng.** Hệ thống không biết ai đang trong khủng hoảng, nên nó dựa hoàn toàn vào việc người dùng tự bấm nút trợ giúp hoặc tự tắt nhận Comfort. Đây là lỗ hổng đã biết, và là lý do Echo/severity nên được ưu tiên ngay sau MVP.
 - **Danh sách Tag là contract.** Entry và Comfort dùng chung nó. Đổi Tag sau khi có dữ liệu là migrate đau. Chốt kỹ trước khi viết dòng code đầu tiên.
-- **Pool Comfort trống lúc đầu.** Tính năng khác biệt duy nhất không hoạt động cho tới khi có đủ người viết — mà người viết còn phải chịu khó tạo tài khoản, nên nguồn cung hẹp hơn nguồn cầu ngay từ đầu. Cần một lượng Comfort mồi trước khi có người dùng thật.
+- **Pool Comfort trống lúc đầu.** Tính năng khác biệt duy nhất không hoạt động cho tới khi có đủ người viết — mà người viết còn phải chịu khó tạo tài khoản, nên nguồn cung hẹp hơn nguồn cầu ngay từ đầu. Cần một lượng Comfort seed trước khi có người dùng thật.
 
 ## 8. Sau MVP
 
