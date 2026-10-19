@@ -30,7 +30,7 @@ Emulator Android (AVD `tearnote`, `tearnote-play` nếu cần TalkBack) qua `adb
 
 ## Đưa ảnh lên PR
 
-Ảnh **không** vào nhánh code (PR phải giữ đúng một commit). Đẩy lên nhánh mồ côi `pr-screenshots`,
+Ảnh **không** vào nhánh code (PR phải giữ đúng một commit). Push lên orphan branch `pr-screenshots`,
 thư mục = tên nhánh PR, bằng plumbing — không đổi nhánh, không đụng working tree:
 
 ```powershell
@@ -46,7 +46,7 @@ $commit = if ($parent) { git commit-tree $tree -p $parent -m $msg } else { git c
 Remove-Item Env:GIT_INDEX_FILE; git push origin "${commit}:refs/heads/pr-screenshots"
 ```
 
-Link ảnh theo **sha commit**, không theo tên nhánh — link theo nhánh bị cache, đẩy lại ảnh cùng tên vẫn hiện ảnh cũ:
+Link ảnh theo **sha commit**, không theo tên nhánh — link theo nhánh bị cache, push lại ảnh cùng tên vẫn hiện ảnh cũ:
 `https://raw.githubusercontent.com/quangtm214/Tearnote/<commit>/<branch>/before-1.png`
 
 Trong body PR, ngay sau phần tóm tắt:
@@ -60,3 +60,13 @@ Trong body PR, ngay sau phần tóm tắt:
 
 Màn: <màn nào> · Cách tới: <bấm gì / deep link> · Ngôn ngữ máy: <vi/en/ja>
 ```
+
+## Khung body PR
+
+1. Tóm tắt một dòng: `**Change <ID>** · <màn> · <trước ra sao>. Giờ <sau ra sao>.` (bug thì `**Bug <ID>**`).
+2. `## Ảnh` như trên.
+3. `## Đã làm`: bullet — đổi gì ở đâu, vì sao chọn cách đó; docs / file dịch đi kèm. Sau đó thêm `Giới hạn: …`
+   hoặc `Ngoài phạm vi, chưa sửa: …` nếu có.
+4. Dòng `Validate: …` với kết quả thật.
+
+Không viết mục `## Xem lại trên máy` — dòng "Cách tới" dưới ảnh đã đủ.

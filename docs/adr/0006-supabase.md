@@ -6,4 +6,4 @@ Supabase cho sẵn Postgres, auth ẩn danh có thể nâng cấp thành tài kh
 
 Loại Next.js API routes (spec §7 gợi ý): client là React Native, kéo cả một framework frontend vào chỉ để làm server là thừa.
 
-Hệ quả: khoá vào Postgres và vào Supabase auth. Rời đi được nhưng tốn.
+Hệ quả: lock-in vào Postgres và Supabase auth. Rời đi được nhưng tốn.

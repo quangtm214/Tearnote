@@ -279,7 +279,7 @@
       "**Do** giữ Reflection và nút bấm ở font hệ thống cỡ `than` / `nut`.",
       "**Do** cho mọi tờ giấy góc vuông và bóng \"nằm trên trang\"; nhấn thì \"nhấc khỏi trang\".",
       "**Do** biểu diễn cường độ bằng đúng n nét bút chì.",
-      "**Do** giữ lối trợ giúp ở chân màn, cao 64, là chỗ duy nhất có `den`."
+      "**Do** giữ lối trợ giúp ở footer, cao 64, là chỗ duy nhất có `den`."
     ],
     "donts": [
       "**Don't** dùng `color`, `text.tieuDe`, `text.nhan`, `radius` hay `caoVach` cho màn thuộc world này; chúng chỉ còn phục vụ màn chưa chuyển.",

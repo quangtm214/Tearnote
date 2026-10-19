@@ -55,7 +55,7 @@ Các app cùng loại (Tracking My Tears, Cry Tracker, Tear Tales, Ductts, CryAp
 
 - Icon và splash: `app/assets/images/`.
 - Danh sách hotline đóng gói sẵn: `app/src/hotlines.ts`.
-- Chưa có: người dùng thật, testimonial, số liệu, Comfort mồi trong pool, điều khoản sử dụng. Nhãn Tag và copy tiếng Anh / tiếng Nhật do Claude viết, chưa người bản ngữ soát — tiếng Nhật bắt buộc soát trước khi có người dùng Nhật. Không bịa những thứ này.
+- Chưa có: người dùng thật, testimonial, số liệu, Comfort seed trong pool, điều khoản sử dụng. Nhãn Tag và copy tiếng Anh / tiếng Nhật do Claude viết, chưa người bản ngữ soát — tiếng Nhật bắt buộc soát trước khi có người dùng Nhật. Không bịa những thứ này.
 
 ## Product Principles
 
