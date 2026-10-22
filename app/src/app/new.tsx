@@ -437,7 +437,8 @@ const styles = StyleSheet.create({
   tearPreview: { alignSelf: 'center', marginLeft: space.sm },
   // Fixed width: "1 / 5" is narrower than "5 / 5"; a flexible width would resize the bar while dragging.
   levelText: { color: album.pencil, alignSelf: 'center', marginLeft: space.sm, minWidth: 40, textAlign: 'right' },
-  input: { minHeight: 120, paddingVertical: space.md - 2, marginTop: space.md },
+  // 3 body lines + padding + the 2px TextField border. Fixed, so a long Reflection scrolls inside instead of pushing the form down.
+  input: { height: 3 * text.body.lineHeight + 2 * (space.md - 2) + 2 * 2, paddingVertical: space.md - 2, marginTop: space.md },
   // Gap of 12 so the corners of adjacent photos do not touch.
   photoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm + space.xs, marginTop: space.md },
   thumbnail: { width: 96, height: 96, opacity: 0.85 },
