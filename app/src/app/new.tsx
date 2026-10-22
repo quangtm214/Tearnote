@@ -16,7 +16,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -39,6 +38,7 @@ import {
   formatDate,
   PrimaryButton,
   SecondaryButton,
+  FormScrollView,
   TextField,
   formatClock,
   Pill,
@@ -201,7 +201,7 @@ export default function NewEntryScreen() {
           iOS does not scroll to the focused input by itself; only automaticallyAdjustKeyboardInsets does, and it
           measures against the keyboard, so KAV padding on top would leave the input behind the footer. */}
       <KeyboardAvoidingView style={styles.screen} behavior="padding" enabled={Platform.OS === 'android'}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <FormScrollView contentContainerStyle={styles.scroll}>
           {/* Top half is read-only; every touch target is in the bottom half, within thumb reach. */}
           <View style={styles.upperHalf}>
             <Text style={[pencil.title, styles.title]} accessibilityRole="header">
@@ -400,7 +400,7 @@ export default function NewEntryScreen() {
           <View style={styles.cancelRow}>
             <LinkRow icon="close" label={t.newEntry.cancel} onPress={() => router.back()} />
           </View>
-        </ScrollView>
+        </FormScrollView>
         <ScreenFooter>
           <PrimaryButton label={t.newEntry.save} onPress={() => void save()} />
         </ScreenFooter>

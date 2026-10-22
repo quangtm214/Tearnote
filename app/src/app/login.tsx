@@ -4,7 +4,6 @@ import {
   AccessibilityInfo,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   type TextInput,
@@ -14,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
+import { ScreenFooter, FormScrollView, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
 import { check, loginForm } from '@/validation';
 
 /**
@@ -78,7 +77,7 @@ export default function LoginScreen() {
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
       {/* Android: KAV, iOS: ScrollView keyboard insets. Why both: new.tsx. */}
       <KeyboardAvoidingView style={s.screen} behavior="padding" enabled={Platform.OS === 'android'}>
-        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <FormScrollView contentContainerStyle={s.content}>
           <Text style={[pencil.title, s.title]} accessibilityRole="header">
             {t.common.signIn}
           </Text>
@@ -126,7 +125,7 @@ export default function LoginScreen() {
 
           <LinkRow label={t.login.createAccount} chevron onPress={() => router.push('/register')} />
           <LinkRow icon="arrow-left" label={t.login.later} onPress={leave} />
-        </ScrollView>
+        </FormScrollView>
         <ScreenFooter>
           <PrimaryButton label={t.common.signIn} onPress={signIn} busy={busy} />
         </ScreenFooter>

@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -18,7 +17,7 @@ import { isRealAccount, supabase } from '@/supabase';
 import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
 import { check, comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH } from '@/validation';
-import { ScreenFooter, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, leave, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, leave, type ConfirmRequest } from '@/ui';
 
 /**
  * Write a Comfort. The two key rules are NOT here: "real accounts only" and "max 5 / 24h" are
@@ -164,7 +163,7 @@ export default function WriteComfortScreen() {
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
       {/* Android: KAV, iOS: ScrollView keyboard insets. Why both: new.tsx. */}
       <KeyboardAvoidingView style={s.screen} behavior="padding" enabled={Platform.OS === 'android'}>
-        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <FormScrollView contentContainerStyle={s.content}>
           <Text style={[pencil.title, s.title]} accessibilityRole="header">
             {t.write.title}
           </Text>
@@ -231,7 +230,7 @@ export default function WriteComfortScreen() {
           ) : null}
 
           <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
-        </ScrollView>
+        </FormScrollView>
         <ScreenFooter>
           <PrimaryButton label={t.write.send} onPress={send} disabled={!canSend && !sending} busy={sending} />
         </ScreenFooter>

@@ -4,7 +4,6 @@ import {
   AccessibilityInfo,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   type TextInput,
@@ -14,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, LinkRow, PrimaryButton, TextField } from '@/ui';
+import { ScreenFooter, FormScrollView, LinkRow, PrimaryButton, TextField } from '@/ui';
 import { check, registerForm } from '@/validation';
 
 /**
@@ -89,7 +88,7 @@ export default function RegisterScreen() {
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
       {/* Android: KAV, iOS: ScrollView keyboard insets. Why both: new.tsx. */}
       <KeyboardAvoidingView style={s.screen} behavior="padding" enabled={Platform.OS === 'android'}>
-        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <FormScrollView contentContainerStyle={s.content}>
           <Text style={[pencil.title, s.title]} accessibilityRole="header">
             {t.register.title}
           </Text>
@@ -154,7 +153,7 @@ export default function RegisterScreen() {
           {error ? <Text style={s.error}>{error}</Text> : null}
 
           <LinkRow label={t.register.haveAccount} chevron onPress={() => router.back()} />
-        </ScrollView>
+        </FormScrollView>
         <ScreenFooter>
           <PrimaryButton label={t.register.title} onPress={register} busy={busy} />
         </ScreenFooter>
