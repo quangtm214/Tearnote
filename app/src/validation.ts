@@ -1,6 +1,8 @@
+import { useState } from 'react';
+import { AccessibilityInfo } from 'react-native';
 import { z } from 'zod';
 
-import { LANGS, type t } from '@/i18n';
+import { LANGS, t } from '@/i18n';
 import { MAX_COMFORT_TAGS, TAG_IDS } from '@/tags';
 
 // Must match Supabase Auth's "Minimum password length" setting.
@@ -59,4 +61,24 @@ export function check<T extends z.ZodType>(
   if (r.success) return { data: r.data as z.output<T> };
   const issue = r.error.issues[0];
   return { field: String(issue.path[0] ?? ''), code: issue.message as ValidationCode };
+}
+
+/**
+ * Field errors for a form. Quiet while the user types the first time; after the first submit the schema
+ * re-runs on every render, so an error goes away as soon as the input is valid. Only the first error shows.
+ */
+export function useFormCheck<T extends z.ZodType>(schema: T, input: z.input<T>) {
+  const [submitted, setSubmitted] = useState(false);
+  const result = check(schema, input);
+  return {
+    errorOf: (field: string) =>
+      submitted && 'code' in result && result.field === field ? t.validation[result.code] : null,
+    /** Parsed data, or null after announcing the error. */
+    submit: (): z.output<T> | null => {
+      setSubmitted(true);
+      if ('data' in result) return result.data;
+      AccessibilityInfo.announceForAccessibility(t.validation[result.code]);
+      return null;
+    },
+  };
 }

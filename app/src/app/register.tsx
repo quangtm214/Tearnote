@@ -14,7 +14,7 @@ import { t } from '@/i18n';
 import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
 import { ScreenFooter, FormScrollView, LinkRow, PrimaryButton, TextField } from '@/ui';
-import { check, registerForm } from '@/validation';
+import { registerForm, useFormCheck } from '@/validation';
 
 /**
  * Create account — opened from login and returns there when done (dismissTo with the `registered`
@@ -26,8 +26,8 @@ export default function RegisterScreen() {
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Validation error, shown under its own field; `error` is the server's answer.
-  const [invalid, setInvalid] = useState<{ field: string; message: string } | null>(null);
+  // Validation errors, shown under their own field; `error` is the server's answer.
+  const form = useFormCheck(registerForm, { email, password, confirm });
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
 
@@ -43,15 +43,10 @@ export default function RegisterScreen() {
   async function register() {
     if (busy) return;
     setError(null);
-    setInvalid(null);
 
-    const form = check(registerForm, { email, password, confirm });
-    if ('code' in form) {
-      const message = t.validation[form.code];
-      setInvalid({ field: form.field, message });
-      return AccessibilityInfo.announceForAccessibility(message);
-    }
-    const credentials = { email: form.data.email, password: form.data.password };
+    const data = form.submit();
+    if (!data) return;
+    const credentials = { email: data.email, password: data.password };
 
     setBusy(true);
     try {
@@ -107,7 +102,7 @@ export default function RegisterScreen() {
             textContentType="emailAddress"
             autoComplete="email"
             placeholder={t.common.emailPlaceholder}
-            error={invalid?.field === 'email' ? invalid.message : null}
+            error={form.errorOf('email')}
             returnKeyType="next"
             submitBehavior="submit"
             onSubmitEditing={() => passwordRef.current?.focus()}
@@ -126,7 +121,7 @@ export default function RegisterScreen() {
             textContentType="newPassword"
             autoComplete="new-password"
             placeholder={t.common.passwordHint}
-            error={invalid?.field === 'password' ? invalid.message : null}
+            error={form.errorOf('password')}
             returnKeyType="next"
             submitBehavior="submit"
             onSubmitEditing={() => confirmRef.current?.focus()}
@@ -144,7 +139,7 @@ export default function RegisterScreen() {
             secureTextEntry
             textContentType="newPassword"
             autoComplete="new-password"
-            error={invalid?.field === 'confirm' ? invalid.message : null}
+            error={form.errorOf('confirm')}
             returnKeyType="go"
             onSubmitEditing={() => void register()}
             editable={!busy}
