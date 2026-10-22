@@ -14,7 +14,7 @@ import { t } from '@/i18n';
 import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
 import { ScreenFooter, FormScrollView, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
-import { check, loginForm } from '@/validation';
+import { loginForm, useFormCheck } from '@/validation';
 
 /**
  * Login is only needed to WRITE Comforts and to turn on sync. The journal works without an
@@ -25,8 +25,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Validation error, shown under its own field; `error` is the server's answer.
-  const [invalid, setInvalid] = useState<{ field: string; message: string } | null>(null);
+  // Validation errors, shown under their own field; `error` is the server's answer.
+  const form = useFormCheck(loginForm, { email, password });
   const [notice, setNotice] = useState<string | null>(null);
   const passwordRef = useRef<TextInput>(null);
   // Sent back by register.tsx when it finishes.
@@ -51,19 +51,14 @@ export default function LoginScreen() {
   async function signIn() {
     if (busy) return;
     setError(null);
-    setInvalid(null);
     setNotice(null);
 
-    const form = check(loginForm, { email, password });
-    if ('code' in form) {
-      const message = t.validation[form.code];
-      setInvalid({ field: form.field, message });
-      return AccessibilityInfo.announceForAccessibility(message);
-    }
+    const data = form.submit();
+    if (!data) return;
 
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword(form.data);
+      const { error } = await supabase.auth.signInWithPassword(data);
       if (error) return reportError(authErrorText(error, t.login.error));
       leave();
     } catch {
@@ -96,7 +91,7 @@ export default function LoginScreen() {
             textContentType="emailAddress"
             autoComplete="email"
             placeholder={t.common.emailPlaceholder}
-            error={invalid?.field === 'email' ? invalid.message : null}
+            error={form.errorOf('email')}
             returnKeyType="next"
             submitBehavior="submit"
             onSubmitEditing={() => passwordRef.current?.focus()}
@@ -114,7 +109,7 @@ export default function LoginScreen() {
             secureTextEntry
             autoComplete="password"
             placeholder={t.common.passwordHint}
-            error={invalid?.field === 'password' ? invalid.message : null}
+            error={form.errorOf('password')}
             returnKeyType="go"
             onSubmitEditing={() => void signIn()}
             editable={!busy}
