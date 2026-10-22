@@ -614,7 +614,7 @@ export function TextField({
           setFocus(false);
           onBlur?.(e);
         }}
-        style={[s.input, focus && s.inputFocus, error && s.inputError, style]}
+        style={[s.input, rest.multiline && s.inputMultiline, focus && s.inputFocus, error && s.inputError, style]}
       />
       {error ? (
         <View style={s.fieldError}>
@@ -859,8 +859,11 @@ const s = StyleSheet.create({
   pillText: { ...text.button, color: album.pencil },
   pillTextSelected: { color: album.page },
 
+  // No lineHeight on a single-line input: iOS UITextField puts the extra line space above the text,
+  // so the text sits low instead of centered.
   input: {
-    ...text.body,
+    fontSize: text.body.fontSize,
+    fontWeight: text.body.fontWeight,
     color: album.ink,
     backgroundColor: album.card,
     borderRadius: radius.touch,
@@ -869,6 +872,7 @@ const s = StyleSheet.create({
     paddingHorizontal: space.md - 2,
     minHeight: touch.min,
   },
+  inputMultiline: { lineHeight: text.body.lineHeight },
   inputFocus: { borderColor: album.pencil },
   inputError: { borderColor: album.alert },
   fieldError: { flexDirection: 'row', gap: space.xs, marginTop: space.xs },
