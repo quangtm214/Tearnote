@@ -1,17 +1,20 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router, type Href } from 'expo-router';
-import { useState, type ReactNode, type Ref } from 'react';
+import { createContext, useContext, useRef, useState, type ReactNode, type Ref } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type ScrollViewProps,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -522,9 +525,52 @@ export function Pill({
   );
 }
 
+// Brings a TextField back above the keyboard; null outside FormScrollView.
+const RevealContext = createContext<((input: TextInput) => void) | null>(null);
+
+/**
+ * ScrollView for screens with TextFields. iOS `automaticallyAdjustKeyboardInsets` scrolls to the input only
+ * when the keyboard opens; if the user scrolls away and types, or a multiline input grows, iOS does not follow.
+ * So each TextField asks this view to scroll it back on every change. Android scrolls to the cursor natively.
+ */
+export function FormScrollView(props: ScrollViewProps) {
+  const ref = useRef<ScrollView>(null);
+  const offset = useRef(0);
+  const reveal = (input: TextInput) => {
+    const view = ref.current;
+    const keyboard = Keyboard.metrics();
+    if (Platform.OS !== 'ios' || !view || !keyboard) return;
+    input.measureInWindow((_x, top, _w, height) => {
+      const below = top + height + space.md - keyboard.screenY;
+      // Not animated: the next keystroke must read an offset that is already final.
+      if (below > 0) return view.scrollTo({ y: offset.current + below, animated: false });
+      view.getNativeScrollRef()?.measureInWindow((_x2, viewTop) => {
+        const above = viewTop + space.md - top;
+        if (above > 0) view.scrollTo({ y: offset.current - above, animated: false });
+      });
+    });
+  };
+  return (
+    <RevealContext value={reveal}>
+      <ScrollView
+        ref={ref}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        scrollEventThrottle={16}
+        {...props}
+        onScroll={(e) => {
+          offset.current = e.nativeEvent.contentOffset.y;
+          props.onScroll?.(e);
+        }}
+      />
+    </RevealContext>
+  );
+}
+
 /**
  * Text input. The 2px border is always there (transparent until focused) so focus does not shift the text.
  * `error` turns the border `alert` and shows the message right under the field. `ref` is a normal prop in React 19.
+ * Inside FormScrollView it scrolls itself back above the iOS keyboard while the user types.
  */
 export function TextField({
   ref,
@@ -532,17 +578,34 @@ export function TextField({
   error,
   onFocus,
   onBlur,
+  onChangeText,
+  onContentSizeChange,
   ...rest
 }: TextInputProps & { ref?: Ref<TextInput>; error?: string | null }) {
   const [focus, setFocus] = useState(false);
+  const reveal = useContext(RevealContext);
+  const input = useRef<TextInput>(null);
   return (
     <View>
       <TextInput
-        ref={ref}
+        ref={(node) => {
+          input.current = node;
+          if (typeof ref === 'function') ref(node);
+          else if (ref) ref.current = node;
+        }}
         placeholderTextColor={album.pencil}
         selectionColor={album.pencil}
         keyboardAppearance="dark"
         {...rest}
+        onChangeText={(value) => {
+          onChangeText?.(value);
+          if (input.current) reveal?.(input.current);
+        }}
+        // A multiline input grows after onChangeText has measured it.
+        onContentSizeChange={(e) => {
+          onContentSizeChange?.(e);
+          if (input.current?.isFocused()) reveal?.(input.current);
+        }}
         onFocus={(e) => {
           setFocus(true);
           onFocus?.(e);
