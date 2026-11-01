@@ -1,11 +1,11 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { t } from '@/i18n';
 import { album, radius, space, text, touch } from '@/theme';
-import type { IconName } from '@/ui';
+import { FocusPressable, type IconName } from '@/ui';
 
 /**
  * "For strangers" is not a tab: it opens the write screen on top, keeping that screen's
@@ -33,7 +33,7 @@ export default function TabLayout() {
             const selected = state.routes[state.index].name === tab.name;
             const color = selected ? album.ink : album.pencil;
             return (
-              <Pressable
+              <FocusPressable
                 key={tab.name}
                 onPress={() => (tab.href ? router.push(tab.href) : navigation.navigate(tab.name))}
                 accessibilityRole={tab.href ? 'button' : 'tab'}
@@ -44,10 +44,10 @@ export default function TabLayout() {
                 <View style={[s.indicator, selected && s.indicatorSelected]}>
                   <MaterialCommunityIcons name={selected && tab.iconSelected ? tab.iconSelected : tab.icon} size={24} color={color} />
                 </View>
-                <Text style={[s.label, { color }]} maxFontSizeMultiplier={1.3}>
+                <Text style={[s.label, { color }]} maxFontSizeMultiplier={1.5}>
                   {t.tab[tab.name]}
                 </Text>
-              </Pressable>
+              </FocusPressable>
             );
           })}
         </View>

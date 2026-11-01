@@ -15,10 +15,12 @@ import type { Lang } from './i18n';
 export const album = {
   /** Album page. */
   page: '#1A1614',
-  /** Cards: Entry, primary button. Just light enough to read as lying on the page. */
+  /** Cards: Entry, text fields. Just light enough to read as lying on the page. */
   card: '#2B2622',
-  /** Small note clipped on by a stranger: a received Comfort. */
+  /** Small note clipped on by a stranger (a received Comfort), dialogs, primary button. */
   clip: '#3A322C',
+  /** Pressed primary button: one step lighter than `clip`. */
+  clipPressed: '#463D36',
   /** Body text on cards. ~11:1 on `card` — readable with blurry eyes, not harsh white. */
   ink: '#E4DCCF',
   /** White pencil: captions, dates, intensity tear. ~7.8:1 on `page`. */
@@ -27,8 +29,10 @@ export const album = {
   corner: '#B3AA9C',
   /** Tissue paper between nights: a very faint light band. */
   tissue: 'rgba(228, 220, 207, 0.06)',
-  /** The only hairline: top edge of the footer, empty-page frame. */
+  /** The only hairline (top edge of the footer, empty-page frame); also the fill of secondary buttons and unselected Pills. */
   hairline: 'rgba(228, 220, 207, 0.12)',
+  /** Text field border at rest: `pencil` at 60%, ≥ 3:1 on `page` and `card` (WCAG 1.4.11). Focus = `pencil`, error = `alert`. */
+  fieldBorder: 'rgba(179, 170, 156, 0.6)',
   /** The only accent color: the help button (~8:1 on `page`). */
   lamp: '#E2A55A',
   /** Pressed Entry card, between `card` and `clip`: shadows barely show on black, so pressing lightens. */
