@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, FormScrollView, LinkRow, PrimaryButton, TextField } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, PrimaryButton, TextField } from '@/ui';
 import { registerForm, useFormCheck } from '@/validation';
 
 /**
@@ -159,7 +159,7 @@ export default function RegisterScreen() {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
-  content: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl, gap: space.md },
+  content: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: FAB_CLEARANCE, gap: space.md },
   title: { color: album.ink },
   explanation: { ...text.body, color: album.pencil },
   label: { ...text.caption, color: album.pencil, marginTop: space.sm },

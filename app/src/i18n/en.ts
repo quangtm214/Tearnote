@@ -31,6 +31,7 @@ const en: Dictionary = {
     loading: 'Loading',
     keep: 'Keep',
     needHelp: 'Need help now',
+    help: 'Help',
     needHelpHint: 'Hotline numbers, available even offline',
     thanked: 'thanked',
     autoTranslated: 'translated automatically',

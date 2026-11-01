@@ -1,5 +1,5 @@
 import { MAX_COMFORT_TAGS } from './tags';
-import { check, comfortDraft, comfortRows, loginForm, myComfortRows, registerForm } from './validation';
+import { check, comfortDraft, comfortRows, fabPosition, loginForm, myComfortRows, registerForm } from './validation';
 
 // db.ts opens SQLite on import (through i18n), which Jest does not have.
 jest.mock('./db', () => ({ getSetting: () => null, setSetting: () => {} }));
@@ -95,5 +95,17 @@ describe('lời gửi người lạ', () => {
 
   it('ngôn ngữ ngoài LANGS bị từ chối', () => {
     expect(check(comfortDraft, { ...draft, sourceLang: 'fr' })).toMatchObject({ code: 'langInvalid' });
+  });
+});
+
+describe('vị trí nút trợ giúp đã lưu', () => {
+  it('giá trị đọc không được thì về góc dưới phải, không làm sập màn', () => {
+    for (const saved of [null, undefined, 'x', { side: 'top', lift: 10 }, { side: 'left', lift: -5 }]) {
+      expect(fabPosition.parse(saved)).toEqual({ side: 'right', lift: 0 });
+    }
+  });
+
+  it('giữ nguyên giá trị hợp lệ', () => {
+    expect(fabPosition.parse({ side: 'left', lift: 120 })).toEqual({ side: 'left', lift: 120 });
   });
 });

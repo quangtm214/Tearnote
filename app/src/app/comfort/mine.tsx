@@ -7,7 +7,7 @@ import type { z } from 'zod';
 import { tagLabels, t } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, leave, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, leave, type ConfirmRequest } from '@/ui';
 import { myComfortRows } from '@/validation';
 
 /**
@@ -75,7 +75,7 @@ export default function MyComfortsScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.scroll}>
+      <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
         <Text style={[pencil.title, s.title]} accessibilityRole="header">
           {t.common.wordsYouWrote}
         </Text>
@@ -127,7 +127,7 @@ export default function MyComfortsScreen() {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
-  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: FAB_CLEARANCE },
   title: { color: album.ink, marginBottom: space.lg },
   explanation: { ...text.body, color: album.pencil },
   body: { ...text.body, color: album.ink },

@@ -52,6 +52,11 @@ export const myComfortRows = z.array(
   }),
 );
 
+// The `help_fab_position` setting (ui.tsx, docs/db.md). Anything unreadable falls back to the default spot.
+export const fabPosition = z
+  .object({ side: z.enum(['left', 'right']), lift: z.number().min(0) })
+  .catch({ side: 'right', lift: 0 });
+
 /** First error: which field + which code. */
 export function check<T extends z.ZodType>(
   schema: T,

@@ -28,6 +28,7 @@ import { album, pencil, space, text, touch } from '@/theme';
 import {
   shadow,
   ScreenFooter,
+  FAB_CLEARANCE,
   LinkRow,
   TearDrop,
   PhotoCorners,
@@ -412,7 +413,7 @@ export default function NewEntryScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
-  scroll: { paddingHorizontal: space.screen, paddingBottom: space.xl },
+  scroll: { paddingHorizontal: space.screen, paddingBottom: FAB_CLEARANCE },
   upperHalf: { minHeight: 120, justifyContent: 'flex-end', paddingBottom: space.lg },
   title: { color: album.ink },
   label: { color: album.pencil, marginTop: space.lg },
