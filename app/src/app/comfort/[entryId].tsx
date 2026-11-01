@@ -20,6 +20,8 @@ import { ensureSession, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
 import {
   ScreenFooter,
+  FAB_CLEARANCE,
+  fabScrollProps,
   LinkRow,
   ConfirmDialog,
   VoicePlayer,
@@ -146,7 +148,7 @@ export default function EntryComfortScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.scroll}>
+      <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
         <Text style={[pencil.title, s.title]} accessibilityRole="header">
           {formatDate(entry.occurredAt)}
         </Text>
@@ -219,7 +221,7 @@ async function hitDailyLimit(): Promise<boolean> {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
-  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: FAB_CLEARANCE },
   title: { color: album.ink, marginBottom: space.lg },
   // Bottom `lg` so the paperclip (16 above the note) does not touch the section label.
   section: { color: album.pencil, marginTop: space.lg, marginBottom: space.lg },

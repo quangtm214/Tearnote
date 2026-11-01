@@ -14,7 +14,7 @@ import {
 } from '@/db';
 import { t } from '@/i18n';
 import { album, pencil, space } from '@/theme';
-import { ScreenFooter, PhotoCorners, formatDate, PrimaryButton, EntryCard, type ComfortState } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, PhotoCorners, formatDate, PrimaryButton, EntryCard, type ComfortState } from '@/ui';
 
 
 /** Group key by local date. */
@@ -70,7 +70,7 @@ export default function Timeline() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
-      <ScrollView ref={scrollRef} contentContainerStyle={s.scroll}>
+      <ScrollView ref={scrollRef} contentContainerStyle={s.scroll} {...fabScrollProps}>
         <Text style={[pencil.title, s.title]} accessibilityRole="header">
           {t.timeline.title}
         </Text>
@@ -124,7 +124,7 @@ export default function Timeline() {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
-  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: FAB_CLEARANCE },
   title: { color: album.ink, marginBottom: space.lg },
   date: { color: album.pencil, marginBottom: space.md },
 

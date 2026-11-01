@@ -93,6 +93,13 @@ components:
   nut-tro-giup-pressed:
     backgroundColor: "{colors.den}"
     textColor: "{colors.trang}"
+  nut-tro-giup-noi:
+    backgroundColor: "{colors.trang}"
+    textColor: "{colors.den}"
+    typography: "{typography.nut}"
+    rounded: "{rounded.tay}"
+    height: "48px"
+    padding: "0 16px 0 12px"
   dong-loi:
     textColor: "{colors.chu}"
     typography: "{typography.nut}"
@@ -143,7 +150,7 @@ components:
 
 # Design System: Tearnote
 
-> **Trạng thái:** mọi màn (`app/src/app/*`) đã ở world "Album ảnh trang đen". Token nằm ở `album` và `pencil` trong `app/src/theme.ts`; mảnh dùng chung (góc dán, tấm Entry, nút chính, nút trợ giúp, dòng lối, nút phụ `SecondaryButton`, lựa chọn, ô nhập `TextField`, footer, dải Nghe lại, hộp thoại `ConfirmDialog`, tấm lời `ComfortCard`) ở `app/src/ui.tsx`. World xanh mực cũ (`color`, `radius`, `caoVach`) đã xoá — đừng dựng lại. Bo góc của world này là `radius` (`paper` 6, `touch` 14), khác `radius` cũ.
+> **Trạng thái:** mọi màn (`app/src/app/*`) đã ở world "Album ảnh trang đen". Token nằm ở `album` và `pencil` trong `app/src/theme.ts`; mảnh dùng chung (góc dán, tấm Entry, nút chính, nút trợ giúp nổi `HelpFab`, nút Gọi `HelpButton`, dòng lối, nút phụ `SecondaryButton`, lựa chọn, ô nhập `TextField`, footer, dải Nghe lại, hộp thoại `ConfirmDialog`, tấm lời `ComfortCard`) ở `app/src/ui.tsx`. World xanh mực cũ (`color`, `radius`, `caoVach`) đã xoá — đừng dựng lại. Bo góc của world này là `radius` (`paper` 6, `touch` 14), khác `radius` cũ.
 
 ## Overview
 
@@ -167,7 +174,7 @@ Từ chối: danh sách card bo tròn kèm biểu đồ của app mood tracker, 
 Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông chữ ngà, một tông bút chì, và đúng một màu được phép nổi.
 
 ### Primary
-- **Đèn Còn Sáng** (`den`): hổ phách ấm, chỉ cho lối "Cần trợ giúp ngay" (~8:1 trên trang). Viền 1.5px khi nghỉ, tô kín khi nhấn. Cố ý không phải đỏ cảnh báo.
+- **Đèn Còn Sáng** (`den`): hổ phách ấm, chỉ cho lối "Cần trợ giúp ngay" — nút nổi "Trợ giúp" và các nút Gọi ở màn hotline (~8:1 trên trang). Viền 1.5px khi nghỉ, tô kín khi nhấn. Cố ý không phải đỏ cảnh báo.
 
 ### Báo lỗi
 - **Đất Nung** (`dat-nung`, `album.alert` trong theme): đỏ đất nung ấm, chỉ cho lỗi — chữ và viền ô nhập sai, dòng lỗi của form (~7:1 trên trang). Không phải đỏ cảnh báo chói; không dùng cho trạng thái chọn, nhấn mạnh hay trang trí. Không tính là màu nổi thứ hai của luật Một Ngọn Đèn: nó chỉ hiện khi có sự cố.
@@ -219,7 +226,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 
 Một cột dọc duy nhất, lề ngang `man` (20). Khoảng giữa các tấm là `lg` (24), và `xl` (40) khi tấm có mẩu giấy kẹp chờm xuống; chú thích nằm trong tấm, cách thân `md` (16). Giữa hai đêm: tờ pơ-luya với `md` phía trên, `xl` phía dưới. Tiêu đề cách nội dung `lg`.
 
-Footer cố định ngoài vùng cuộn (`ScreenFooter` trong `ui.tsx`), **ở mọi màn trừ màn hotline** — ADR 0005 đòi lối trợ giúp hiển thị thường trực: nút chính của màn (Ghi lại nhật ký, Lưu lại, Gửi, Đăng nhập, Tạo tài khoản) rồi nút trợ giúp, cách nhau `sm`, padding trên/dưới 12, tách khỏi trang bằng **một** hairline `vien-mo` — thanh điều hướng không có hairline riêng. Màn có hành động chính thì nút đó luôn ở footer, không ở cuối vùng cuộn; ngoại lệ là "Nhận một lời từ người lạ", nằm trong trang (ADR 0007: app không đẩy). Ba màn Nhật ký, Lịch, Cài đặt là tab: dưới footer có thêm thanh điều hướng, không có "Quay lại". Màn khác kết thúc vùng cuộn bằng dòng lối "Quay lại". Màn có ô nhập bọc nội dung trong `KeyboardAvoidingView` (behavior `padding`, chỉ bật trên Android): Android edge-to-edge không tự co cửa sổ, thiếu nó là bàn phím che ô đang gõ. Trên iOS vùng cuộn tự chèn khoảng bàn phím và cuộn ô đang gõ lên (`automaticallyAdjustKeyboardInsets`), và mỗi lần gõ thì `FormScrollView` trong `ui.tsx` kéo ô đang gõ trở lại trên bàn phím (kể cả khi người dùng đã cuộn đi, hay ô nhiều dòng cao dần); footer nằm dưới bàn phím tới khi ẩn bàn phím. Màn có nhập liệu (ghi lần khóc, viết lời) hỏi lại bằng hộp thoại trước khi rời nếu còn chữ, ảnh hay ghi âm chưa lưu. Form: Enter ở ô giữa chuyển sang ô kế (`next`), ô cuối gửi (`go`). Vùng bấm tối thiểu 48, nút chính 56, trợ giúp 64 (`touch` trong theme). Mở lại app thì cuộn thẳng tới đêm của Entry mở gần nhất, không animate; lưu xong một lần khóc thì cuộn tới đêm của nó.
+Footer cố định ngoài vùng cuộn (`ScreenFooter` trong `ui.tsx`) **chỉ chứa nút chính** của màn (Ghi lại nhật ký, Lưu lại, Gửi, Đăng nhập, Tạo tài khoản), padding trên/dưới 12, tách khỏi trang bằng **một** hairline `vien-mo` — thanh điều hướng không có hairline riêng. Màn không có nút chính thì không có footer (không hairline). **Lối trợ giúp là nút nổi** (`HelpFab`, ADR 0005) do `ScreenFooter` gắn, ở mọi màn trừ màn hotline: mặc định góc dưới phải, cách lề `screen`, nổi trên footer (hoặc trên thanh điều hướng) `md`. Độ cao tính từ đáy vùng màn (trên thanh điều hướng / inset đáy), nên nút đứng **cùng một chỗ trên mọi màn**; chỉ khi màn có footer cao hơn chỗ đó thì nút được đẩy lên để vẫn cách footer `md`. Mở màn: icon `lifebuoy` 22 + chữ "Trợ giúp", cao 48, bo 14, viền `den` 1.5px trên nền `trang` đặc, bóng nghỉ; cuộn xuống (bằng tay) thu về hình tròn 48 chỉ còn icon, cuộn lên hay mở màn khác thì hiện chữ lại — app tự cuộn (mở lại Nhật ký, lưu xong) thì không thu; screen reader luôn đọc "Cần trợ giúp ngay". **Kéo được:** di quá 6 mới là kéo (chạm nhẹ luôn mở hotline), đang kéo thì bóng sâu; thả ra hít vào mép trái hoặc phải gần hơn, giữ độ cao đã thả nhưng không lên quá 16 dưới status bar — độ cao đã lưu lớn hơn chỗ của màn hiện tại thì tự hạ. Vị trí nhớ qua các lần mở app (`settings.help_fab_position`, docs/db.md). **Ẩn khi bàn phím mở**, hiện lại khi ẩn bàn phím. Vùng cuộn chừa 72 ở cuối (`FAB_CLEARANCE`) để nút không che dòng cuối. Màn có hành động chính thì nút đó luôn ở footer, không ở cuối vùng cuộn; ngoại lệ là "Nhận một lời từ người lạ", nằm trong trang (ADR 0007: app không đẩy). Ba màn Nhật ký, Lịch, Cài đặt là tab: dưới footer có thêm thanh điều hướng, không có "Quay lại". Màn khác kết thúc vùng cuộn bằng dòng lối "Quay lại". Màn có ô nhập bọc nội dung trong `KeyboardAvoidingView` (behavior `padding`, chỉ bật trên Android): Android edge-to-edge không tự co cửa sổ, thiếu nó là bàn phím che ô đang gõ. Trên iOS vùng cuộn tự chèn khoảng bàn phím và cuộn ô đang gõ lên (`automaticallyAdjustKeyboardInsets`), và mỗi lần gõ thì `FormScrollView` trong `ui.tsx` kéo ô đang gõ trở lại trên bàn phím (kể cả khi người dùng đã cuộn đi, hay ô nhiều dòng cao dần); footer nằm dưới bàn phím tới khi ẩn bàn phím. Màn có nhập liệu (ghi lần khóc, viết lời) hỏi lại bằng hộp thoại trước khi rời nếu còn chữ, ảnh hay ghi âm chưa lưu. Form: Enter ở ô giữa chuyển sang ô kế (`next`), ô cuối gửi (`go`). Vùng bấm tối thiểu 48 (kể cả nút trợ giúp nổi), nút chính 56, nút Gọi ở hotline 64 (`touch` trong theme). Mở lại app thì cuộn thẳng tới đêm của Entry mở gần nhất, không animate; lưu xong một lần khóc thì cuộn tới đêm của nó.
 
 ### Named Rules
 **The Một Trục Rule.** Không lưới, không cột, không heatmap. Mọi thứ nằm trên một trục dọc theo thời gian. **Ngoại lệ duy nhất:** bảng năm ở màn Lịch — chủ repo chọn lưới vì nhìn cả năm một lượt mới thấy được mùa nào dày, tháng nào thưa. Ngoại lệ không lan sang màn khác; Timeline vẫn là một trục.
@@ -232,21 +239,22 @@ Chiều sâu là bậc sáng `trang` → `tam` → `kep`. Bóng giữ làm phụ
 Mọi thứ bấm được (nút, lựa chọn, dòng lối, tấm Entry, polaroid, ảnh nhỏ ở màn ghi, ô bảng năm, hàng công tắc ở Cài đặt, link website ở màn hotline, mục thanh điều hướng) đi qua `FocusPressable` trong `ui.tsx`; chỉ nền che của hộp thoại (không nhận focus) và trình xem ảnh phủ cả màn là Pressable thường. Khi focus bằng bàn phím / D-pad thì có viền `but-chi` 2px cách mép 2px (`outline`, nằm ngoài layout nên không xê dịch gì), theo bo góc của nó. Chạm không chuyển focus nên vòng không hiện khi chạm. Ô nhập không có vòng riêng — viền `but-chi` của nó là focus.
 
 ### Shadow Vocabulary
-- **Nằm trên trang** (`shadowColor #000, offset 0/3, opacity 0.45, radius 6, elevation 3`): tấm Entry, dải Nghe lại, mẩu giấy kẹp, tấm lời, card hotline, hộp thoại (mẩu kẹp, tấm lời và hộp thoại dùng elevation 6). Nút chính không có bóng.
-- **Nhấc khỏi trang** (`translateY -3, offset 0/8, opacity 0.6, radius 12, elevation 10`): trạng thái nhấn của tấm Entry (cùng nền `tam-nhac`).
+- **Nằm trên trang** (`shadowColor #000, offset 0/3, opacity 0.45, radius 6, elevation 3`): tấm Entry, dải Nghe lại, mẩu giấy kẹp, tấm lời, card hotline, hộp thoại, nút trợ giúp nổi `HelpFab` (mẩu kẹp, tấm lời và hộp thoại dùng elevation 6). Nút chính không có bóng.
+- **Nhấc khỏi trang** (`translateY -3, offset 0/8, opacity 0.6, radius 12, elevation 10`): trạng thái nhấn của tấm Entry (cùng nền `tam-nhac`); `HelpFab` đang bị kéo (không nhấc −3).
 
 ### Named Rules
 **The Bóng Là Giấy Rule.** Bóng chỉ để nói "tờ giấy này nằm trên trang". Mềm, thấp, đen, không lệch cứng, không màu.
 
 ## Shapes
 
-**Giấy vuông, tay mềm.** Thứ có góc dán (tấm Entry, ảnh nhỏ ở màn ghi, khung chờ) góc vuông — góc dán 14 che mọi bo ≤ 10, bo ≥ 12 làm góc tấm lùi khỏi góc dán và mất silhouette. Thứ ngón tay chạm (nút chính, nút trợ giúp, nút phụ, lựa chọn, ô nhập, dải Nghe lại, indicator của tab, nút hộp thoại) bo `radius.touch` 14. Giấy rời không góc dán (mẩu kẹp, tấm lời, card hotline, hộp thoại, polaroid trên tấm) bo `radius.paper` 6. Hình tròn (đĩa play, thumb, dấu ×) là hình, không phải mức bo. Không mức nào khác ngoài hai mức này và ba ngoại lệ cục bộ: ô bảng năm bo 3, ảnh trong khung polaroid bo 3 (nửa bo khung, để góc ảnh theo góc khung), đoạn thanh cường độ bo 4. Không viên thuốc (bo ≥ 20). Hình tam giác của bốn góc dán (14 trên tấm, 10 trên ảnh nhỏ, chìa ra 2 ngoài mép) là silhouette nhận diện của world — góc dán chỉ ở thứ được dán, không bao giờ trên nút. Nét bút chì là thanh 2px bo 1. Bất đối xứng nhỏ có chủ đích: mẩu kẹp nghiêng -2°, pơ-luya nghiêng -0.8°, kẹp giấy trên tấm lời 8°, polaroid theo vị trí -3° · 2° · -1.5°.
+**Giấy vuông, tay mềm.** Thứ có góc dán (tấm Entry, ảnh nhỏ ở màn ghi, khung chờ) góc vuông — góc dán 14 che mọi bo ≤ 10, bo ≥ 12 làm góc tấm lùi khỏi góc dán và mất silhouette. Thứ ngón tay chạm (nút chính, nút trợ giúp nổi khi có chữ, nút Gọi, nút phụ, lựa chọn, ô nhập, dải Nghe lại, indicator của tab, nút hộp thoại) bo `radius.touch` 14. Giấy rời không góc dán (mẩu kẹp, tấm lời, card hotline, hộp thoại, polaroid trên tấm) bo `radius.paper` 6. Hình tròn (đĩa play, thumb, dấu ×) là hình, không phải mức bo. Không mức nào khác ngoài hai mức này và ba ngoại lệ cục bộ: ô bảng năm bo 3, ảnh trong khung polaroid bo 3 (nửa bo khung, để góc ảnh theo góc khung), đoạn thanh cường độ bo 4. Không viên thuốc (bo ≥ 20). Hình tam giác của bốn góc dán (14 trên tấm, 10 trên ảnh nhỏ, chìa ra 2 ngoài mép) là silhouette nhận diện của world — góc dán chỉ ở thứ được dán, không bao giờ trên nút. Nét bút chì là thanh 2px bo 1. Bất đối xứng nhỏ có chủ đích: mẩu kẹp nghiêng -2°, pơ-luya nghiêng -0.8°, kẹp giấy trên tấm lời 8°, polaroid theo vị trí -3° · 2° · -1.5°.
 
 ## Components
 
 ### Buttons
 - **Nút chính** ("Ghi lại nhật ký", "Lưu lại", "Gửi", "Đăng nhập", "Tạo tài khoản"): nền `kep` (không phải `tam`: nút chính và lựa chọn chưa chọn không được trông giống nhau), bo 14, không góc dán, không bóng, chữ `nut` màu `chu` (9.2:1); nhấn thì nền sáng lên `kep-nhan`. Ở footer. Khi chờ lâu (xin lời) thì kèm chữ cạnh spinner ("Đang tìm một lời…").
-- **Nút trợ giúp** ("Cần trợ giúp ngay"): viền `den` 1.5px trên nền trang, bo 14, icon `lifebuoy` 24 trước nhãn, chữ và icon `den`; nhấn thì tô kín `den`, chữ và icon chuyển `trang`. Luôn ở footer, luôn cùng chỗ. Nút "Gọi …" ở màn hotline cùng kiểu, icon `phone-outline`.
+- **Nút trợ giúp nổi** (`HelpFab`, chữ "Trợ giúp"): viền `den` 1.5px trên nền trang, bo 14 (thu gọn thì tròn), icon `lifebuoy` 22, chữ và icon `den`; nhấn thì tô kín `den`, chữ và icon chuyển `trang`. Vị trí và hành vi ở Layout.
+- **Nút Gọi** (`HelpButton`, màn hotline): cùng kiểu viền `den`, cao 64, icon `phone-outline` 24.
 - **Dòng lối** (ví dụ "Viết một lời cho người lạ", "Lời bạn đã viết", "Quay lại"): không nền, không viền, cả hàng là vùng bấm; nhãn `nut` màu `chu`, dòng giải thích `phu` màu `but-chi` (tối đa 320 rộng). `icon` (24, `chu`) đứng trước khi lối làm một việc ngay (Quay lại / Để sau `arrow-left`, Đăng xuất `logout`, Thôi `close`, Xoá `trash-can-outline`, Thử lại `refresh`); `mui` (chevron phải 24, `but-chi`) ở cuối khi lối dẫn sang màn khác. Nhấn thì mờ 0.6. Screen reader đọc nhãn, dòng giải thích là hint.
 - **Nút phụ** (`SecondaryButton`): hành động tại chỗ (Chụp ảnh, Chọn ảnh, Ghi âm, Dừng ghi, Bỏ ghi âm, Cảm ơn, Thu hồi): mảnh nền `vien-mo` bo 14 cao 48, icon 20 `but-chi` tuỳ chọn, chữ `nut` `chu`; nhấn mờ 0.6; hết lượt thì mờ 0.35 và tắt, không ẩn (vị trí không nhảy).
 
@@ -302,12 +310,12 @@ Ngoại lệ luật Một Trục. 12 cột tháng × 31 hàng ngày, cột nhãn
 - **Do** giữ Reflection và nút bấm ở font hệ thống cỡ `than` / `nut`.
 - **Do** giữ vuông thứ có góc dán, bo 14 thứ ngón tay chạm, bo 6 giấy rời; nhấn thì sáng lên một bậc.
 - **Do** biểu diễn cường độ trên tấm bằng một giọt nước mắt đầy dần.
-- **Do** giữ lối trợ giúp ở footer, cao 64, là chỗ duy nhất có `den`.
+- **Do** giữ lối trợ giúp là nút nổi cùng một chỗ ở mọi màn (trừ hotline), chỉ ẩn khi bàn phím mở; cùng các nút Gọi, đó là chỗ duy nhất có `den`.
 
 ### Don't:
 - **Don't** dựng lại world xanh mực cũ (`color`, `radius`, `caoVach` đã xoá); don't bo tấm có góc dán; don't gắn góc dán lên nút.
 - **Don't** dùng `Alert` hệ thống — dùng `ConfirmDialog`; don't dùng màu đỏ cho thao tác xoá / bỏ.
-- **Don't** dùng `den` ở bất kỳ đâu ngoài lối trợ giúp (nút ở footer và các nút Gọi trên màn hotline).
+- **Don't** dùng `den` ở bất kỳ đâu ngoài lối trợ giúp (nút nổi "Trợ giúp" và các nút Gọi trên màn hotline).
 - **Don't** dùng Patrick Hand cho Reflection hoặc nhãn nút; don't dùng Yomogi cho tiếng Việt.
 - **Don't** vẽ biểu đồ, lưới, heatmap hay ô trống cho cường độ — ngoài bảng năm ở màn Lịch.
 - **Don't** dùng viền để tạo lớp (viền focus của ô nhập là trạng thái); don't dùng hình viên thuốc (bo ≥ 20).
@@ -315,5 +323,6 @@ Ngoại lệ luật Một Trục. 12 cột tháng × 31 hàng ngày, cột nhãn
 
 ## Lịch sử thay đổi
 
+- 2026-11-01 — Change 16: lối trợ giúp thành nút nổi `HelpFab` kéo được (vị trí lưu ở `settings.help_fab_position`), footer chỉ còn nút chính, màn không có nút chính thì không có footer.
 - 2026-11-01 — Change 15 (audit UX vòng 1–2): nút chính nền `kep`, nhấn `kep-nhan`; lựa chọn chưa chọn nền `vien-mo`; ô nhập viền `vien-o-nhap` lúc nghỉ; vòng focus `but-chi` 2px qua `FocusPressable`; trần cỡ chữ 2.0 cho nút chính / trợ giúp / hộp thoại, 1.5 cho nhãn tab.
 - 2026-10-07 — Review toàn app (ba vai visual / UX / nội dung thảo luận ba vòng; quyết định chi tiết ở `tearnote-evidence/review-2026-10-06/design/decisions.md`, ngoài repo): "giấy vuông, tay mềm" (`radius.touch` 14 / `radius.paper` 6), nút chính bỏ góc dán và sáng lên khi nhấn, `ConfirmDialog` thay Alert, `TextField` có focus, `SecondaryButton`, tấm lời có kẹp giấy, nút chính của mọi màn ở footer, hỏi lại trước khi rời màn có nhập liệu, xoá một lần khóc, Lịch đủ 31 hàng + hôm nay, hotline đưa nước của máy lên đầu.

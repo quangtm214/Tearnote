@@ -7,7 +7,7 @@ import { setComfortReceivingEnabled, isComfortReceivingEnabled } from '@/db';
 import { setLanguage, LANGS, currentLang, t, NATIVE_NAMES } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, LinkRow, Pill, FocusPressable } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, Pill, FocusPressable } from '@/ui';
 
 export default function SettingsScreen() {
   const [receiving, setReceiving] = useState(true);
@@ -39,7 +39,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={s.scroll}>
+      <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
         <Text style={[pencil.title, s.title]} accessibilityRole="header">
           {t.settings.title}
         </Text>
@@ -115,7 +115,7 @@ export default function SettingsScreen() {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
-  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.xl },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: FAB_CLEARANCE },
   title: { color: album.ink, marginBottom: space.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
   left: { flex: 1 },

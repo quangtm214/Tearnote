@@ -20,6 +20,8 @@ const vi = {
     loading: 'Đang tải',
     keep: 'Giữ lại',
     needHelp: 'Cần trợ giúp ngay',
+    // Short label on the floating help button; screen readers still read needHelp.
+    help: 'Trợ giúp',
     needHelpHint: 'Số đường dây nóng, mở được cả khi không có mạng',
     thanked: 'đã cảm ơn',
     autoTranslated: 'đã dịch tự động',
