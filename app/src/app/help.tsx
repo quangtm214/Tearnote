@@ -1,10 +1,10 @@
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HOTLINES_FALLBACK, topCountry, type Hotline } from '@/hotlines';
 import { currentLang, t, deviceRegion, type Lang } from '@/i18n';
 import { album, pencil, radius, space, text, touch } from '@/theme';
-import { shadow, LinkRow, HelpButton, leave } from '@/ui';
+import { shadow, LinkRow, HelpButton, leave, FocusPressable } from '@/ui';
 
 /** Must work in airplane mode: reads only the bundled list, no network calls. */
 const COUNTRY_NAMES: Record<string, Record<Lang, string>> = {
@@ -68,14 +68,14 @@ export default function Help() {
                   </View>
                 ) : null}
                 {url ? (
-                  <Pressable
+                  <FocusPressable
                     style={({ pressed }) => [s.link, pressed && s.pressed]}
                     accessibilityRole="link"
                     accessibilityLabel={t.help.openWebsite(name[lang])}
                     onPress={() => openUrl(url)}
                   >
                     <Text style={s.linkText}>{url.replace(/^https?:\/\//, '')}</Text>
-                  </Pressable>
+                  </FocusPressable>
                 ) : null}
               </View>
             ))}

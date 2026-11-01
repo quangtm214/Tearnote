@@ -1,14 +1,14 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { listEntries, type Entry } from '@/db';
 import { t } from '@/i18n';
 import { colorLevel, THRESHOLDS, dailyTotals } from '@/calendar';
 import { album, pencil, space, text, touch } from '@/theme';
-import { ScreenFooter, type IconName } from '@/ui';
+import { ScreenFooter, FocusPressable, type IconName } from '@/ui';
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 /** "1–2" … "10+", derived from THRESHOLDS so the legend never drifts from them. */
@@ -145,7 +145,7 @@ export default function CalendarScreen() {
 /** Previous / next year button: shown only with two or more years; faded and disabled at either end. */
 function YearButton({ icon, label, disabled, onPress }: { icon: IconName; label: string; disabled: boolean; onPress: () => void }) {
   return (
-    <Pressable
+    <FocusPressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -154,7 +154,7 @@ function YearButton({ icon, label, disabled, onPress }: { icon: IconName; label:
       style={({ pressed }) => [s.yearButton, pressed && s.pressed, disabled && s.faded]}
     >
       <MaterialCommunityIcons name={icon} size={24} color={album.ink} />
-    </Pressable>
+    </FocusPressable>
   );
 }
 
