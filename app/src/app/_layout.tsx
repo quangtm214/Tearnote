@@ -13,8 +13,9 @@ SplashScreen.preventAutoHideAsync();
 const YOMOGI = { Yomogi: require('../../assets/fonts/Yomogi-Regular.ttf') };
 
 /**
- * One Stack for every route. Screens are not listed — expo-router registers them from files,
- * so new routes do not need changes here.
+ * One Stack for every route. expo-router registers screens from files; only screens with their own
+ * options are listed. `slide_from_right` is the native push: the only animation where the iOS edge
+ * swipe-back follows the finger (custom ones like `fade` just pop).
  */
 export default function RootLayout() {
   const [lang, setLang] = useState(currentLang);
@@ -49,9 +50,14 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: album.page },
-          animation: 'fade',
+          animation: 'slide_from_right',
         }}
-      />
+      >
+        {/* Listed first: once any screen is listed, the first one becomes the initial route. */}
+        <Stack.Screen name="(tabs)" />
+        {/* An interruption that returns where it came from: closes with × (TopBar); iOS shows a page sheet. */}
+        <Stack.Screen name="login" options={{ presentation: 'modal', animation: 'default' }} />
+      </Stack>
     </>
   );
 }

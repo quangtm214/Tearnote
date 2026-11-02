@@ -16,6 +16,7 @@ const ja: Dictionary = {
 
   common: {
     back: '戻る',
+    close: '閉じる',
     networkError: '接続できませんでした。ネットワークを確認して、もう一度お試しください。',
     loading: '読み込み中',
     keep: '残す',
