@@ -401,6 +401,25 @@ export function LinkRow({
 }
 
 /**
+ * Bar above the scroll area of every stacked screen: ← (or × on a modal), no title — the pencil title
+ * stays in the page. The "Back" row at the end of the page stays too, for the thumb. DESIGN.md › TopBar.
+ */
+export function TopBar({ close }: { close?: boolean }) {
+  return (
+    <View style={s.topBar}>
+      <FocusPressable
+        onPress={leave}
+        accessibilityRole="button"
+        accessibilityLabel={close ? t.common.close : t.common.back}
+        style={({ pressed }) => [s.topBarButton, pressed && s.dim]}
+      >
+        <MaterialCommunityIcons name={close ? 'close' : 'arrow-left'} size={24} color={album.ink} />
+      </FocusPressable>
+    </View>
+  );
+}
+
+/**
  * Secondary button for in-place actions (Take photo, Record, Thank, Withdraw…). When unavailable it is
  * faded and disabled, not hidden, so the layout does not jump.
  */
@@ -981,6 +1000,9 @@ const s = StyleSheet.create({
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm + space.xs },
   linkBlock: { flex: 1 },
   dim: { opacity: 0.6 },
+  // Padding 12 less than the screen margin: the 24 icon centred in its 48 box lines up with the page text.
+  topBar: { height: touch.min, flexDirection: 'row', alignItems: 'center', paddingHorizontal: space.screen - 12, backgroundColor: album.page },
+  topBarButton: { width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.touch },
   // `outline` draws outside the layout and follows borderRadius, so focus does not move anything.
   focusRing: { outlineColor: album.pencil, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
   linkText: { ...text.button, color: album.ink },
