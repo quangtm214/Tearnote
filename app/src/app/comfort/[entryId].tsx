@@ -31,6 +31,7 @@ import {
   EntryCard,
   ComfortCard,
   leave,
+  TopBar,
   type ConfirmRequest,
 } from '@/ui';
 import { comfortRows } from '@/validation';
@@ -134,68 +135,75 @@ export default function EntryComfortScreen() {
   if (!entryId || !entry) {
     return (
       <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-        <View style={[s.screen, s.scroll]}>
-          <Text style={[pencil.title, s.title]} accessibilityRole="header">
-            {t.entry.notFound}
-          </Text>
-          <Text style={s.explanation}>{t.entry.notFoundDetail}</Text>
-          <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
+        <TopBar />
+        {/* Own box under the TopBar: the help FAB is placed inside it, so it can never cover ←. */}
+        <View style={s.screen}>
+          <View style={[s.screen, s.scroll]}>
+            <Text style={[pencil.title, s.title]} accessibilityRole="header">
+              {t.entry.notFound}
+            </Text>
+            <Text style={s.explanation}>{t.entry.notFoundDetail}</Text>
+            <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
+          </View>
+          <ScreenFooter />
         </View>
-        <ScreenFooter />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
-        <Text style={[pencil.title, s.title]} accessibilityRole="header">
-          {formatDate(entry.occurredAt)}
-        </Text>
-        <EntryCard entry={entry} attachments={attachments} />
-        {/* Outside the card: the card is one merged screen-reader item and would swallow a button inside it. */}
-        {recording ? <VoicePlayer uri={recording.uri} /> : null}
+      <TopBar />
+      <View style={s.screen}>
+        <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
+          <Text style={[pencil.title, s.title]} accessibilityRole="header">
+            {formatDate(entry.occurredAt)}
+          </Text>
+          <EntryCard entry={entry} attachments={attachments} />
+          {/* Outside the card: the card is one merged screen-reader item and would swallow a button inside it. */}
+          {recording ? <VoicePlayer uri={recording.uri} /> : null}
 
-        <Text style={[pencil.date, s.section]} accessibilityRole="header">
-          {t.entry.wordsFromStranger}
-        </Text>
+          <Text style={[pencil.date, s.section]} accessibilityRole="header">
+            {t.entry.wordsFromStranger}
+          </Text>
 
-        {comforts.length === 0 ? (
-          <Text style={s.explanation}>{t.entry.noneYet}</Text>
-        ) : (
-          comforts.map((comfort) => (
-            // Same `album.clip` tone as the small clip on the Timeline card.
-            <ComfortCard key={comfort.comfortId}>
-              <Text style={s.body}>{comfort.body}</Text>
-              {comfort.translated ? <Text style={[pencil.note, s.muted]}>{t.common.autoTranslated}</Text> : null}
-              {comfort.thanked ? (
-                <Text style={[pencil.note, s.muted]}>{t.common.thanked}</Text>
-              ) : (
-                <SecondaryButton label={t.entry.thank} onPress={() => void thank(comfort.comfortId)} />
-              )}
-            </ComfortCard>
-          ))
-        )}
+          {comforts.length === 0 ? (
+            <Text style={s.explanation}>{t.entry.noneYet}</Text>
+          ) : (
+            comforts.map((comfort) => (
+              // Same `album.clip` tone as the small clip on the Timeline card.
+              <ComfortCard key={comfort.comfortId}>
+                <Text style={s.body}>{comfort.body}</Text>
+                {comfort.translated ? <Text style={[pencil.note, s.muted]}>{t.common.autoTranslated}</Text> : null}
+                {comfort.thanked ? (
+                  <Text style={[pencil.note, s.muted]}>{t.common.thanked}</Text>
+                ) : (
+                  <SecondaryButton label={t.entry.thank} onPress={() => void thank(comfort.comfortId)} />
+                )}
+              </ComfortCard>
+            ))
+          )}
 
-        {notice ? <Text style={s.notice}>{notice}</Text> : null}
+          {notice ? <Text style={s.notice}>{notice}</Text> : null}
 
-        {/* One Comfort per Entry (ADR 0007); with receiving turned off there is no request button anywhere. */}
-        {comforts.length === 0 && receivingOn ? (
-          <View style={s.requestButton}>
-            <PrimaryButton label={t.entry.request} onPress={requestComfort} busy={requesting} busyLabel={t.entry.searching} />
+          {/* One Comfort per Entry (ADR 0007); with receiving turned off there is no request button anywhere. */}
+          {comforts.length === 0 && receivingOn ? (
+            <View style={s.requestButton}>
+              <PrimaryButton label={t.entry.request} onPress={requestComfort} busy={requesting} busyLabel={t.entry.searching} />
+            </View>
+          ) : null}
+
+          {comforts.length === 0 && !receivingOn ? (
+            <Text style={[s.explanation, s.requestButton]}>{t.entry.receivingOff}</Text>
+          ) : null}
+
+          <View style={s.removeRow}>
+            <LinkRow icon="trash-can-outline" label={t.entry.remove} onPress={askRemove} />
           </View>
-        ) : null}
-
-        {comforts.length === 0 && !receivingOn ? (
-          <Text style={[s.explanation, s.requestButton]}>{t.entry.receivingOff}</Text>
-        ) : null}
-
-        <View style={s.removeRow}>
-          <LinkRow icon="trash-can-outline" label={t.entry.remove} onPress={askRemove} />
-        </View>
-        <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
-      </ScrollView>
-      <ScreenFooter />
+          <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
+        </ScrollView>
+        <ScreenFooter />
+      </View>
       <ConfirmDialog request={dialog} onClose={() => setDialog(null)} />
     </SafeAreaView>
   );

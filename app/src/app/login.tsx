@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, PrimaryButton, TextField, leave } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, PrimaryButton, TextField, TopBar, leave } from '@/ui';
 import { loginForm, useFormCheck } from '@/validation';
 
 /**
@@ -70,6 +70,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <TopBar close />
       {/* Android: KAV, iOS: ScrollView keyboard insets. Why both: new.tsx. */}
       <KeyboardAvoidingView style={s.screen} behavior="padding" enabled={Platform.OS === 'android'}>
         <FormScrollView contentContainerStyle={s.content}>

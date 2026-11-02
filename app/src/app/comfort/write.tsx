@@ -17,7 +17,7 @@ import { isRealAccount, supabase } from '@/supabase';
 import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
 import { check, comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH } from '@/validation';
-import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, leave, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, TopBar, leave, type ConfirmRequest } from '@/ui';
 
 /**
  * Write a Comfort. The two key rules are NOT here: "real accounts only" and "max 5 / 24h" are
@@ -136,10 +136,14 @@ export default function WriteComfortScreen() {
   if (checkingAuth) {
     return (
       <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-        <View style={s.center}>
-          <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
+        <TopBar />
+        {/* Own box under the TopBar: the help FAB is placed inside it, so it can never cover ←. */}
+        <View style={s.screen}>
+          <View style={s.center}>
+            <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
+          </View>
+          <ScreenFooter />
         </View>
-        <ScreenFooter />
       </SafeAreaView>
     );
   }
@@ -147,20 +151,24 @@ export default function WriteComfortScreen() {
   if (done) {
     return (
       <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-        <View style={s.doneContent}>
-          <Text style={[pencil.title, s.title]} accessibilityRole="header">
-            {t.write.doneTitle}
-          </Text>
-          <Text style={s.explanation}>{t.write.doneDetail}</Text>
-          <PrimaryButton label={t.write.done} onPress={leave} />
+        <TopBar />
+        <View style={s.screen}>
+          <View style={s.doneContent}>
+            <Text style={[pencil.title, s.title]} accessibilityRole="header">
+              {t.write.doneTitle}
+            </Text>
+            <Text style={s.explanation}>{t.write.doneDetail}</Text>
+            <PrimaryButton label={t.write.done} onPress={leave} />
+          </View>
+          <ScreenFooter />
         </View>
-        <ScreenFooter />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <TopBar />
       {/* Android: KAV, iOS: ScrollView keyboard insets. Why both: new.tsx. */}
       <KeyboardAvoidingView style={s.screen} behavior="padding" enabled={Platform.OS === 'android'}>
         <FormScrollView contentContainerStyle={s.content}>
