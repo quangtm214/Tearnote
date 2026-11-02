@@ -45,6 +45,7 @@ import {
   DURATION_OPTIONS,
   FocusPressable,
   TopBar,
+  showSnackbar,
   type ConfirmRequest,
 } from '@/ui';
 
@@ -189,7 +190,7 @@ export default function NewEntryScreen() {
           ...(audioUri ? [{ kind: 'audio' as const, uri: audioUri }] : []),
         ],
       );
-      AccessibilityInfo.announceForAccessibility(t.newEntry.saved);
+      showSnackbar(t.newEntry.saved);
       router.back();
     } catch {
       saved.current = false;

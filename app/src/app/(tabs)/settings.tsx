@@ -1,13 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { AccessibilityInfo, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { setComfortReceivingEnabled, isComfortReceivingEnabled } from '@/db';
 import { setLanguage, LANGS, currentLang, t, NATIVE_NAMES } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, Pill, FocusPressable } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, Pill, FocusPressable, showSnackbar } from '@/ui';
 
 export default function SettingsScreen() {
   const [receiving, setReceiving] = useState(true);
@@ -34,7 +34,7 @@ export default function SettingsScreen() {
     // signOut always clears the local session, even offline (an error only means the server did not revoke the token).
     await supabase.auth.signOut();
     setEmail(null);
-    AccessibilityInfo.announceForAccessibility(t.settings.signedOut);
+    showSnackbar(t.settings.signedOut);
   }
 
   return (

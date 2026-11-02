@@ -1,13 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { z } from 'zod';
 
 import { tagLabels, t } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, TopBar, leave, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, TopBar, leave, showSnackbar, type ConfirmRequest } from '@/ui';
 import { myComfortRows } from '@/validation';
 
 /**
@@ -69,7 +69,7 @@ export default function MyComfortsScreen() {
       setError(t.myComforts.retractError);
       return;
     }
-    AccessibilityInfo.announceForAccessibility(t.myComforts.retracted);
+    showSnackbar(t.myComforts.retracted);
     await load();
   }
 

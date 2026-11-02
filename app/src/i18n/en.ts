@@ -229,6 +229,7 @@ const en: Dictionary = {
   },
 
   login: {
+    signedIn: 'Signed in.',
     verificationSent: "We've sent a verification email. Once you've verified, sign in here.",
     error: "Couldn't sign in. Check your email, password and connection.",
     explanation:

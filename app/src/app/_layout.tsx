@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { currentLang, subscribeLanguage } from '@/i18n';
 import { album } from '@/theme';
+import { SnackbarHost } from '@/ui';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -58,6 +59,7 @@ export default function RootLayout() {
         {/* An interruption that returns where it came from: closes with × (TopBar); iOS shows a page sheet. */}
         <Stack.Screen name="login" options={{ presentation: 'modal', animation: 'default' }} />
       </Stack>
+      <SnackbarHost />
     </>
   );
 }
