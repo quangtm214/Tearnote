@@ -1,5 +1,4 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -8,13 +7,12 @@ import { album, radius, space, text, touch } from '@/theme';
 import { FocusPressable, type IconName } from '@/ui';
 
 /**
- * "For strangers" is not a tab: it opens the write screen on top, keeping that screen's
- * login / Send / Done flow. The active tab gets a filled icon — `ink` and `pencil` are too close
- * to rely on color alone. Labels come from `t.tab[name]` at render time.
+ * The active tab gets a filled icon — `ink` and `pencil` are too close to rely on color alone.
+ * Labels come from `t.tab[name]` at render time.
  */
-const TABS: { name: keyof typeof t.tab; icon: IconName; iconSelected?: IconName; href?: Href }[] = [
+const TABS: { name: keyof typeof t.tab; icon: IconName; iconSelected: IconName }[] = [
   { name: 'index', icon: 'notebook-outline', iconSelected: 'notebook' },
-  { name: 'write', icon: 'note-edit-outline', href: '/comfort/write' },
+  { name: 'strangers', icon: 'note-edit-outline', iconSelected: 'note-edit' },
   { name: 'calendar', icon: 'calendar-blank-outline', iconSelected: 'calendar-blank' },
   { name: 'settings', icon: 'cog-outline', iconSelected: 'cog' },
 ];
@@ -35,14 +33,14 @@ export default function TabLayout() {
             return (
               <FocusPressable
                 key={tab.name}
-                onPress={() => (tab.href ? router.push(tab.href) : navigation.navigate(tab.name))}
-                accessibilityRole={tab.href ? 'button' : 'tab'}
+                onPress={() => navigation.navigate(tab.name)}
+                accessibilityRole="tab"
                 accessibilityState={{ selected }}
                 accessibilityLabel={t.tab[tab.name]}
                 style={({ pressed }) => [s.item, pressed && s.dim]}
               >
                 <View style={[s.indicator, selected && s.indicatorSelected]}>
-                  <MaterialCommunityIcons name={selected && tab.iconSelected ? tab.iconSelected : tab.icon} size={24} color={color} />
+                  <MaterialCommunityIcons name={selected ? tab.iconSelected : tab.icon} size={24} color={color} />
                 </View>
                 <Text style={[s.label, { color }]} maxFontSizeMultiplier={1.5}>
                   {t.tab[tab.name]}
@@ -55,6 +53,7 @@ export default function TabLayout() {
     >
       {/* Declared so the Journal is the first tab: Back on another tab returns here. */}
       <Tabs.Screen name="index" />
+      <Tabs.Screen name="strangers" />
       <Tabs.Screen name="calendar" />
       <Tabs.Screen name="settings" />
     </Tabs>

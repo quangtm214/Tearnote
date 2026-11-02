@@ -29,7 +29,6 @@ const vi = {
     intensity: (n: number) => `cường độ ${n} trên 5`,
     signIn: 'Đăng nhập',
     wordsYouWrote: 'Lời bạn đã viết',
-    writeForStranger: 'Viết một lời cho người lạ',
     email: 'Email',
     emailPlaceholder: 'ban@vidu.com',
     password: 'Mật khẩu',
@@ -38,7 +37,16 @@ const vi = {
     remove: 'Xoá',
   },
 
-  tab: { index: 'Nhật ký', write: 'Viết lời', calendar: 'Lịch', settings: 'Cài đặt' },
+  tab: { index: 'Nhật ký', strangers: 'Viết lời', calendar: 'Lịch', settings: 'Cài đặt' },
+
+  /** "For strangers" tab ((tabs)/strangers.tsx). */
+  strangers: {
+    title: 'Lời cho người lạ',
+    intro: 'Lời bạn viết sẽ tới một người lạ vừa khóc vì chuyện tương tự. Hai bên không biết nhau.',
+    rules: 'Cần đăng nhập. Tối đa 5 lời trong 24 giờ. Lời được duyệt trước khi gửi đi.',
+    wordsYouWroteDetail: 'Xem lại, hoặc thu hồi lời đã viết.',
+    writeOne: 'Viết một lời',
+  },
 
   /** EntryCard and VoicePlayer (ui.tsx). */
   card: {
@@ -138,8 +146,6 @@ const vi = {
     signedOut: 'Đã đăng xuất.',
     receiveComforts: 'Nhận lời từ người lạ',
     receiveComfortsDetail: 'Tắt thì không nhận thêm lời nào từ người lạ. Việc ghi lại vẫn như cũ.',
-    wordsYouWroteDetail: 'Xem lại, hoặc thu hồi lời đã viết.',
-    writeForStrangerDetail: 'Cần đăng nhập. Tối đa 5 lời trong 24 giờ.',
     account: 'Tài khoản',
     signOut: 'Đăng xuất',
     signOutDetail: 'Những lần khóc vẫn nằm nguyên trên máy.',
@@ -175,7 +181,7 @@ const vi = {
     title: 'Viết một lời cho người lạ',
     doneTitle: 'Đã nhận lời của bạn',
     doneDetail:
-      'Lời này sẽ được duyệt trước, rồi mới tới tay một người lạ. Muốn thu hồi thì vào Cài đặt → Lời bạn đã viết.',
+      'Lời này sẽ được duyệt trước, rồi mới tới tay một người lạ. Muốn thu hồi thì vào Viết lời → Lời bạn đã viết.',
     done: 'Xong',
     intro: 'Lời này sẽ tới một người lạ vừa khóc vì chuyện tương tự. Hai bên không biết nhau.',
     guidance: 'Kể điều từng giúp bạn, không cần khuyên. Đừng để lại tên, số điện thoại hay tài khoản mạng xã hội.',
@@ -189,7 +195,7 @@ const vi = {
       `Chọn 1 hoặc ${max}. Lời hợp với bất kỳ ai đang buồn thì chọn “${unknownLabel}”.`,
     /** `others`: languages the Comfort will be translated into — every language except the one the writer chose. */
     consent: (others: Lang[]) =>
-      `Bấm Gửi là bạn đồng ý: lời này được duyệt, dịch sang ${joinList(others.map((lang) => LANG_NAMES[lang]))}, rồi gửi ẩn danh tới người lạ. Thu hồi được trong Cài đặt → Lời bạn đã viết; ai đã nhận thì vẫn giữ bản của họ.`,
+      `Bấm Gửi là bạn đồng ý: lời này được duyệt, dịch sang ${joinList(others.map((lang) => LANG_NAMES[lang]))}, rồi gửi ẩn danh tới người lạ. Thu hồi được trong Viết lời → Lời bạn đã viết; ai đã nhận thì vẫn giữ bản của họ.`,
     signInAgain: 'Đăng nhập lại',
     send: 'Gửi',
     leaveQuestion: 'Thoát mà chưa gửi?',
