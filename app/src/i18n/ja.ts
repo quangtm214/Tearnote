@@ -215,6 +215,7 @@ const ja: Dictionary = {
   },
 
   login: {
+    signedIn: 'ログインしました。',
     verificationSent: '確認メールを送りました。確認が済んだら、ここでログインしてください。',
     error: 'ログインできませんでした。メールアドレス、パスワード、ネットワークを確認してください。',
     explanation:

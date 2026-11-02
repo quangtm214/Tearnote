@@ -32,6 +32,7 @@ import {
   ComfortCard,
   leave,
   TopBar,
+  showSnackbar,
   type ConfirmRequest,
 } from '@/ui';
 import { comfortRows } from '@/validation';
@@ -127,7 +128,7 @@ export default function EntryComfortScreen() {
       confirmLabel: t.common.remove,
       onConfirm: () => {
         deleteEntry(entry.id);
-        AccessibilityInfo.announceForAccessibility(t.entry.removed);
+        showSnackbar(t.entry.removed, 'deleted');
         leave();
       },
     });

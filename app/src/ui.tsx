@@ -15,6 +15,7 @@ import {
   type Ref,
 } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Animated,
   Image,
@@ -405,6 +406,16 @@ export function LinkRow({
  * stays in the page. The "Back" row at the end of the page stays too, for the thumb. DESIGN.md › TopBar.
  */
 export function TopBar({ close }: { close?: boolean }) {
+  useFocusEffect(
+    useCallback(() => {
+      topBars++;
+      emitSnack();
+      return () => {
+        topBars--;
+        emitSnack();
+      };
+    }, []),
+  );
   return (
     <View style={s.topBar}>
       <FocusPressable
@@ -416,6 +427,69 @@ export function TopBar({ close }: { close?: boolean }) {
         <MaterialCommunityIcons name={close ? 'close' : 'arrow-left'} size={24} color={album.ink} />
       </FocusPressable>
     </View>
+  );
+}
+
+type Snack = { id: number; message: string; kind: 'done' | 'deleted' };
+let snack: Snack | null = null;
+let snackTimer: ReturnType<typeof setTimeout> | undefined;
+// Focused screens with a TopBar: a counter, not a flag, because the next screen's focus can run before
+// the last screen's blur.
+let topBars = 0;
+const snackListeners = new Set<() => void>();
+const emitSnack = () => snackListeners.forEach((l) => l());
+const subscribeSnack = (l: () => void) => {
+  snackListeners.add(l);
+  return () => void snackListeners.delete(l);
+};
+
+/**
+ * Short note that something just finished ("Đã lưu.", "Đã xoá."), at the top of whatever screen is shown next
+ * (DESIGN.md › Snackbar). No action, no undo; a new one replaces the current one. Also read by screen readers.
+ */
+export function showSnackbar(message: string, kind: Snack['kind'] = 'done') {
+  clearTimeout(snackTimer);
+  snack = { id: (snack?.id ?? 0) + 1, message, kind };
+  emitSnack();
+  // `queue`: iOS VoiceOver otherwise cuts the message off when the next screen is announced. Android ignores it.
+  AccessibilityInfo.announceForAccessibilityWithOptions(message, { queue: true });
+  snackTimer = setTimeout(() => {
+    snack = null;
+    emitSnack();
+  }, 3000);
+}
+
+/** Mounted once in the root layout, above every screen and the help FAB. */
+export function SnackbarHost() {
+  const current = useSyncExternalStore(subscribeSnack, () => snack);
+  const underTopBar = useSyncExternalStore(subscribeSnack, () => topBars > 0);
+  const insets = useSafeAreaInsets();
+  if (!current) return null;
+  return (
+    <View
+      pointerEvents="none"
+      style={[s.snackLayer, { top: insets.top + (underTopBar ? touch.min : 0) + space.sm }]}
+    >
+      <SnackPaper key={current.id} {...current} />
+    </View>
+  );
+}
+
+function SnackPaper({ message, kind }: Snack) {
+  const y = useRef(new Animated.Value(-touch.min - space.lg)).current;
+  useEffect(() => {
+    Animated.timing(y, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+  }, [y]);
+  return (
+    // Already announced by showSnackbar; hidden from screen readers so it is not read twice.
+    <Animated.View
+      style={[s.snack, { transform: [{ translateY: y }] }]}
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+    >
+      <MaterialCommunityIcons name={kind === 'deleted' ? 'trash-can-outline' : 'check'} size={20} color={album.pencil} />
+      <Text style={s.snackText}>{message}</Text>
+    </Animated.View>
   );
 }
 
@@ -1002,6 +1076,18 @@ const s = StyleSheet.create({
   dim: { opacity: 0.6 },
   // Padding 12 less than the screen margin: the 24 icon centred in its 48 box lines up with the page text.
   topBar: { height: touch.min, flexDirection: 'row', alignItems: 'center', paddingHorizontal: space.screen - 12, backgroundColor: album.page },
+  snackLayer: { position: 'absolute', left: space.screen, right: space.screen },
+  snack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingVertical: 12,
+    paddingHorizontal: space.md,
+    borderRadius: radius.paper,
+    backgroundColor: album.clip,
+    ...shadow,
+  },
+  snackText: { ...text.body, color: album.ink, flexShrink: 1 },
   topBarButton: { width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.touch },
   // `outline` draws outside the layout and follows borderRadius, so focus does not move anything.
   focusRing: { outlineColor: album.pencil, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
