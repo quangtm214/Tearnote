@@ -835,7 +835,7 @@ const RevealContext = createContext<((input: TextInput) => void) | null>(null);
  * when the keyboard opens; if the user scrolls away and types, or a multiline input grows, iOS does not follow.
  * So each TextField asks this view to scroll it back on every change. Android scrolls to the cursor natively.
  */
-export function FormScrollView(props: ScrollViewProps) {
+export function FormScrollView({ ref: outerRef, ...props }: ScrollViewProps & { ref?: Ref<ScrollView> }) {
   const ref = useRef<ScrollView>(null);
   const offset = useRef(0);
   const reveal = (input: TextInput) => {
@@ -855,7 +855,11 @@ export function FormScrollView(props: ScrollViewProps) {
   return (
     <RevealContext value={reveal}>
       <ScrollView
-        ref={ref}
+        ref={(node) => {
+          ref.current = node;
+          if (typeof outerRef === 'function') outerRef(node);
+          else if (outerRef) outerRef.current = node;
+        }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
         {...fabScrollProps}
@@ -919,12 +923,24 @@ export function TextField({
         }}
         style={[s.input, rest.multiline && s.inputMultiline, focus && s.inputFocus, error && s.inputError, style]}
       />
-      {error ? (
-        <View style={s.fieldError}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={18} color={album.alert} style={s.fieldErrorIcon} />
-          <Text style={s.fieldErrorText}>{error}</Text>
-        </View>
-      ) : null}
+      {error ? <FieldError message={error} /> : null}
+    </View>
+  );
+}
+
+/** Validation error right under what is wrong: a TextField (via its `error` prop) or a group of choices. */
+export function FieldError({ message }: { message: string }) {
+  return (
+    <View style={s.fieldError} accessibilityRole="alert">
+      <MaterialCommunityIcons
+        name="alert-circle-outline"
+        size={18}
+        color={album.alert}
+        style={s.fieldErrorIcon}
+        importantForAccessibility="no"
+        accessibilityElementsHidden
+      />
+      <Text style={s.fieldErrorText}>{message}</Text>
     </View>
   );
 }

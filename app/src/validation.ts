@@ -70,20 +70,32 @@ export function check<T extends z.ZodType>(
 
 /**
  * Field errors for a form. Quiet while the user types the first time; after the first submit the schema
- * re-runs on every render, so an error goes away as soon as the input is valid. Only the first error shows.
+ * re-runs on every render, so an error goes away as soon as the input is valid. Each field shows its own
+ * first error, so every missing part is marked at once (DESIGN.md › Buttons: the primary is never disabled).
+ * `messageOf` overrides the text of a code, e.g. to say how much is missing; the same text is announced.
  */
-export function useFormCheck<T extends z.ZodType>(schema: T, input: z.input<T>) {
+export function useFormCheck<T extends z.ZodType>(
+  schema: T,
+  input: z.input<T>,
+  messageOf?: (field: keyof z.input<T> & string, code: ValidationCode) => string | undefined,
+) {
+  type Field = keyof z.input<T> & string;
   const [submitted, setSubmitted] = useState(false);
-  const result = check(schema, input);
+  const r = schema.safeParse(input);
+  const issues = r.success ? [] : r.error.issues;
+  const text = (field: Field, code: ValidationCode) => messageOf?.(field, code) ?? t.validation[code];
   return {
-    errorOf: (field: string) =>
-      submitted && 'code' in result && result.field === field ? t.validation[result.code] : null,
-    /** Parsed data, or null after announcing the error. */
-    submit: (): z.output<T> | null => {
+    errorOf: (field: Field) => {
+      const issue = submitted ? issues.find((i) => i.path[0] === field) : undefined;
+      return issue ? text(field, issue.message as ValidationCode) : null;
+    },
+    /** Parsed data, or the first failing field after announcing its error. */
+    submit: (): { data: z.output<T> } | { field: Field } => {
       setSubmitted(true);
-      if ('data' in result) return result.data;
-      AccessibilityInfo.announceForAccessibility(t.validation[result.code]);
-      return null;
+      if (r.success) return { data: r.data as z.output<T> };
+      const field = String(issues[0].path[0]) as Field;
+      AccessibilityInfo.announceForAccessibility(text(field, issues[0].message as ValidationCode));
+      return { field };
     },
   };
 }

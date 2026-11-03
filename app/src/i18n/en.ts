@@ -196,7 +196,7 @@ const en: Dictionary = {
     inputLabel: 'Words for a stranger',
     inputPlaceholder: 'Write what you once needed to hear.',
     counterA11y: (n, max) => `${n} of ${max} characters`,
-    shortBy: (n) => ` · ${count(n, 'more character', 'more characters')} needed`,
+    shortBy: (n) => `${count(n, 'more character', 'more characters')} needed.`,
     languageLabel: 'What language are you writing in?',
     topicLabel: 'What situation is it for?',
     pickTags: (max, unknownLabel) =>
@@ -208,7 +208,6 @@ const en: Dictionary = {
     leaveQuestion: 'Leave without sending?',
     leaveDetail: "The words you're writing will be lost.",
     keepWriting: 'Keep writing',
-    needTag: 'Choose at least one situation above.',
   },
 
   myComforts: {
@@ -277,7 +276,7 @@ const en: Dictionary = {
     passwordMismatch: "The passwords don't match.",
     bodyTooShort: 'Your words are a little short — add a bit more.',
     bodyTooLong: 'Your words are too long — trim them a little.',
-    tagsNone: 'Pick at least one topic.',
+    tagsNone: 'Choose at least one situation above.',
     tagsTooMany: 'You can pick up to 2 topics.',
     langInvalid: 'Pick the language you wrote in.',
   },

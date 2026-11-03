@@ -188,7 +188,7 @@ const vi = {
     inputLabel: 'Lời cho người lạ',
     inputPlaceholder: 'Viết điều bạn từng muốn nghe.',
     counterA11y: (n: number, max: number) => `${n} trên ${max} ký tự`,
-    shortBy: (n: number) => ` · còn thiếu ${n} ký tự`,
+    shortBy: (n: number) => `Còn thiếu ${n} ký tự.`,
     languageLabel: 'Bạn viết bằng tiếng gì?',
     topicLabel: 'Lời này dành cho chuyện gì?',
     pickTags: (max: number, unknownLabel: string) =>
@@ -201,7 +201,6 @@ const vi = {
     leaveQuestion: 'Thoát mà chưa gửi?',
     leaveDetail: 'Lời bạn đang viết sẽ mất.',
     keepWriting: 'Viết tiếp',
-    needTag: 'Chọn ít nhất một chuyện ở trên.',
   },
 
   /** Comforts the user wrote (comfort/mine.tsx). */
@@ -272,7 +271,7 @@ const vi = {
     passwordMismatch: 'Hai lần nhập mật khẩu chưa khớp.',
     bodyTooShort: 'Lời nhắn còn hơi ngắn — hãy viết thêm một chút.',
     bodyTooLong: 'Lời nhắn dài quá giới hạn — hãy rút gọn lại một chút.',
-    tagsNone: 'Chọn ít nhất một chủ đề.',
+    tagsNone: 'Chọn ít nhất một chuyện ở trên.',
     tagsTooMany: 'Chỉ chọn được tối đa 2 chủ đề.',
     langInvalid: 'Hãy chọn ngôn ngữ bạn viết.',
   },

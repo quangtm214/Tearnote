@@ -109,3 +109,17 @@ describe('vị trí nút trợ giúp đã lưu', () => {
     expect(fabPosition.parse({ side: 'left', lift: 120 })).toEqual({ side: 'left', lift: 120 });
   });
 });
+
+describe('mỗi ô có lỗi riêng (useFormCheck đánh dấu mọi chỗ thiếu cùng lúc)', () => {
+  const fields = (r: { success: boolean; error?: { issues: { path: PropertyKey[] }[] } }) =>
+    new Set(r.error?.issues.map((i) => i.path[0]));
+
+  it('lời trống + không chọn chuyện: lỗi ở cả body lẫn tags', () => {
+    expect(fields(comfortDraft.safeParse({ body: '', tags: [], sourceLang: 'vi' }))).toEqual(new Set(['body', 'tags']));
+  });
+
+  it('đăng ký: email sai + nhập lại không khớp: lỗi ở cả email lẫn confirm', () => {
+    const r = registerForm.safeParse({ email: 'abc', password: '123456', confirm: '654321' });
+    expect(fields(r)).toEqual(new Set(['email', 'confirm']));
+  });
+});

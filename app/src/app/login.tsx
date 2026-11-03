@@ -56,8 +56,9 @@ export default function LoginScreen() {
     setError(null);
     setNotice(null);
 
-    const data = form.submit();
-    if (!data) return;
+    const result = form.submit();
+    if (!('data' in result)) return;
+    const { data } = result;
 
     setBusy(true);
     try {
