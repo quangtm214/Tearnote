@@ -44,8 +44,9 @@ export default function RegisterScreen() {
     if (busy) return;
     setError(null);
 
-    const data = form.submit();
-    if (!data) return;
+    const result = form.submit();
+    if (!('data' in result)) return;
+    const { data } = result;
     const credentials = { email: data.email, password: data.password };
 
     setBusy(true);
