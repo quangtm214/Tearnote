@@ -66,19 +66,6 @@ export default function SettingsScreen() {
           </View>
         </FocusPressable>
 
-        <LinkRow
-          chevron
-          label={t.common.wordsYouWrote}
-          detail={t.settings.wordsYouWroteDetail}
-          onPress={() => router.push('/comfort/mine')}
-        />
-        <LinkRow
-          chevron
-          label={t.common.writeForStranger}
-          detail={t.settings.writeForStrangerDetail}
-          onPress={() => router.push('/comfort/write')}
-        />
-
         {email ? (
           <>
             <View style={s.row}>

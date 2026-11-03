@@ -39,7 +39,6 @@ const en: Dictionary = {
     intensity: (n) => `intensity ${n} of 5`,
     signIn: 'Sign in',
     wordsYouWrote: 'Words you wrote',
-    writeForStranger: 'Write words for a stranger',
     email: 'Email',
     emailPlaceholder: 'you@example.com',
     password: 'Password',
@@ -48,7 +47,16 @@ const en: Dictionary = {
     remove: 'Delete',
   },
 
-  tab: { index: 'Journal', write: 'For strangers', calendar: 'Calendar', settings: 'Settings' },
+  tab: { index: 'Journal', strangers: 'For strangers', calendar: 'Calendar', settings: 'Settings' },
+
+  /** "For strangers" tab ((tabs)/strangers.tsx). */
+  strangers: {
+    title: 'Words for a stranger',
+    intro: 'Your words will reach a stranger who just cried over something similar. Neither of you knows who the other is.',
+    rules: 'Requires signing in. You can send up to 5 in 24 hours. Words are reviewed before they are sent.',
+    wordsYouWroteDetail: 'Read them again, or withdraw them.',
+    writeOne: 'Write to a stranger',
+  },
 
   card: {
     photos: (n) => count(n, 'photo', 'photos'),
@@ -146,8 +154,6 @@ const en: Dictionary = {
     receiveComforts: 'Receive words from strangers',
     receiveComfortsDetail:
       "When off, you won't receive any more words from strangers. Your journal stays the same.",
-    wordsYouWroteDetail: 'Read them again, or withdraw them.',
-    writeForStrangerDetail: 'Requires signing in. Up to 5 in 24 hours.',
     account: 'Account',
     signOut: 'Sign out',
     signOutDetail: 'Your journal stays on this phone.',
@@ -182,7 +188,7 @@ const en: Dictionary = {
     title: 'Write words for a stranger',
     doneTitle: 'Your words were received',
     doneDetail:
-      "They'll be reviewed first, then reach a stranger. To withdraw them, go to Settings → Words you wrote.",
+      "They'll be reviewed first, then reach a stranger. To withdraw them, go to For strangers → Words you wrote.",
     done: 'Done',
     intro:
       'Your words will reach a stranger who just cried over something similar. Neither of you knows who the other is.',
@@ -196,7 +202,7 @@ const en: Dictionary = {
     pickTags: (max, unknownLabel) =>
       `Choose 1 or ${max}. If it fits anyone who is sad, choose “${unknownLabel}”.`,
     consent: (others) =>
-      `By tapping Send, you agree that your words will be reviewed, translated into ${joinList(others.map((lang) => LANG_NAMES[lang]))}, and sent anonymously to strangers. You can withdraw them in Settings → Words you wrote; anyone who already received them keeps their copy.`,
+      `By tapping Send, you agree that your words will be reviewed, translated into ${joinList(others.map((lang) => LANG_NAMES[lang]))}, and sent anonymously to strangers. You can withdraw them in For strangers → Words you wrote; anyone who already received them keeps their copy.`,
     signInAgain: 'Sign in again',
     send: 'Send',
     leaveQuestion: 'Leave without sending?',
