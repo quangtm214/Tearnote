@@ -6,7 +6,8 @@ import { LANGS, t } from '@/i18n';
 import { MAX_COMFORT_TAGS, TAG_IDS } from '@/tags';
 
 // Must match Supabase Auth's "Minimum password length" setting.
-// Changing these means editing `passwordTooShort` / `tagsTooMany` in all three dictionaries (6 / 2 are hardcoded there).
+// Changing these means editing `passwordTooShort` / `common.passwordHint` / `tagsTooMany` in all three dictionaries
+// (6 / 6 / 2 are hardcoded there).
 export const MIN_PASSWORD = 6;
 // Change together with CHECK `char_length(body) between 20 and 500` and
 // `array_length(tags,1) between 1 and 2` in supabase/migrations/0001_init.sql.
@@ -26,9 +27,9 @@ const password = z.string().min(MIN_PASSWORD, 'passwordTooShort');
 // Login skips MIN_PASSWORD: accounts created under an older, lower minimum must still get in.
 export const loginForm = z.object({ email, password: z.string().min(1, 'passwordRequired') });
 
-export const registerForm = z
-  .object({ email, password, confirm: z.string() })
-  .refine((v) => v.password === v.confirm, { path: ['confirm'], message: 'passwordMismatch' });
+// No "repeat password" field: TextField `password` has an eye button to check what was typed.
+export const registerForm = z.object({ email, password });
+export const newPasswordForm = z.object({ password });
 
 export const comfortDraft = z.object({
   body: z

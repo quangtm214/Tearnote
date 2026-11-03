@@ -42,7 +42,9 @@ const en: Dictionary = {
     email: 'Email',
     emailPlaceholder: 'you@example.com',
     password: 'Password',
-    passwordHint: 'At least 6 characters',
+    passwordHint: 'At least 6 characters.',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     leave: 'Leave',
     remove: 'Delete',
   },
@@ -233,33 +235,54 @@ const en: Dictionary = {
     retracted: 'Withdrawn.',
   },
 
-  login: {
+  account: {
+    title: 'Account',
+    intro: {
+      send: 'Sign in to send these words. What you wrote stays as it is.',
+      mine: 'Words you write are kept with your account.',
+      settings: 'Only needed to write words for strangers. Readers never see your email.',
+    },
+    modeLabel: 'Sign in or create an account',
+    create: 'Create account',
     signedIn: 'Signed in.',
-    verificationSent: "We've sent a verification email. Once you've verified, sign in here.",
-    error: "Couldn't sign in. Check your email, password and connection.",
-    explanation:
-      'Writing for strangers requires signing in, to keep readers safe. Readers never see your email. Keeping your journal needs no account.',
-    createAccount: 'Create an account',
-    later: 'Not now',
+    signInError: "Couldn't sign in. Check your email, password and connection.",
+    createError: "Couldn't create the account. Try again in a moment.",
+    signInWithEmail: 'Sign in with this email',
+    forgot: 'Forgot password?',
+    resetError: "Couldn't send the reset email. Try again in a moment.",
+    forgotNeedsEmail: 'Enter your email above to get a reset link.',
+    resetSent: 'Password reset email sent.',
+    checkInbox: 'Check your inbox',
+    verifySent: 'We sent a verification email to',
+    verifyNext: 'Open it, tap the link inside, then come back here.',
+    spamHint: "Can't find it? Look in Spam or Promotions too.",
+    resend: 'Send again',
+    resendIn: (seconds: number) => `Send again in ${seconds} s`,
+    resent: 'Sent again.',
+    otherEmail: 'Use another email',
+    verified: "I've verified, sign in",
   },
 
-  register: {
-    title: 'Create account',
-    createError:
-      "Couldn't create the account. This email may already have one — try signing in. Or check your connection.",
-    explanation: 'An account is only for writing to strangers. Readers never see your email.',
-    confirmPassword: 'Confirm password',
-    haveAccount: 'Already have an account? Sign in',
+  reset: {
+    title: 'Set a new password',
+    newPassword: 'New password',
+    save: 'Save password',
+    saved: 'Password changed.',
+    error: "Couldn't change the password. Try again in a moment.",
+    invalidLink: 'This link has expired, was already used, or was opened on a different phone from the one that asked. Send a new one from the Account screen on this phone.',
+    retry: 'Try again',
+    openAccount: 'Open Account',
   },
 
   /** Supabase Auth errors; which code shows which text is AUTH_ERROR_KEY in supabase.ts. */
   authError: {
     emailRejected: "This email can't be used. Check the address, or use another email.",
-    emailExists: 'This email already has an account. Tap "Already have an account? Sign in".',
+    emailExists: 'This email already has an account.',
     weakPassword: 'This password is too easy to guess. Try a longer one that mixes letters and numbers.',
     emailNotSent: "Couldn't send the verification email, maybe because of too many tries. Wait a while and try again.",
     wrongCredentials: "The email or password isn't right. Check them and try again.",
     emailNotConfirmed: "This email isn't verified yet. Open the verification email in your inbox, tap the link in it, then sign in again.",
+    samePassword: 'The new password must be different from the old one.',
   },
 
   help: {
@@ -273,7 +296,6 @@ const en: Dictionary = {
     emailInvalid: "That email doesn't look right — please check it.",
     passwordRequired: 'Enter your password.',
     passwordTooShort: 'Your password needs at least 6 characters.',
-    passwordMismatch: "The passwords don't match.",
     bodyTooShort: 'Your words are a little short — add a bit more.',
     bodyTooLong: 'Your words are too long — trim them a little.',
     tagsNone: 'Choose at least one situation above.',

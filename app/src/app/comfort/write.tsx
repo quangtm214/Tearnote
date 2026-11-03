@@ -1,9 +1,8 @@
 import { router, useFocusEffect, useNavigation } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -25,7 +24,6 @@ import { ScreenFooter, FAB_CLEARANCE, FieldError, FormScrollView, LinkRow, Confi
  * enforced by RLS (docs/db.md). The app only turns the errors into messages.
  */
 export default function WriteComfortScreen() {
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [body, setBody] = useState('');
   const [tags, setTags] = useState<TagId[]>([]);
   // source_lang: the translation batch translates from it. Defaults to the app language; the writer can change it.
@@ -35,13 +33,15 @@ export default function WriteComfortScreen() {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [done, setDone] = useState(false);
   const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
-  const sentToLogin = useRef(false);
+  // Set when Send opened the account modal; on return with a real account the Comfort is sent right away.
+  const sendAfterSignIn = useRef(false);
+  const inFlight = useRef(false);
   const scroll = useRef<ScrollView>(null);
   // y of each checked field inside the scroll content, to scroll to the first error on submit.
   const fieldY = useRef({ body: 0, tags: 0 });
 
   // Losing a draft to an accidental Back hurts as much as losing a Reflection: confirm before leaving.
-  // Going to login is a push, not a leave, so it does not ask.
+  // Opening the account modal is a push, not a leave, so it does not ask.
   const navigation = useNavigation();
   usePreventRemove(body.trim() !== '' && !done, ({ data }) =>
     setDialog({
@@ -51,26 +51,6 @@ export default function WriteComfortScreen() {
       keepLabel: t.write.keepWriting,
       onConfirm: () => navigation.dispatch(data.action),
     }),
-  );
-
-  // push, not replace: after login the user returns here with the draft intact.
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      isRealAccount().then((isReal) => {
-        if (cancelled) return;
-        if (isReal) return setCheckingAuth(false);
-        // First time: go to login. Back here still logged out ("Later"): leave the write screen.
-        if (sentToLogin.current) leave();
-        else {
-          sentToLogin.current = true;
-          router.push('/login');
-        }
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, []),
   );
 
   const length = countChars(body);
@@ -90,18 +70,53 @@ export default function WriteComfortScreen() {
     );
   }
 
+  // Back from the account modal: send if signing in worked; closing it with × just leaves the draft.
+  // Through a ref so the call reads the latest draft, not the one from when the focus effect was made.
+  const sendRef = useRef(send);
+  useEffect(() => {
+    sendRef.current = send;
+  });
+  useFocusEffect(
+    useCallback(() => {
+      if (!sendAfterSignIn.current) return;
+      sendAfterSignIn.current = false;
+      isRealAccount()
+        .then((isReal) => {
+          if (isReal) void sendRef.current();
+        })
+        .catch(() => {});
+    }, []),
+  );
+
   const reportError = (msg: string) => {
     setError(msg);
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
+  // Synchronous guard: state updates land later, so a double tap — or the auto-send after sign-in plus a
+  // tap — could otherwise insert the same Comfort twice.
   async function send() {
-    if (sending) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      await sendDraft();
+    } finally {
+      inFlight.current = false;
+    }
+  }
+
+  async function sendDraft() {
     const result = form.submit();
     if (!('data' in result)) {
       if (result.field === 'body' || result.field === 'tags') {
         scroll.current?.scrollTo({ y: Math.max(0, fieldY.current[result.field] - space.lg) });
       }
+      return;
+    }
+    // Ask for an account only now, after the draft is valid; the draft stays here meanwhile (DESIGN.md › "Tài khoản").
+    if (!(await isRealAccount())) {
+      sendAfterSignIn.current = true;
+      router.push({ pathname: '/account', params: { reason: 'send' } });
       return;
     }
     setError(null);
@@ -146,21 +161,6 @@ export default function WriteComfortScreen() {
     } finally {
       setSending(false);
     }
-  }
-
-  if (checkingAuth) {
-    return (
-      <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-        <TopBar />
-        {/* Own box under the TopBar: the help FAB is placed inside it, so it can never cover ←. */}
-        <View style={s.screen}>
-          <View style={s.center}>
-            <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
-          </View>
-          <ScreenFooter />
-        </View>
-      </SafeAreaView>
-    );
   }
 
   if (done) {
@@ -257,7 +257,14 @@ export default function WriteComfortScreen() {
 
           {error ? <Text style={s.error}>{error}</Text> : null}
           {sessionExpired ? (
-            <LinkRow label={t.write.signInAgain} chevron onPress={() => router.push('/login')} />
+            <LinkRow
+              label={t.write.signInAgain}
+              chevron
+              onPress={() => {
+                sendAfterSignIn.current = true;
+                router.push({ pathname: '/account', params: { reason: 'send' } });
+              }}
+            />
           ) : null}
 
           <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
@@ -274,7 +281,6 @@ export default function WriteComfortScreen() {
 const s = StyleSheet.create({
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   screen: { flex: 1, backgroundColor: album.page },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: FAB_CLEARANCE, gap: space.md },
   doneContent: {
     flex: 1,

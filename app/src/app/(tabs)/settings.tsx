@@ -81,7 +81,7 @@ export default function SettingsScreen() {
             chevron
             label={t.common.signIn}
             detail={t.settings.signInDetail}
-            onPress={() => router.push('/login')}
+            onPress={() => router.push({ pathname: '/account', params: { reason: 'settings' } })}
           />
         )}
 
