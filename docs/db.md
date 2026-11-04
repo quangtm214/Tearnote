@@ -28,17 +28,33 @@ Xoá dữ liệu ⇒ `on delete cascade` ⇒ Comfort của họ biến mất kh�
 
 | Kiểu | Giá trị |
 |---|---|
-| `tag` | `heartbreak` `grief` `pressure` `self_worth` `loneliness` `family` `overwhelm` `anxiety` `moved` `unknown` |
+| `tag_kind` | `sad` `joy` `unknown` |
 | `lang` | `en` `vi` `ja` |
 | `comfort_status` | `pending` `approved` `rejected` `retracted` |
 
-Enum chứ không phải text tự do: contract ở [tags.md](./tags.md) do DB enforce, không phải app tự giữ. Thêm giá trị về sau là `alter type ... add value`.
+Tag không còn là enum: danh sách nằm trong bảng [`tags`](#tags) do admin quản lý ([ADR 0009](./adr/0009-tag-do-admin-quan-ly.md)), cột `tags` của `comforts` / `entries` là `text[]` có trigger kiểm từng id tồn tại. Luật Tag ở [tags.md](./tags.md).
 
 Thêm một ngôn ngữ = một giá trị `lang` (migration một dòng) + `LANGS` và một file dịch trong app (`app/src/i18n/`). Không thêm cột, không thêm bảng; batch đêm tự dịch backlog sang giá trị mới ([ADR 0003](./adr/0003-dich-comfort-theo-batch.md)). `LANGS` phải khớp enum (`i18n.test.ts` check).
 
 ---
 
 # Server — Supabase
+
+## `tags`
+
+Danh sách Tag, admin sửa trên Table Editor của Supabase — [ADR 0009](./adr/0009-tag-do-admin-quan-ly.md). Seed ban đầu (10 Tag cũ) ở `0003_tags_table.sql`; app đóng gói sẵn cùng bản đó.
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| `id` | text | PK, `^[a-z][a-z_]*$` | Cố định mãi mãi: nằm trong Comfort trên server và Entry trên mọi máy |
+| `kind` | tag_kind | not null | `sad` / `joy` / `unknown`. `joy` = không fallback về `unknown` |
+| `labels` | jsonb | not null | `{"vi": …, "en": …, "ja": …}`; mọi giá trị của `lang` phải có nhãn khác rỗng |
+| `sort` | int | not null, default 0 | Thứ tự admin xếp |
+| `active` | boolean | not null, default true | `false` = ẩn khỏi form; vẫn match, vẫn hiện nhãn ở Entry cũ |
+
+**CHECK:** `(id = 'unknown') = (kind = 'unknown')` — `unknown` là Tag duy nhất có kind đó · `active or id <> 'unknown'` — không ẩn được `unknown`.
+
+**Trigger `tags_guard`** (before insert/update/delete): cấm xoá (ẩn bằng `active = false`), cấm đổi `id`, đòi đủ nhãn cho mọi giá trị `enum_range(null::lang)`. Luật nằm ở trigger chứ không ở policy vì dashboard chạy bằng `postgres`, bỏ qua RLS. Thêm một `lang` thì migration đó phải điền nhãn cho mọi Tag.
 
 ## `comforts`
 
@@ -50,7 +66,7 @@ Lời động viên ẩn danh, bản gốc, bằng ngôn ngữ người viết.
 | `author_id` | uuid | not null, FK → `auth.users` **cascade** | Không bao giờ lộ ra ngoài. Bắt buộc là tài khoản thật, không phải anonymous |
 | `body` | text | not null, độ dài 20–500 | |
 | `source_lang` | lang | not null | Luôn dịch từ đây, không dịch chuyền. Người viết chọn trên màn viết, mặc định là ngôn ngữ app |
-| `tags` | tag[] | not null, 1–2 phần tử | |
+| `tags` | text[] | not null, 1–2 phần tử | Mỗi id phải có trong `tags` (trigger `check_tag_ids`, chỉ kiểm tồn tại, không kiểm `active`) |
 | `status` | comfort_status | not null, default `pending` | `pending` chính là hàng đợi duyệt |
 | `mod_note` | text | | Admin ghi lý do khi từ chối |
 | `created_at` | timestamptz | not null, default `now()` | |
@@ -125,7 +141,7 @@ Admin cập nhật; app vẫn đóng gói sẵn bản dự phòng — [ADR 0005]
 | `occurred_at` | timestamptz | not null | Lúc khóc, không phải lúc ghi |
 | `duration_min` | int | ≥ 0 | |
 | `intensity` | smallint | not null, 1–5 | |
-| `tags` | tag[] | not null, 1–3 phần tử | |
+| `tags` | text[] | not null, 1–3 phần tử | Trigger `check_tag_ids` như `comforts`: Entry cũ mang Tag đã ẩn vẫn sync được |
 | `reflection` | text | | |
 | `attachments` | text[] | | Đường dẫn trong Supabase Storage |
 | `created_at` | timestamptz | not null, default `now()` | |
@@ -143,6 +159,7 @@ Bật cho tất cả các bảng.
 | `deliveries` | chỉ dòng mình là người nhận | update `thanked` của chính mình |
 | `entries` | chỉ của mình | chỉ của mình |
 | `hotlines` | ai cũng đọc | chỉ admin |
+| `tags` | ai cũng đọc (`anon`, `authenticated`) | chỉ admin (dashboard / service role); không có policy ghi |
 
 Người nhận không đọc được `comforts`, nên `author_id` không có đường nào ra ngoài. Ẩn danh do RLS giữ, không phải do app quên hiển thị — [ADR 0008](./adr/0008-pool-chi-doc-qua-function.md).
 
@@ -151,9 +168,9 @@ Người nhận không đọc được `comforts`, nên `author_id` không có �
 Không ai `select` thẳng vào `comforts`. Cái này không diễn đạt được bằng bảng nên để nguyên SQL.
 
 ```sql
-create function request_comfort(p_tags tag[], p_lang lang)
+create function request_comfort(p_tags text[], p_lang lang)
 returns table (comfort_id uuid, body text, translated boolean)
-language sql security definer as $fn$
+language sql security definer set search_path = public, pg_temp as $fn$
   with picked as (
     select c.id,
            coalesce(t.body, c.body) as body,
@@ -163,9 +180,10 @@ language sql security definer as $fn$
       on t.comfort_id = c.id and t.lang = p_lang
     where c.status = 'approved'
       and c.author_id <> auth.uid()
-      -- trùng tag; không có thì lùi về 'unknown', trừ 'moved' (xem tags.md)
+      -- trùng tag; không có thì lùi về 'unknown', trừ khi Entry có Tag kind 'joy' (xem tags.md)
       and (c.tags && p_tags
-           or (not ('moved' = any(p_tags)) and 'unknown' = any(c.tags)))
+           or (not exists (select 1 from tags g where g.id = any(p_tags) and g.kind = 'joy')
+               and 'unknown' = any(c.tags)))
       -- không trả bản chưa có ngôn ngữ của người đọc
       and (t.comfort_id is not null or c.source_lang = p_lang)
       and not exists (
@@ -186,7 +204,7 @@ language sql security definer as $fn$
 $fn$;
 ```
 
-Năm rule hàm này enforce: không nhận Comfort của chính mình · không nhận lại cái đã nhận · tối đa 3 lần / 24h · không trả bản chưa dịch sang ngôn ngữ người đọc · `moved` không fallback về `unknown`.
+Năm rule hàm này enforce: không nhận Comfort của chính mình · không nhận lại cái đã nhận · tối đa 3 lần / 24h · không trả bản chưa dịch sang ngôn ngữ người đọc · Entry có Tag `joy` không fallback về `unknown`. Tag đã ẩn (`active = false`) vẫn match.
 
 App truyền `p_lang` là ngôn ngữ app đang dùng.
 
@@ -197,6 +215,12 @@ vốn đã không trả gì, nhưng để `anon` gọi được một `security 
 **Đã verify bằng SQL thật trên project, không phải suy đoán.** Cả năm rule đều đúng như thiết kế.
 Điểm từng nghi ngờ: CTE `insert ... returning` **có** ghi `deliveries` — Postgres đảm bảo CTE
 sửa dữ liệu chạy đúng một lần dù không được tham chiếu, nên không cần viết lại bằng `plpgsql`.
+
+`0003_tags_table.sql` (bảng `tags`, rule `joy`) đã apply 2026-11-03 qua SQL Editor (connector MCP từ chối
+lệnh DDL có `drop`, nên không có dòng trong `supabase_migrations`). Verify bằng `execute_sql`, mọi dữ liệu test rollback:
+Entry buồn pool rỗng nhận lời `unknown` · Entry `joy` (kể cả `joy` + buồn) không nhận gì · Tag đã ẩn vẫn match ·
+hết 3/24h không nhận gì · pool rỗng không nhận gì · Tag không tồn tại bị từ chối ở `comforts` và `entries` (23503) ·
+xoá Tag, đổi id, thiếu nhãn `ja`, `kind = 'unknown'` thứ hai, ẩn `unknown` đều bị chặn · Tag hợp lệ mới thêm được.
 
 ---
 
