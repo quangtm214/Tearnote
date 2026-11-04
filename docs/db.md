@@ -244,16 +244,20 @@ Cài đặt của người dùng. Chỉ ở máy, không sync, không lên serve
 
 Key đang dùng:
 
-- `nhan_comfort` = `bat` \| `tat`. Thiếu key ⇒ coi như `bat`.
+- `receive_comforts` = `on` \| `off`. Thiếu key ⇒ coi như `on`.
   Tắt thì không còn nút xin Comfort ở bất kỳ Entry nào — overview.md §6.
-- `timeline_dung` = id của Entry mở gần nhất. Mở lại app thì Timeline cuộn về đêm của Entry đó
+- `timeline_last_opened` = id của Entry mở gần nhất. Mở lại app thì Timeline cuộn về đêm của Entry đó
   (DESIGN.md, Layout). Thiếu key hoặc Entry không còn ⇒ đứng ở đầu trang.
-- `ngon_ngu` = `vi` \| `en` \| `ja` — ngôn ngữ chọn trong Cài đặt. Thiếu key ⇒ theo ngôn ngữ máy;
+- `language` = `vi` \| `en` \| `ja` — ngôn ngữ chọn trong Cài đặt. Thiếu key ⇒ theo ngôn ngữ máy;
   máy dùng tiếng khác ⇒ `en` (`app/src/i18n/index.ts`).
 - `help_fab_position` = JSON `{"side": "left" | "right", "lift": <số>}` — chỗ người dùng kéo nút trợ giúp
   tới. `lift` = dp từ đáy vùng màn (trên thanh điều hướng / inset đáy) tới đáy nút; mỗi màn tự kẹp vào khoảng
   của nó (ít nhất `space.md` trên footer, nhiều nhất `space.md` dưới status bar), không ghi lại. Thiếu key
   hoặc giá trị đọc không được ⇒ góc dưới phải (`fabPosition` trong `app/src/validation.ts`).
+
+Key và value đều tiếng Anh. Máy cài bản cũ có key tiếng Việt (`nhan_comfort` = `bat` \| `tat`, `ngon_ngu`,
+`timeline_dung`): mở app là `app/src/db.ts` chép sang key mới một lần (`bat` → `on`, `tat` → `off`) rồi xoá key cũ.
+Key cũ còn sót bên cạnh key mới (bản app cũ ghi sau lần chép) thì key cũ thắng — đó là lựa chọn gần nhất.
 
 ## `received_comforts`
 

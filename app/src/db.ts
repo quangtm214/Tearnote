@@ -65,6 +65,19 @@ db.withTransactionSync(() => {
       drop table received_comforts_cu;
     `);
   }
+  // Old installs stored Vietnamese settings: nhan_comfort = bat | tat, ngon_ngu, timeline_dung.
+  // Move them to the English keys once. `or replace`: an old key still present was written by an older
+  // bundle after the copy, so it is the latest choice.
+  db.execSync(`
+    insert or replace into settings (key, value)
+      select case key when 'nhan_comfort' then 'receive_comforts'
+                      when 'ngon_ngu' then 'language'
+                      when 'timeline_dung' then 'timeline_last_opened' end,
+             case when key = 'nhan_comfort' then (case value when 'tat' then 'off' else 'on' end)
+                  else value end
+      from settings where key in ('nhan_comfort', 'ngon_ngu', 'timeline_dung');
+    delete from settings where key in ('nhan_comfort', 'ngon_ngu', 'timeline_dung');
+  `);
 });
 
 export type Entry = {
@@ -265,5 +278,5 @@ export function setSetting(key: string, value: string): void {
  * because the system cannot detect a crisis. Default ON: the pool is why Tearnote exists.
  * When off, no request button appears anywhere.
  */
-export const isComfortReceivingEnabled = () => getSetting('nhan_comfort') !== 'tat';
-export const setComfortReceivingEnabled = (enabled: boolean) => setSetting('nhan_comfort', enabled ? 'bat' : 'tat');
+export const isComfortReceivingEnabled = () => getSetting('receive_comforts') !== 'off';
+export const setComfortReceivingEnabled = (enabled: boolean) => setSetting('receive_comforts', enabled ? 'on' : 'off');
