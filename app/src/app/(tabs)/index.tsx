@@ -21,7 +21,7 @@ import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, PhotoCorners, formatDate, 
 const dayKey = (ms: number) => new Date(ms).toDateString();
 
 /** Last opened Entry — on app start the album scrolls back to that night. */
-const LAST_OPENED_KEY = 'timeline_dung';
+const LAST_OPENED_KEY = 'timeline_last_opened';
 
 export default function Timeline() {
   const [entries, setEntries] = useState<Entry[]>([]);

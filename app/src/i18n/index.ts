@@ -24,7 +24,7 @@ export type Lang = (typeof LANGS)[number];
 export const NATIVE_NAMES: Record<Lang, string> = { vi: 'Tiếng Việt', en: 'English', ja: '日本語' };
 
 const DICTIONARIES: Record<Lang, Dictionary> = { vi, en, ja };
-const LANG_SETTING_KEY = 'ngon_ngu';
+const LANG_SETTING_KEY = 'language';
 
 /**
  * The Settings choice if any; else the device language; else English.
