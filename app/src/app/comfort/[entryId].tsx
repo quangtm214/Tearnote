@@ -17,6 +17,7 @@ import {
 } from '@/db';
 import { currentLang, t } from '@/i18n';
 import { ensureSession, supabase } from '@/supabase';
+import { isJoyOnly } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
 import {
   ScreenFooter,
@@ -88,8 +89,7 @@ export default function EntryComfortScreen() {
       const row = parsed.data[0];
       if (!row) {
         // Two different reasons, two different messages (required edge case, CLAUDE.md).
-        const joyOnly = entry.tags.length === 1 && entry.tags[0] === 'moved';
-        notify((await hitDailyLimit()) ? t.entry.limitReached : t.entry.poolEmpty(joyOnly));
+        notify((await hitDailyLimit()) ? t.entry.limitReached : t.entry.poolEmpty(isJoyOnly(entry.tags)));
         return;
       }
 

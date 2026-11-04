@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { currentLang, subscribeLanguage } from '@/i18n';
+import { refreshTags } from '@/supabase';
 import { album } from '@/theme';
 import { SnackbarHost } from '@/ui';
 
@@ -31,6 +32,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded || fontError) SplashScreen.hideAsync();
   }, [loaded, fontError]);
+
+  // Background: forms read the SQLite copy, so a slow or failed fetch never blocks them.
+  useEffect(() => {
+    refreshTags().catch(() => {});
+  }, []);
 
   // Language change from Settings: `t` already holds the new text; changing `key` rebuilds every screen.
   // For Japanese, load Yomogi first; if it fails, switch anyway — kana falls back to the system font.

@@ -53,10 +53,10 @@ describe('dòng RPC request_comfort', () => {
 describe('dòng comforts của mình', () => {
   const row = { id: 'c1', body: 'xin chào', tags: ['grief'], status: 'pending' };
 
-  it('đúng hình dạng thì qua, status lạ hoặc tag lạ thì hỏng', () => {
+  it('đúng hình dạng thì qua, status lạ hoặc tag không phải chuỗi thì hỏng', () => {
     expect(myComfortRows.safeParse([row]).success).toBe(true);
     expect(myComfortRows.safeParse([{ ...row, status: 'x' }]).success).toBe(false);
-    expect(myComfortRows.safeParse([{ ...row, tags: ['nope'] }]).success).toBe(false);
+    expect(myComfortRows.safeParse([{ ...row, tags: [1] }]).success).toBe(false);
   });
 });
 

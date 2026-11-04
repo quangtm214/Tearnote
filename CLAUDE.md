@@ -21,15 +21,15 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Ngôn ngữ + framework | TypeScript + React Native (Expo managed) | Dev trên Windows không build được iOS tại máy; Expo + EAS build cloud. Xem ADR 0001 |
 | Lưu trữ dữ liệu | Local-first (SQLite trên máy); sync lên server là opt-in, cần đăng nhập | Entry là dữ liệu tâm lý nhạy cảm. Xem ADR 0004 |
 | Auth | Supabase anonymous auth cho phần nhật ký; tài khoản thật bắt buộc để **viết** Comfort hoặc bật sync | Không ép đăng ký để dùng app, nhưng viết cho người lạ đọc thì cần danh tính bền. Xem ADR 0002, 0004, 0006 |
-| Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 4 việc nhỏ, không đáng tự build |
+| Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 5 việc nhỏ (pool Comfort, bản dịch, hotline, bản sao Entry khi bật sync, danh sách Tag), không đáng tự build |
 | Test runner | jest-expo | Đi kèm Expo, không thêm dependency |
 | Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 pin react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE |
 | Chạy app khi máy tính tắt | EAS Update vào Expo Go: `expo-updates`, project `@quangtm/tearnote`, `runtimeVersion` policy `sdkVersion` (ra `exposdk:57.0.0`). Publish bản update mới: `cd app; npx eas-cli update --branch preview --environment preview --message "<msg>"`, mở trong Expo Go (đăng nhập tài khoản `quangtm`) › project › branch `preview` | User dùng iOS, không có Apple Developer nên không build được app iOS. Expo Go chỉ nhận update có runtime `exposdk:<sdk>`; policy `appVersion` thì Expo Go từ chối. `--environment preview` bỏ qua `app/.env`: biến `EXPO_PUBLIC_SUPABASE_*` lấy từ EAS env `preview` (`eas env:list preview`); đổi `.env` thì sửa cả bên đó |
 | Visual world | "Album ảnh trang đen": `album` + `pencil` trong `app/src/theme.ts` | Chọn qua `/impeccable` (thay world một-bit — bị bỏ vì lạnh, retro, khó đọc); hướng chi tiết ở `.impeccable/surfaces/`. Đã phủ mọi màn; component dùng chung ở `app/src/ui.tsx`, world cũ đã xoá |
 | Lưới / heatmap | Chỉ bảng năm ở màn Lịch — ngoại lệ duy nhất của luật Một Trục (DESIGN.md) | Nhìn cả năm một lượt mới thấy mùa nào dày. Màu = tổng cường độ trong ngày, ngưỡng cố định ở `app/src/calendar.ts` để màu cùng nghĩa giữa các năm |
 | Từ vựng trên UI | "lần khóc" thay "Entry", "lời từ/cho người lạ" thay "Comfort"; bản en/ja ("a cry", "words from/for a stranger"; "泣いたこと", "見知らぬ人から/へのことば") cũng ở PRODUCT.md | Screen reader đọc chữ Anh sai giữa câu Việt; các khái niệm khác vốn đã Việt hoá trên UI |
-| Nhãn Tag | Cột `vi` / `en` / `ja` của `docs/tags.md`, trùng từng chữ với `TAG_LABEL` trong `app/src/tags.ts` (có test check); en/ja dịch theo nghĩa cột vi | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau, kể cả khi khác ngôn ngữ — đổi nhãn là đổi contract |
-| Danh sách Tag (server: Change 23, app: Change 24) | Bảng `tags` trên Supabase (id cố định, `labels` jsonb, `sort`, `kind` sad/joy/unknown, `active`), admin sửa qua dashboard; `comforts`/`entries.tags` thành `text[]` + trigger kiểm tồn tại; app chép về SQLite + bản đóng gói `TAGS_BUNDLED`, tải cả bảng mỗi lần mở app; hàng nhanh đếm từ `entries` trên máy. Xem ADR 0009 | Thêm/ẩn chuyện không cần migration hay bản phát hành. Server: `0003_tags_table.sql` (đã apply + verify 2026-11-03, docs/db.md), trigger `tags_guard` cấm xoá / đổi id / thiếu nhãn. Khi app đọc bảng (Change 24) thì thay hàng "Nhãn Tag", mục Contract và "Contract Tag nằm ở ba chỗ" |
+| Nhãn Tag | `tags.labels` (jsonb) trên server, admin sửa; app đọc qua `tagLabel` (`app/src/i18n/index.ts`): nhãn ngôn ngữ app, thiếu thì `en`. en/ja dịch theo nghĩa nhãn vi (docs/tags.md) | Nhãn quyết định người viết và người nhận hiểu Tag giống nhau, kể cả khi khác ngôn ngữ — đổi nhãn là đổi contract |
+| Danh sách Tag | Bảng `tags` trên Supabase (id cố định, `labels` jsonb, `sort`, `kind` sad/joy/unknown, `active`), admin sửa qua dashboard; `comforts`/`entries.tags` thành `text[]` + trigger kiểm tồn tại; app chép về bảng `tags` trong SQLite (`saveTags` trong `app/src/db.ts`) + bản đóng gói `TAGS_BUNDLED` (`app/src/tags.ts`), `refreshTags` (`app/src/supabase.ts`) tải cả bảng mỗi lần mở app, không xoá dòng trên máy; form lấy `formTags(selected)` (Tag đang hiện + Tag đang chọn mà vừa bị ẩn), nhãn lần khóc cũ lấy cả Tag đã ẩn; refresh parse từng dòng (`tagRow`), dòng đọc không được thì bỏ qua; hàng nhanh: Change 25 (ADR 0009 §5). Xem ADR 0009 | Thêm/ẩn chuyện không cần migration hay bản phát hành. Server: `0003_tags_table.sql` (đã apply + verify 2026-11-03, docs/db.md), trigger `tags_guard` cấm xoá / đổi id / thiếu nhãn. App: Change 24 |
 | Đa ngôn ngữ | File dịch TS tự viết ở `app/src/i18n/` (`vi.ts` là khuôn; `en.ts` / `ja.ts` thiếu key thì tsc đỏ), không thư viện. Mặc định theo ngôn ngữ máy (`I18nManager` / Intl của RN), máy dùng tiếng khác ⇒ `en`; đổi được ở Cài đặt (`settings.language`). Đổi = ghi đè `t` tại chỗ rồi đổi `key` của Stack ở `_layout` gốc | Không thêm dependency (không i18next, không expo-localization); ba ngôn ngữ không cần plural rules. Đổi `key` remount mọi màn mà vẫn giữ màn đang đứng. iOS chưa test: lệch ngôn ngữ máy thì thay bằng expo-localization |
 | `source_lang` khi viết lời | Người viết chọn ở màn viết ("Bạn viết bằng tiếng gì?"), mặc định là ngôn ngữ app | Dùng app tiếng Nhật vẫn có thể viết tiếng Việt; `source_lang` sai là batch dịch sai nguồn |
 | Điều hướng | `Tabs` của `expo-router/js-tabs`, thanh tự viết; tab = Nhật ký · Viết lời · Lịch · Cài đặt (`app/src/app/(tabs)/`); "Viết lời" (en "For strangers", ja "見知らぬ人へ", icon `note-edit-outline`) là màn "Lời cho người lạ" (`(tabs)/strangers.tsx`, route `strangers` để khỏi lẫn với `comfort/write`): giới thiệu, dòng lối "Lời bạn đã viết", nút chính "Viết một lời" mở `comfort/write` đè lên — riêng **nhãn tab** en/ja không dùng động từ "viết" để khỏi trùng nút "Ghi lại nhật ký" (nút "Write to a stranger" / 「見知らぬ人に書く」 thì được). Icon: `@expo/vector-icons` (MaterialCommunityIcons) | Thanh mặc định cao cố định 49, nhãn dưới 14 — vỡ luật chữ của DESIGN.md. Change 19 (audit UX): tab Viết lời là trang đầu cho phần lời người lạ (thay 2 dòng ở Cài đặt); màn viết vẫn mở chồng nên giữ nguyên luồng đăng nhập / Gửi / Xong |
@@ -128,7 +128,7 @@ Không có lệnh verify được thì **nói rõ đã verify bằng cách nào*
      model ⇄ migration, proto ⇄ client, API spec ⇄ client types.
      Chưa có cặp nào thì để nguyên dòng này. -->
 
-* [docs/tags.md](docs/tags.md) — luật Tag (kind, match, fallback, luật cho admin). Danh sách nằm trong bảng `tags` trên Supabase, admin sửa qua dashboard; đừng seed hay sửa Tag bằng migration mà không hỏi.
+* [docs/tags.md](docs/tags.md) — luật Tag (kind, match, fallback, luật cho admin). Danh sách nằm trong bảng `tags` trên Supabase, admin sửa qua dashboard; app chỉ có bản đóng gói `TAGS_BUNDLED` (= seed). Đừng seed hay sửa Tag bằng migration mà không hỏi.
 * [docs/db.md](docs/db.md) ⇄ migration Supabase ⇄ schema SQLite trong app. Ba chỗ này phải khớp; sửa một thì sửa cả ba.
 * [DESIGN.md](DESIGN.md) — source of truth cho giao diện. Mọi màn mới hoặc chỉnh UI dùng token
   `album` / `pencil` trong `app/src/theme.ts` và luật trong DESIGN.md; không dùng token `color` cũ
@@ -142,16 +142,16 @@ Không có lệnh verify được thì **nói rõ đã verify bằng cách nào*
 * Pool rỗng, và "hết lượt 3 Comfort / 24h" — hai chuyện khác nhau, phải là hai thông báo khác nhau.
 * Mất mạng ở màn hotline: vẫn phải hiện được danh sách đóng gói sẵn (ADR 0005).
 * Entry không chọn tag nào → `unknown`, không phải mảng rỗng.
-* `moved` không bao giờ fallback về `unknown` khi tìm Comfort.
+* Entry có Tag `kind = 'joy'` (hiện là `moved`) không bao giờ fallback về `unknown` khi tìm Comfort; câu "pool rỗng" dùng `isJoyOnly` (`app/src/tags.ts`).
 
 ## Chỗ dễ vỡ
 
 <!-- Điền khi có file được import từ nhiều nơi. -->
 
-* **Contract Tag nằm ở ba chỗ**: `docs/tags.md` ⇄ enum `tag` trong `supabase/migrations/0001_init.sql`
-  ⇄ `app/src/tags.ts`. Lệch một chỗ thì `app/src/tags.test.ts` đỏ — đó là việc của nó. Phía server
-  chuyển sang bảng `tags` (seed ở `0003_tags_table.sql`, migration drop enum); test còn đọc khối enum ở 0001
-  tới khi app đọc bảng (Change 24).
+* **Tag trong code chỉ còn bản đóng gói**: `TAGS_BUNDLED` (`app/src/tags.ts`) ⇄ seed trong
+  `supabase/migrations/0003_tags_table.sql`. Lệch thì `app/src/tags.test.ts` đỏ. Admin sửa bảng `tags` sau đó thì
+  bản đóng gói được phép cũ hơn — nó chỉ là dự phòng cho lần mở đầu không mạng. `'unknown'` là id dành riêng
+  (`UNKNOWN_TAG`); đừng viết id Tag nào khác thẳng vào code.
 * **Danh sách ngôn ngữ nằm ở ba chỗ**: enum `lang` trong migration ⇄ `LANGS` trong
   `app/src/i18n/index.ts` ⇄ một file dịch mỗi ngôn ngữ. Lệch enum ⇄ `LANGS` thì
   `app/src/i18n/i18n.test.ts` đỏ; thiếu key trong file dịch hay thiếu `Record<Lang, …>` thì tsc đỏ.

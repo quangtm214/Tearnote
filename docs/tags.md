@@ -24,28 +24,9 @@ Tag mô tả **hoàn cảnh**, không mô tả cảm xúc. Cường độ cảm 
 - **Mọi ngôn ngữ phải có nhãn** (DB bắt). `vi` là nghĩa gốc; `en`, `ja` dịch theo nghĩa đó (xem dưới).
 - **Không thêm Tag cho khủng hoảng / tự hại** (mục cuối).
 
-## Danh sách ban đầu
+`id` là thứ lưu trong Comfort / Entry và dùng để match; nhãn nằm trong `tags.labels`. Danh sách ban đầu là seed trong `supabase/migrations/0003_tags_table.sql`, app đóng gói đúng bản đó (`TAGS_BUNDLED` trong `app/src/tags.ts`, `tags.test.ts` so hai bên) cho lần mở đầu không mạng.
 
-Seed trong `supabase/migrations/0003_tags_table.sql`, cũng là bản app đóng gói sẵn. Danh sách thật là bảng `tags`; bảng dưới chỉ còn tới khi app đọc bảng đó (Change 24) — `app/src/tags.test.ts` hiện còn so với nó.
-
-| id | vi | en | ja |
-|---|---|---|---|
-| `heartbreak` | Chuyện tình cảm | Love life | 恋愛のこと |
-| `grief` | Mất người thân | Losing a loved one | 大切な人を亡くした |
-| `pressure` | Áp lực công việc, học tập | Work or school pressure | 仕事や勉強のプレッシャー |
-| `self_worth` | Thấy mình không đủ tốt | Feeling not good enough | 自分はダメだと感じる |
-| `loneliness` | Cô đơn | Feeling lonely | さみしい |
-| `family` | Chuyện gia đình | Family matters | 家族のこと |
-| `overwhelm` | Kiệt sức, quá tải | Exhausted, overwhelmed | 疲れ果てて、もう限界 |
-| `anxiety` | Lo về tương lai | Worried about the future | 将来への不安 |
-| `moved` | Vì vui, vì cảm động | Happy or touched | うれしくて、感動して |
-| `unknown` | Không rõ vì sao | Not sure why | 理由がわからない |
-
-`id` là thứ lưu trong Comfort / Entry và dùng để match; nhãn nằm trong `tags.labels`.
-
-Nhãn là thứ khiến người viết và người nhận hiểu một Tag giống nhau — kể cả khi hai người dùng hai ngôn ngữ — nên đổi nhãn cũng là đổi contract: `grief` là mất người thân chứ không phải mọi mất mát; `moved` phải nói rõ là vì vui, vì "xúc động" trong tiếng Việt dùng được cả cho buồn — mà `moved` không fallback về `unknown`.
-
-Cột `vi` là nghĩa gốc; `en` và `ja` dịch theo nghĩa đó, không dịch theo id. Vì vậy không dùng "Grief" / 喪失 (mọi mất mát), "Heartbreak" / 失恋 (chỉ chia tay), "Moved" (tiếng Anh còn là "chuyển nhà", và không nói là vì vui), và không dùng "Anxiety" — nghe như tên một chẩn đoán (overview.md §6: không chẩn đoán).
+Nhãn là thứ khiến người viết và người nhận hiểu một Tag giống nhau — kể cả khi hai người dùng hai ngôn ngữ — nên đổi nhãn cũng là đổi contract: `grief` là mất người thân chứ không phải mọi mất mát; `moved` phải nói rõ là vì vui, vì "xúc động" trong tiếng Việt dùng được cả cho buồn — mà `moved` không fallback về `unknown`. Nhãn `vi` là nghĩa gốc; `en` và `ja` dịch theo nghĩa đó, không dịch theo id. Vì vậy không dùng "Grief" / 喪失 (mọi mất mát), "Heartbreak" / 失恋 (chỉ chia tay), "Moved" (tiếng Anh còn là "chuyển nhà", và không nói là vì vui), và không dùng "Anxiety" — nghe như tên một chẩn đoán (overview.md §6: không chẩn đoán).
 
 ## Rule
 
