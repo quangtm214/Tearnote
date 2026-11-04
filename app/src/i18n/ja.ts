@@ -31,7 +31,9 @@ const ja: Dictionary = {
     email: 'メールアドレス',
     emailPlaceholder: 'you@example.com',
     password: 'パスワード',
-    passwordHint: '6文字以上',
+    passwordHint: '6文字以上。',
+    showPassword: 'パスワードを表示',
+    hidePassword: 'パスワードを隠す',
     leave: '戻る',
     remove: '削除する',
   },
@@ -219,34 +221,54 @@ const ja: Dictionary = {
     retracted: '取り下げました。',
   },
 
-  login: {
+  account: {
+    title: 'アカウント',
+    intro: {
+      send: 'ログインすると、このことばを送れます。書いたことばはそのまま残っています。',
+      mine: '書いたことばはアカウントに保存されます。',
+      settings: '見知らぬ人へのことばを書くときだけ必要です。読む人にメールアドレスが見えることはありません。',
+    },
+    modeLabel: 'ログインかアカウント作成か',
+    create: 'アカウントを作る',
     signedIn: 'ログインしました。',
-    verificationSent: '確認メールを送りました。確認が済んだら、ここでログインしてください。',
-    error: 'ログインできませんでした。メールアドレス、パスワード、ネットワークを確認してください。',
-    explanation:
-      '見知らぬ人へ書くには、読む人の安全のためにログインが必要です。読む人にメールアドレスが見えることはありません。泣いたことを記録するだけなら必要ありません。',
-    createAccount: 'アカウントを作る',
-    later: 'あとで',
+    signInError: 'ログインできませんでした。メールアドレス、パスワード、ネットワークを確認してください。',
+    createError: 'アカウントを作れませんでした。少し待ってから試してください。',
+    signInWithEmail: 'このメールアドレスでログイン',
+    forgot: 'パスワードを忘れた場合',
+    resetError: '再設定のメールを送れませんでした。少し待ってから試してください。',
+    forgotNeedsEmail: '上にメールアドレスを入れると、再設定のメールが届きます。',
+    resetSent: 'パスワード再設定のメールを送りました。',
+    checkInbox: '受信箱を確認してください',
+    verifySent: '確認メールを送った先：',
+    verifyNext: 'メールを開いてリンクを押してから、ここに戻ってください。',
+    spamHint: '見つからないときは、迷惑メールやプロモーションのフォルダも見てください。',
+    resend: 'もう一度送る',
+    resendIn: (seconds: number) => `${seconds}秒後にもう一度送れます`,
+    resent: 'もう一度送りました。',
+    otherEmail: '別のメールアドレスを使う',
+    verified: '確認したのでログインする',
   },
 
-  register: {
-    title: 'アカウントを作る',
-    createError:
-      'アカウントを作れませんでした。このメールアドレスはすでに登録されているかもしれません。ログインを試すか、ネットワークを確認してください。',
-    explanation:
-      'アカウントは、見知らぬ人へ書くためだけのものです。読む人にメールアドレスが見えることはありません。',
-    confirmPassword: 'パスワード（確認）',
-    haveAccount: 'アカウントをお持ちの方はログイン',
+  reset: {
+    title: '新しいパスワード',
+    newPassword: '新しいパスワード',
+    save: 'パスワードを保存',
+    saved: 'パスワードを変更しました。',
+    error: 'パスワードを変更できませんでした。少し待ってから試してください。',
+    invalidLink: 'このリンクは期限切れか、すでに使われたか、再設定を申し込んだ端末とは別の端末で開かれています。この端末のアカウント画面からもう一度送ってください。',
+    retry: 'もう一度試す',
+    openAccount: 'アカウントを開く',
   },
 
   /** Supabase Auth errors; which code shows which text is AUTH_ERROR_KEY in supabase.ts. */
   authError: {
     emailRejected: 'このメールアドレスは使えません。アドレスを確認するか、別のメールアドレスを使ってください。',
-    emailExists: 'このメールアドレスはすでに登録されています。「アカウントをお持ちの方はログイン」からログインしてください。',
+    emailExists: 'このメールアドレスはすでに登録されています。',
     weakPassword: 'このパスワードは推測されやすいです。文字と数字をまぜて、もっと長くしてください。',
     emailNotSent: '確認メールを送れませんでした。送信回数が多すぎたのかもしれません。少し待ってから試してください。',
     wrongCredentials: 'メールアドレスかパスワードが違います。確認してもう一度試してください。',
     emailNotConfirmed: 'このメールアドレスはまだ確認されていません。受信箱の確認メールを開き、リンクを押してから、もう一度ログインしてください。',
+    samePassword: '新しいパスワードは前のものと違うものにしてください。',
   },
 
   help: {
@@ -260,7 +282,6 @@ const ja: Dictionary = {
     emailInvalid: 'メールアドレスの形式が正しくないようです。もう一度確かめてください。',
     passwordRequired: 'パスワードを入力してください。',
     passwordTooShort: 'パスワードは6文字以上にしてください。',
-    passwordMismatch: '2つのパスワードが一致しません。',
     bodyTooShort: '少し短いようです。もう少し書き足してください。',
     bodyTooLong: '長すぎます。少し短くしてください。',
     tagsNone: '上から1つ以上選んでください。',

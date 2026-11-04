@@ -30,18 +30,14 @@ describe('form đăng nhập', () => {
 
 describe('form tạo tài khoản', () => {
   it('mật khẩu dưới 6 ký tự báo passwordTooShort', () => {
-    expect(check(registerForm, { ...ok, password: '12345', confirm: '12345' })).toEqual({
+    expect(check(registerForm, { ...ok, password: '12345' })).toEqual({
       field: 'password',
       code: 'passwordTooShort',
     });
   });
 
-  it('nhập lại không khớp thì lỗi nằm ở ô confirm', () => {
-    expect(check(registerForm, { ...ok, confirm: '654321' })).toEqual({ field: 'confirm', code: 'passwordMismatch' });
-  });
-
-  it('khớp thì qua', () => {
-    expect('data' in check(registerForm, { ...ok, confirm: '123456' })).toBe(true);
+  it('đủ 6 ký tự thì qua', () => {
+    expect('data' in check(registerForm, ok)).toBe(true);
   });
 });
 
@@ -118,8 +114,8 @@ describe('mỗi ô có lỗi riêng (useFormCheck đánh dấu mọi chỗ thi�
     expect(fields(comfortDraft.safeParse({ body: '', tags: [], sourceLang: 'vi' }))).toEqual(new Set(['body', 'tags']));
   });
 
-  it('đăng ký: email sai + nhập lại không khớp: lỗi ở cả email lẫn confirm', () => {
-    const r = registerForm.safeParse({ email: 'abc', password: '123456', confirm: '654321' });
-    expect(fields(r)).toEqual(new Set(['email', 'confirm']));
+  it('đăng ký: email sai + mật khẩu ngắn: lỗi ở cả email lẫn password', () => {
+    const r = registerForm.safeParse({ email: 'abc', password: '123' });
+    expect(fields(r)).toEqual(new Set(['email', 'password']));
   });
 });

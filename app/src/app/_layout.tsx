@@ -59,7 +59,7 @@ export default function RootLayout() {
         {/* Listed first: once any screen is listed, the first one becomes the initial route. */}
         <Stack.Screen name="(tabs)" />
         {/* An interruption that returns where it came from: closes with × (TopBar); iOS shows a page sheet. */}
-        <Stack.Screen name="login" options={{ presentation: 'modal', animation: 'default' }} />
+        <Stack.Screen name="account" options={{ presentation: 'modal', animation: 'default' }} />
       </Stack>
       <SnackbarHost />
     </View>

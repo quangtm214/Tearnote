@@ -32,7 +32,9 @@ const vi = {
     email: 'Email',
     emailPlaceholder: 'ban@vidu.com',
     password: 'Mật khẩu',
-    passwordHint: 'Ít nhất 6 ký tự',
+    passwordHint: 'Ít nhất 6 ký tự.',
+    showPassword: 'Hiện mật khẩu',
+    hidePassword: 'Ẩn mật khẩu',
     leave: 'Thoát',
     remove: 'Xoá',
   },
@@ -227,33 +229,57 @@ const vi = {
     retracted: 'Đã thu hồi.',
   },
 
-  login: {
+  /** Account modal (account.tsx): sign in and create account on one screen. */
+  account: {
+    title: 'Tài khoản',
+    // Depends on where the modal was opened from.
+    intro: {
+      send: 'Đăng nhập để gửi lời này. Lời bạn viết vẫn còn nguyên.',
+      mine: 'Lời bạn viết được giữ theo tài khoản.',
+      settings: 'Chỉ cần khi viết lời cho người lạ. Người đọc không thấy email của bạn.',
+    },
+    modeLabel: 'Đăng nhập hay tạo tài khoản',
+    create: 'Tạo tài khoản',
     signedIn: 'Đã đăng nhập.',
-    verificationSent: 'Đã gửi thư xác minh tới email của bạn. Xác minh xong thì đăng nhập ở đây.',
-    error: 'Không đăng nhập được. Kiểm tra lại email, mật khẩu và kết nối mạng.',
-    explanation:
-      'Viết cho người lạ thì cần đăng nhập, để giữ an toàn cho người đọc. Người đọc không bao giờ thấy email của bạn. Ghi lại những lần khóc thì không cần.',
-    createAccount: 'Tạo tài khoản mới',
-    later: 'Để sau',
+    signInError: 'Không đăng nhập được. Kiểm tra lại email, mật khẩu và kết nối mạng.',
+    createError: 'Không tạo được tài khoản. Thử lại sau một lát.',
+    signInWithEmail: 'Đăng nhập bằng email này',
+    forgot: 'Quên mật khẩu?',
+    resetError: 'Chưa gửi được thư đặt lại mật khẩu. Thử lại sau một lát.',
+    forgotNeedsEmail: 'Nhập email ở trên để nhận thư đặt lại mật khẩu.',
+    resetSent: 'Đã gửi thư đặt lại mật khẩu.',
+    checkInbox: 'Kiểm tra hộp thư',
+    verifySent: 'Đã gửi thư xác minh tới',
+    verifyNext: 'Mở thư, bấm vào liên kết trong đó rồi quay lại đây.',
+    spamHint: 'Không thấy thư thì xem cả mục Spam hoặc Quảng cáo.',
+    resend: 'Gửi lại thư',
+    resendIn: (seconds: number) => `Gửi lại sau ${seconds} giây`,
+    resent: 'Đã gửi lại thư.',
+    otherEmail: 'Dùng email khác',
+    verified: 'Tôi đã xác minh, đăng nhập',
   },
 
-  register: {
-    title: 'Tạo tài khoản',
-    createError:
-      'Không tạo được tài khoản. Có thể email này đã có tài khoản — thử Đăng nhập. Hoặc kiểm tra mạng.',
-    explanation: 'Tài khoản chỉ để viết cho người lạ. Người đọc không bao giờ thấy email của bạn.',
-    confirmPassword: 'Nhập lại mật khẩu',
-    haveAccount: 'Đã có tài khoản? Đăng nhập',
+  /** "Set a new password" (reset-password.tsx), opened from the link in the reset email. */
+  reset: {
+    title: 'Đặt mật khẩu mới',
+    newPassword: 'Mật khẩu mới',
+    save: 'Lưu mật khẩu',
+    saved: 'Đã đổi mật khẩu.',
+    error: 'Chưa đổi được mật khẩu. Thử lại sau một lát.',
+    invalidLink: 'Liên kết này đã hết hạn, đã dùng rồi, hoặc không mở trên máy đã xin đặt lại. Gửi lại thư từ màn Tài khoản trên máy này.',
+    retry: 'Thử lại',
+    openAccount: 'Mở Tài khoản',
   },
 
   /** Supabase Auth errors; which code shows which text is AUTH_ERROR_KEY in supabase.ts. */
   authError: {
     emailRejected: 'Email này không dùng được. Kiểm tra lại địa chỉ, hoặc dùng email khác.',
-    emailExists: 'Email này đã có tài khoản. Bấm "Đã có tài khoản? Đăng nhập" để vào.',
+    emailExists: 'Email này đã có tài khoản.',
     weakPassword: 'Mật khẩu này quá dễ đoán. Thử mật khẩu dài hơn, trộn chữ và số.',
     emailNotSent: 'Chưa gửi được thư xác minh, có thể vì đã gửi quá nhiều lần. Đợi một lúc rồi thử lại.',
     wrongCredentials: 'Email hoặc mật khẩu chưa đúng. Kiểm tra lại rồi thử lần nữa.',
     emailNotConfirmed: 'Email này chưa được xác minh. Mở thư xác minh trong hộp thư của bạn, bấm vào liên kết trong đó rồi đăng nhập lại.',
+    samePassword: 'Mật khẩu mới phải khác mật khẩu cũ.',
   },
 
   /** Hotline screen (help.tsx). Line names and hours are in hotlines.ts. */
@@ -268,7 +294,6 @@ const vi = {
     emailInvalid: 'Email này chưa đúng dạng — kiểm tra lại giúp mình nhé.',
     passwordRequired: 'Nhập mật khẩu.',
     passwordTooShort: 'Mật khẩu cần ít nhất 6 ký tự.',
-    passwordMismatch: 'Hai lần nhập mật khẩu chưa khớp.',
     bodyTooShort: 'Lời nhắn còn hơi ngắn — hãy viết thêm một chút.',
     bodyTooLong: 'Lời nhắn dài quá giới hạn — hãy rút gọn lại một chút.',
     tagsNone: 'Chọn ít nhất một chuyện ở trên.',

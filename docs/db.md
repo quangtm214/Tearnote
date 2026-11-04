@@ -18,6 +18,8 @@ Mỗi lần cài app sinh một **anonymous user** của Supabase — người d
 | **Viết Comfort** | **không** | có (tối đa 5 / 24h) |
 | Sync Entry lên server | không | có, nếu bật |
 
+Đăng nhập tài khoản có sẵn (hay mở link đặt lại mật khẩu) khi máy đang là anonymous user là **đổi danh tính**: Delivery của anonymous user cũ ở lại user đó, nên lời đã nhận trên máy không tính vào hạn 3 / 24h của tài khoản và có thể được giao lại — chấp nhận, vì chỉ tạo tài khoản mới (`updateUser` trên chính anonymous user) mới giữ được Delivery. Link đặt lại mật khẩu dùng PKCE: chỉ máy đã xin thư mới đổi được `code` lấy session.
+
 Viết Comfort đòi tài khoản thật vì đó là thứ duy nhất người lạ đọc được: cần một danh tính không tái tạo được sau mỗi lần cài lại app, để việc chặn một người viết có ý nghĩa.
 
 Xoá dữ liệu ⇒ `on delete cascade` ⇒ Comfort của họ biến mất khỏi pool. Đúng quyền thu hồi mà spec §5.2 yêu cầu. Người đã nhận vẫn giữ bản sao trong SQLite máy mình.
