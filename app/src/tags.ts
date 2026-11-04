@@ -1,69 +1,68 @@
 import type { Lang } from './i18n';
 
 /**
- * Tag contract. Source of truth: docs/tags.md and the Postgres `tag` enum.
- * All three must match — change one, change all. Do not add/remove Tags without asking.
+ * Tags are an admin-managed table on the server (ADR 0009). The app keeps a copy in SQLite (db.ts)
+ * and this in-memory list; `TAGS_BUNDLED` covers a first launch with no network.
  *
  * Tags describe the SITUATION, not how strong the feeling is (that is intensity 1–5).
  */
-export const TAG_IDS = [
-  'heartbreak',
-  'grief',
-  'pressure',
-  'self_worth',
-  'loneliness',
-  'family',
-  'overwhelm',
-  'anxiety',
-  'moved',
-  'unknown',
-] as const;
-
-export type TagId = (typeof TAG_IDS)[number];
+export type TagKind = 'sad' | 'joy' | 'unknown';
 
 /**
- * Labels per language — must equal the vi/en/ja columns of docs/tags.md (checked by tags.test.ts).
- * Labels decide whether writer and reader understand a Tag the same way, so they are part of matching,
- * not just button text: en/ja translate the MEANING of the vi column, not the id.
+ * `labels` may miss a language: the app adds one to LANGS while rows already on the device (and not yet
+ * refreshed) lack it. Read through `tagLabel`, which falls back to `en`.
  */
-export const TAG_LABEL: Record<Lang, Record<TagId, string>> = {
-  vi: {
-    heartbreak: 'Chuyện tình cảm',
-    grief: 'Mất người thân',
-    pressure: 'Áp lực công việc, học tập',
-    self_worth: 'Thấy mình không đủ tốt',
-    loneliness: 'Cô đơn',
-    family: 'Chuyện gia đình',
-    overwhelm: 'Kiệt sức, quá tải',
-    anxiety: 'Lo về tương lai',
-    moved: 'Vì vui, vì cảm động',
-    unknown: 'Không rõ vì sao',
-  },
-  en: {
-    heartbreak: 'Love life',
-    grief: 'Losing a loved one',
-    pressure: 'Work or school pressure',
-    self_worth: 'Feeling not good enough',
-    loneliness: 'Feeling lonely',
-    family: 'Family matters',
-    overwhelm: 'Exhausted, overwhelmed',
-    anxiety: 'Worried about the future',
-    moved: 'Happy or touched',
-    unknown: 'Not sure why',
-  },
-  ja: {
-    heartbreak: '恋愛のこと',
-    grief: '大切な人を亡くした',
-    pressure: '仕事や勉強のプレッシャー',
-    self_worth: '自分はダメだと感じる',
-    loneliness: 'さみしい',
-    family: '家族のこと',
-    overwhelm: '疲れ果てて、もう限界',
-    anxiety: '将来への不安',
-    moved: 'うれしくて、感動して',
-    unknown: '理由がわからない',
-  },
+export type Tag = {
+  id: string;
+  kind: TagKind;
+  labels: Partial<Record<Lang, string>>;
+  sort: number;
+  active: boolean;
 };
+
+/** Reserved id: an Entry with no Tag gets it, and request_comfort() falls back to it. */
+export const UNKNOWN_TAG = 'unknown';
+
+/**
+ * Must equal the seed in supabase/migrations/0003_tags_table.sql (checked by tags.test.ts). Labels translate
+ * the MEANING of the vi label, not the id (docs/tags.md). Once the app has loaded the server list, the
+ * server wins: this bundle is only the fallback.
+ */
+export const TAGS_BUNDLED: (Tag & { labels: Record<Lang, string> })[] = [
+  { id: 'heartbreak', kind: 'sad', sort: 10, active: true, labels: { vi: 'Chuyện tình cảm', en: 'Love life', ja: '恋愛のこと' } },
+  { id: 'grief', kind: 'sad', sort: 20, active: true, labels: { vi: 'Mất người thân', en: 'Losing a loved one', ja: '大切な人を亡くした' } },
+  { id: 'pressure', kind: 'sad', sort: 30, active: true, labels: { vi: 'Áp lực công việc, học tập', en: 'Work or school pressure', ja: '仕事や勉強のプレッシャー' } },
+  { id: 'self_worth', kind: 'sad', sort: 40, active: true, labels: { vi: 'Thấy mình không đủ tốt', en: 'Feeling not good enough', ja: '自分はダメだと感じる' } },
+  { id: 'loneliness', kind: 'sad', sort: 50, active: true, labels: { vi: 'Cô đơn', en: 'Feeling lonely', ja: 'さみしい' } },
+  { id: 'family', kind: 'sad', sort: 60, active: true, labels: { vi: 'Chuyện gia đình', en: 'Family matters', ja: '家族のこと' } },
+  { id: 'overwhelm', kind: 'sad', sort: 70, active: true, labels: { vi: 'Kiệt sức, quá tải', en: 'Exhausted, overwhelmed', ja: '疲れ果てて、もう限界' } },
+  { id: 'anxiety', kind: 'sad', sort: 80, active: true, labels: { vi: 'Lo về tương lai', en: 'Worried about the future', ja: '将来への不安' } },
+  { id: 'moved', kind: 'joy', sort: 90, active: true, labels: { vi: 'Vì vui, vì cảm động', en: 'Happy or touched', ja: 'うれしくて、感動して' } },
+  { id: 'unknown', kind: 'unknown', sort: 100, active: true, labels: { vi: 'Không rõ vì sao', en: 'Not sure why', ja: '理由がわからない' } },
+];
+
+let list: Tag[] = TAGS_BUNDLED;
+
+/** db.ts sets this from SQLite at startup and after each server refresh. */
+export function setTagList(tags: Tag[]) {
+  list = [...tags].sort((a, b) => a.sort - b.sort);
+}
+
+/**
+ * What a form offers, in the admin's order: active Tags, plus any selected Tag hidden meanwhile (the
+ * refresh can land while the form is open) so it stays visible and can be unselected.
+ */
+export const formTags = (selected: readonly string[]) =>
+  list.filter((tag) => tag.active || selected.includes(tag.id));
+
+export const findTag = (id: string) => list.find((tag) => tag.id === id);
+
+/**
+ * Only joy Tags: request_comfort() never falls back to `unknown` for them, so "no Comfort" needs the
+ * joy wording.
+ */
+export const isJoyOnly = (ids: readonly string[]) =>
+  ids.length > 0 && ids.every((id) => findTag(id)?.kind === 'joy');
 
 /** Max 3 Tags per Entry, 2 per Comfort. Both have a matching CHECK in the migration. */
 export const MAX_ENTRY_TAGS = 3;
@@ -74,7 +73,7 @@ export const MAX_COMFORT_TAGS = 2;
  * Extra Tags are cut instead of rejected: someone who just cried should not be blocked by a
  * validation error.
  */
-export function normalizeTags(picked: readonly TagId[]): TagId[] {
+export function normalizeTags(picked: readonly string[]): string[] {
   const unique = [...new Set(picked)];
-  return unique.length === 0 ? ['unknown'] : unique.slice(0, MAX_ENTRY_TAGS);
+  return unique.length === 0 ? [UNKNOWN_TAG] : unique.slice(0, MAX_ENTRY_TAGS);
 }

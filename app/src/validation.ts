@@ -3,7 +3,7 @@ import { AccessibilityInfo } from 'react-native';
 import { z } from 'zod';
 
 import { LANGS, t } from '@/i18n';
-import { MAX_COMFORT_TAGS, TAG_IDS } from '@/tags';
+import { MAX_COMFORT_TAGS } from '@/tags';
 
 // Must match Supabase Auth's "Minimum password length" setting.
 // Changing these means editing `passwordTooShort` / `common.passwordHint` / `tagsTooMany` in all three dictionaries
@@ -36,7 +36,8 @@ export const comfortDraft = z.object({
     .string()
     .refine((s) => countChars(s) >= MIN_COMFORT_LENGTH, 'bodyTooShort')
     .refine((s) => countChars(s) <= MAX_COMFORT_LENGTH, 'bodyTooLong'),
-  tags: z.array(z.enum(TAG_IDS)).min(1, 'tagsNone').max(MAX_COMFORT_TAGS, 'tagsTooMany'),
+  // Ids are checked by the server trigger check_tag_ids (ADR 0009), not here.
+  tags: z.array(z.string()).min(1, 'tagsNone').max(MAX_COMFORT_TAGS, 'tagsTooMany'),
   sourceLang: z.enum(LANGS, 'langInvalid'),
 });
 
@@ -48,10 +49,20 @@ export const myComfortRows = z.array(
   z.object({
     id: z.string(),
     body: z.string(),
-    tags: z.array(z.enum(TAG_IDS)),
+    tags: z.array(z.string()),
     status: z.enum(['pending', 'approved', 'rejected', 'retracted']),
   }),
 );
+
+// One `select id, kind, labels, sort, active` row from the tags table. `labels` is a plain string record:
+// a language the server adds later must not make the row fail to parse.
+export const tagRow = z.object({
+  id: z.string(),
+  kind: z.enum(['sad', 'joy', 'unknown']),
+  labels: z.record(z.string(), z.string()),
+  sort: z.number(),
+  active: z.boolean(),
+});
 
 // The `help_fab_position` setting (ui.tsx, docs/db.md). Anything unreadable falls back to the default spot.
 export const fabPosition = z

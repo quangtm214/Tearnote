@@ -283,6 +283,23 @@ Key và value đều tiếng Anh. Máy cài bản cũ có key tiếng Việt (`n
 `timeline_dung`): mở app là `app/src/db.ts` chép sang key mới một lần (`bat` → `on`, `tat` → `off`) rồi xoá key cũ.
 Key cũ còn sót bên cạnh key mới (bản app cũ ghi sau lần chép) thì key cũ thắng — đó là lựa chọn gần nhất.
 
+## `tags`
+
+Bản sao danh sách Tag của server ([ADR 0009](./adr/0009-tag-do-admin-quan-ly.md)). Form và mọi chỗ hiện nhãn đọc từ đây (qua danh sách trong bộ nhớ ở `app/src/tags.ts`), kể cả khi không mạng, không tài khoản.
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| `id` | text | PK | Như `tags.id` trên server |
+| `kind` | text | not null | `sad` \| `joy` \| `unknown` |
+| `labels` | text | not null | JSON `{"vi": …, "en": …, "ja": …}`; thiếu ngôn ngữ app thì hiện `en` |
+| `sort` | integer | not null | Thứ tự admin xếp |
+| `active` | integer | not null | 0 = admin đã ẩn: form không bày, lần khóc cũ vẫn hiện nhãn |
+
+- **Mở app:** `insert … on conflict do nothing` bản đóng gói `TAGS_BUNDLED` (= seed của `0003_tags_table.sql`) — máy mới cài, không mạng vẫn có đủ danh sách; bản app mới có thêm Tag thì thêm dòng mà không đè nhãn server.
+- **Cập nhật** (`refreshTags` trong `app/src/supabase.ts`, gọi nền ở `_layout` gốc): tải **cả bảng** (gồm Tag đã ẩn), parse từng dòng bằng zod (`tagRow` — dòng bản app này đọc không được, ví dụ `kind` mới, thì bỏ qua chứ không bỏ cả danh sách), upsert trong một transaction. Lỗi mạng thì im lặng, giữ bản đang có. Không dùng `updated_at`: vài chục dòng rẻ hơn theo dõi thay đổi.
+- **Không bao giờ xoá dòng.** Server cấm xoá Tag, nên upsert là đủ.
+- Id không có trong bảng (dữ liệu sync từ máy khác trước khi tải danh sách) thì bỏ qua khi hiện nhãn.
+
 ## `received_comforts`
 
 Comfort đã nhận, giữ để xem lại offline. Bản sao, không phải source of truth.

@@ -1,6 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
-import { normalizeTags, type TagId } from './tags';
+import { normalizeTags, setTagList, TAGS_BUNDLED, type Tag } from './tags';
 
 /**
  * On-device SQLite — the source of truth for Entries. Works with no network and no account.
@@ -28,7 +28,7 @@ db.withTransactionSync(() => {
     occurred_at  integer not null,                                 -- epoch ms, lúc khóc
     duration_min integer check (duration_min is null or duration_min >= 0),
     intensity    integer not null check (intensity between 1 and 5),
-    tags         text not null,                                    -- JSON array TagId
+    tags         text not null,                                    -- JSON array Tag id
     reflection   text,
     synced_at    integer,                                          -- null = chưa sao lưu
     deleted_at   integer                                           -- xoá mềm, để sync xoá bên kia
@@ -57,6 +57,14 @@ db.withTransactionSync(() => {
     thanked     integer not null default 0,
     primary key (entry_id, comfort_id)
   );
+
+  create table if not exists tags (
+    id     text primary key,
+    kind   text not null,
+    labels text not null,                                          -- JSON {"vi": …, "en": …, "ja": …}
+    sort   integer not null,
+    active integer not null
+  );
   `);
   if (legacyKey) {
     db.execSync(`
@@ -80,12 +88,48 @@ db.withTransactionSync(() => {
   `);
 });
 
+type TagRow = { id: string; kind: Tag['kind']; labels: string; sort: number; active: number };
+
+function writeTags(tags: Tag[], overwrite: boolean) {
+  const sql = overwrite
+    ? `insert into tags (id, kind, labels, sort, active) values (?, ?, ?, ?, ?)
+       on conflict (id) do update set kind = excluded.kind, labels = excluded.labels,
+       sort = excluded.sort, active = excluded.active`
+    : `insert into tags (id, kind, labels, sort, active) values (?, ?, ?, ?, ?) on conflict (id) do nothing`;
+  db.withTransactionSync(() => {
+    for (const tag of tags) {
+      db.runSync(
+        sql,
+        tag.id,
+        tag.kind,
+        JSON.stringify(tag.labels),
+        tag.sort,
+        tag.active ? 1 : 0,
+      );
+    }
+  });
+  setTagList(
+    db
+      .getAllSync<TagRow>(`select id, kind, labels, sort, active from tags`)
+      .map((r) => ({ ...r, labels: JSON.parse(r.labels) as Tag['labels'], active: r.active === 1 })),
+  );
+}
+
+// The bundle only fills gaps: once the server list has loaded, its labels and order win (ADR 0009 §4).
+writeTags(TAGS_BUNDLED, false);
+
+/**
+ * Server Tag rows replace local ones by id. Local rows are never deleted (the server forbids it too),
+ * so an Entry with a hidden Tag still shows its label.
+ */
+export const saveTags = (tags: Tag[]) => writeTags(tags, true);
+
 export type Entry = {
   id: string;
   occurredAt: number;
   durationMin: number | null;
   intensity: number;
-  tags: TagId[];
+  tags: string[];
   reflection: string | null;
 };
 

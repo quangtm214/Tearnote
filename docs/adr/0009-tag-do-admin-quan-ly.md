@@ -1,6 +1,6 @@
 # Danh sách Tag là bảng `tags` do admin quản lý
 
-**Trạng thái:** đã chốt; server ở Change 23 (`0003_tags_table.sql`), app ở Change 24. Thay hợp đồng ba chỗ cũ (`docs/tags.md` ⇄ enum `tag` ⇄ `app/src/tags.ts`).
+**Trạng thái:** đã làm — server ở Change 23 (`0003_tags_table.sql`), app ở Change 24 (`app/src/tags.ts`, bảng `tags` trong SQLite). Thay hợp đồng ba chỗ cũ (`docs/tags.md` ⇄ enum `tag` ⇄ `app/src/tags.ts`).
 
 Tag đang hardcode ở ba nơi: thêm, ẩn hay sửa nhãn một chuyện là một migration + một bản phát hành app + sửa docs. Design system mới (`TagPicker` / `TagSheet`) đã tính cho danh sách dài dần, 8 hay 30 mục. Danh sách chuyển vào bảng `tags` trên Supabase, admin sửa trực tiếp; app tải về SQLite và đóng gói sẵn một bản dự phòng — đúng khuôn của hotline (ADR 0005).
 
