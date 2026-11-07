@@ -1,13 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { z } from 'zod';
 
 import { tagLabels, t } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, TopBar, leave, showSnackbar, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, Loading, ConfirmDialog, SecondaryButton, ComfortCard, TopBar, leave, showSnackbar, type ConfirmRequest } from '@/ui';
 import { myComfortRows } from '@/validation';
 
 /**
@@ -84,7 +84,7 @@ export default function MyComfortsScreen() {
           </Text>
 
           {items === null ? (
-            <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
+            <Loading label={t.common.loading} />
           ) : items === 'signedOut' ? (
             <>
               <Text style={s.explanation}>{t.myComforts.keptByAccount}</Text>

@@ -18,7 +18,7 @@ const vi = {
     back: 'Quay lại',
     close: 'Đóng',
     networkError: 'Không kết nối được. Kiểm tra mạng rồi thử lại.',
-    loading: 'Đang tải',
+    loading: 'Đang tải…',
     keep: 'Giữ lại',
     needHelp: 'Cần trợ giúp ngay',
     // Short label on the floating help button; screen readers still read needHelp.
@@ -36,6 +36,7 @@ const vi = {
     showPassword: 'Hiện mật khẩu',
     hidePassword: 'Ẩn mật khẩu',
     leave: 'Thoát',
+    openSettings: 'Mở Cài đặt',
     remove: 'Xoá',
   },
 
@@ -147,6 +148,7 @@ const vi = {
     levelRange: (from: number, to?: number) => (to === undefined ? `từ ${from} trở lên` : `${from} đến ${to}`),
     legendA11y: (levels: string[]) => `Màu đậm dần theo tổng cường độ trong ngày: ${levels.join(', ')}`,
     prevYear: 'Năm trước',
+    emptyYear: (year: number) => `Năm ${year} chưa có lần khóc nào.`,
     nextYear: 'Năm sau',
     legendTitle: 'Tổng cường độ trong ngày',
   },
@@ -208,6 +210,7 @@ const vi = {
       `Bấm Gửi là bạn đồng ý: lời này được duyệt, dịch sang ${joinList(others.map((lang) => LANG_NAMES[lang]))}, rồi gửi ẩn danh tới người lạ. Thu hồi được trong Viết lời → Lời bạn đã viết; ai đã nhận thì vẫn giữ bản của họ.`,
     signInAgain: 'Đăng nhập lại',
     send: 'Gửi',
+    sending: 'Đang gửi…',
     leaveQuestion: 'Thoát mà chưa gửi?',
     leaveDetail: 'Lời bạn đang viết sẽ mất.',
     keepWriting: 'Viết tiếp',
@@ -299,14 +302,14 @@ const vi = {
     footer: 'Danh sách có sẵn trong máy, mở được cả khi không có mạng. Số nào không gọi được thì thử số khác.',
   },
   validation: {
-    emailInvalid: 'Email này chưa đúng dạng — kiểm tra lại giúp mình nhé.',
+    emailInvalid: 'Email chưa đúng dạng.',
     passwordRequired: 'Nhập mật khẩu.',
     passwordTooShort: 'Mật khẩu cần ít nhất 6 ký tự.',
-    bodyTooShort: 'Lời nhắn còn hơi ngắn — hãy viết thêm một chút.',
-    bodyTooLong: 'Lời nhắn dài quá giới hạn — hãy rút gọn lại một chút.',
+    bodyTooShort: 'Lời còn ngắn quá.',
+    bodyTooLong: 'Lời dài quá giới hạn.',
     tagsNone: 'Chọn ít nhất một chuyện ở trên.',
-    tagsTooMany: 'Chỉ chọn được tối đa 2 chủ đề.',
-    langInvalid: 'Hãy chọn ngôn ngữ bạn viết.',
+    tagsTooMany: 'Chỉ chọn được tối đa 2 chuyện.',
+    langInvalid: 'Chọn ngôn ngữ bạn viết.',
   },
 };
 

@@ -14,6 +14,7 @@ import {
   AccessibilityInfo,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -44,6 +45,7 @@ import {
   Pill,
   TagPicker,
   DURATION_OPTIONS,
+  FieldError,
   FocusPressable,
   TopBar,
   showSnackbar,
@@ -70,11 +72,12 @@ export default function NewEntryScreen() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // `settings`: the permission was refused for good (no system prompt any more), so the fix is in the system Settings.
+  const [error, setError] = useState<{ message: string; settings?: boolean } | null>(null);
   const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
 
-  const reportError = (msg: string) => {
-    setError(msg);
+  const reportError = (msg: string, settings = false) => {
+    setError({ message: msg, settings });
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
@@ -131,8 +134,9 @@ export default function NewEntryScreen() {
     setError(null);
     const remaining = MAX_PHOTOS - photos.length;
     try {
-      if (camera && !(await ImagePicker.requestCameraPermissionsAsync()).granted) {
-        return reportError(t.newEntry.noCameraPermission);
+      if (camera) {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) return reportError(t.newEntry.noCameraPermission, !perm.canAskAgain);
       }
       const result = camera
         ? await ImagePicker.launchCameraAsync()
@@ -151,9 +155,10 @@ export default function NewEntryScreen() {
     // Hide the Record button at once: a second tap would prepare the recorder again and throw.
     setIsRecording(true);
     try {
-      if (!(await requestRecordingPermissionsAsync()).granted) {
+      const perm = await requestRecordingPermissionsAsync();
+      if (!perm.granted) {
         setIsRecording(false);
-        return reportError(t.newEntry.noMicPermission);
+        return reportError(t.newEntry.noMicPermission, !perm.canAskAgain);
       }
       // iOS refuses to record unless the audio session allows it; Android ignores this flag.
       // expo-audio on iOS throws when allowsRecording is true without playsInSilentMode.
@@ -220,7 +225,7 @@ export default function NewEntryScreen() {
           <Text style={styles.caption}>
             {formatDate(when)} · {formatTime(when)}
           </Text>
-          <View style={styles.row} accessibilityRole="radiogroup">
+          <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel={t.newEntry.whenLabel}>
             {BACKDATE_MINUTES.map((minutes) => (
               <Pill
                 key={minutes}
@@ -235,7 +240,7 @@ export default function NewEntryScreen() {
           <Text style={[pencil.date, styles.label]} accessibilityRole="header">
             {t.newEntry.howLongLabel}
           </Text>
-          <View style={styles.row} accessibilityRole="radiogroup">
+          <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel={t.newEntry.howLongLabel}>
             {DURATION_OPTIONS.map((minutes) => (
               <Pill
                 key={String(minutes)}
@@ -378,7 +383,7 @@ export default function NewEntryScreen() {
             </View>
           ) : null}
           {/* Always three buttons; at the limit they fade, not hide, so nothing jumps. No camera while recording. */}
-          <View style={styles.attachRow}>
+          <View style={styles.attachRow} role="group" accessibilityLabel={t.newEntry.attachLabel}>
             <SecondaryButton
               icon="camera-outline"
               label={t.newEntry.takePhoto}
@@ -398,7 +403,12 @@ export default function NewEntryScreen() {
               onPress={() => void startRecording()}
             />
           </View>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <FieldError message={error.message} /> : null}
+          {error?.settings ? (
+            <View style={styles.buttonRow}>
+              <SecondaryButton icon="cog-outline" label={t.common.openSettings} onPress={() => void Linking.openSettings().catch(() => {})} />
+            </View>
+          ) : null}
 
           <View style={styles.cancelRow}>
             <LinkRow icon="close" label={t.newEntry.cancel} onPress={() => router.back()} />
@@ -461,6 +471,5 @@ const styles = StyleSheet.create({
   recordingBox: { marginTop: space.md },
   buttonRow: { marginTop: space.sm },
   attachRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
-  error: { ...text.body, color: album.alert, marginTop: space.md },
   cancelRow: { marginTop: space.lg },
 });
