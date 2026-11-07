@@ -91,6 +91,13 @@ const en: Dictionary = {
     newEntry: 'Write it down',
   },
 
+  tagPicker: {
+    more: 'Something else…',
+    count: (max: number, n: number) => `Up to ${max} · ${n} picked`,
+    groups: { sad: 'Sad things', joy: 'Happy things', unknown: 'Not sure' },
+    done: 'Done',
+  },
+
   newEntry: {
     ago: (minutes) =>
       minutes === 0 ? 'Just now' : minutes === 60 * 24 ? 'Yesterday' : `${count(minutes / 60, 'hour', 'hours')} ago`,

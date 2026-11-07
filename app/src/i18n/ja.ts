@@ -80,6 +80,13 @@ const ja: Dictionary = {
     newEntry: '書きとめる',
   },
 
+  tagPicker: {
+    more: 'ほかのこと…',
+    count: (max: number, n: number) => `${max}つまで · ${n}つ選択中`,
+    groups: { sad: 'つらいこと', joy: 'うれしいこと', unknown: 'わからない' },
+    done: '完了',
+  },
+
   newEntry: {
     ago: (minutes) => (minutes === 0 ? 'さっき' : minutes === 60 * 24 ? '昨日' : `${minutes / 60}時間前`),
     recordingInterrupted: '録音が途中で止まりました。もう一度録音してください。',

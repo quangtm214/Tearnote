@@ -299,6 +299,7 @@ Bản sao danh sách Tag của server ([ADR 0009](./adr/0009-tag-do-admin-quan-l
 - **Cập nhật** (`refreshTags` trong `app/src/supabase.ts`, gọi nền ở `_layout` gốc): tải **cả bảng** (gồm Tag đã ẩn), parse từng dòng bằng zod (`tagRow` — dòng bản app này đọc không được, ví dụ `kind` mới, thì bỏ qua chứ không bỏ cả danh sách), upsert trong một transaction. Lỗi mạng thì im lặng, giữ bản đang có. Không dùng `updated_at`: vài chục dòng rẻ hơn theo dõi thay đổi.
 - **Không bao giờ xoá dòng.** Server cấm xoá Tag, nên upsert là đủ.
 - Id không có trong bảng (dữ liệu sync từ máy khác trước khi tải danh sách) thì bỏ qua khi hiện nhãn.
+- **Số lần chọn** cho hàng nhanh của `TagPicker` không lưu ở đâu: `tagUsage` (`app/src/db.ts`) đếm thẳng từ `entries.tags` (`json_each`, `deleted_at is null`), nên xoá lần khóc là số đếm tự đổi. Không đếm `unknown`: đó là giá trị `normalizeTags` ghi khi không chọn gì, không phải một lựa chọn.
 
 ## `received_comforts`
 
