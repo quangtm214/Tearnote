@@ -40,8 +40,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Defs, Path } from 'react-native-svg';
 import type { z } from 'zod';
 
-import { getSetting, setSetting, type Attachment, type Entry } from './db';
-import { tagLabels, t } from './i18n';
+import { getSetting, setSetting, tagUsage, type Attachment, type Entry } from './db';
+import { tagLabel, tagLabels, t } from './i18n';
+import { quickTags, type Tag } from './tags';
 import { album, pencil, radius, space, text, touch } from './theme';
 import { fabPosition } from './validation';
 
@@ -830,6 +831,175 @@ export function Pill({
   );
 }
 
+/**
+ * Tag choice on the entry and write screens. The admin list can grow, so the form shows only `quickTags`
+ * (most picked + selected) and puts the rest behind "Chuyện khác…" — DESIGN.md › "Chọn chuyện".
+ * `tags`: what this screen offers, in admin order; `label`: the question above, reused as the sheet title.
+ */
+export function TagPicker({
+  tags,
+  selected,
+  max,
+  label,
+  disabled,
+  onToggle,
+}: {
+  tags: readonly Tag[];
+  selected: readonly string[];
+  max: number;
+  label: string;
+  disabled?: boolean;
+  onToggle: (id: string) => void;
+}) {
+  // Read once per mount: the row must not reorder while the user is picking.
+  const [usage] = useState(tagUsage);
+  // Every Tag picked during this mount stays on the row, so unselecting one does not pull it from under the finger.
+  const [picked, setPicked] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const { row, more } = quickTags(tags, usage, [...new Set([...selected, ...picked])]);
+  const full = selected.length >= max;
+  const toggle = (id: string) => {
+    setPicked((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    onToggle(id);
+  };
+  return (
+    <>
+      <View style={s.tagRow} role="group">
+        {row.map(({ id }) => {
+          const on = selected.includes(id);
+          return (
+            <Pill
+              key={id}
+              label={tagLabel(id)}
+              selected={on}
+              disabled={disabled || (full && !on)}
+              onPress={() => toggle(id)}
+            />
+          );
+        })}
+        {more ? (
+          <SecondaryButton icon="dots-horizontal" label={t.tagPicker.more} disabled={disabled} onPress={() => setOpen(true)} />
+        ) : null}
+      </View>
+      <TagSheet
+        open={open}
+        tags={tags}
+        selected={selected}
+        max={max}
+        title={label}
+        onToggle={toggle}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  );
+}
+
+const TAG_GROUPS = ['sad', 'joy', 'unknown'] as const;
+
+/**
+ * Every Tag, one checkbox row each, grouped by kind in admin order (not by use, so it can be searched from
+ * memory). A tick applies at once; "Xong", the backdrop and Back all close and keep the picks.
+ */
+function TagSheet({
+  open,
+  tags,
+  selected,
+  max,
+  title,
+  onToggle,
+  onClose,
+}: {
+  open: boolean;
+  tags: readonly Tag[];
+  selected: readonly string[];
+  max: number;
+  title: string;
+  onToggle: (id: string) => void;
+  onClose: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  // Starts 24 below and rises on show; back to 24 once closed so the next open rises again.
+  const rise = useRef(new Animated.Value(24)).current;
+  const full = selected.length >= max;
+  useEffect(() => {
+    if (!open) rise.setValue(24);
+  }, [open, rise]);
+  return (
+    <Modal
+      visible={open}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onClose}
+      onShow={() => {
+        Animated.timing(rise, { toValue: 0, duration: 220, useNativeDriver: true }).start();
+      }}
+    >
+      <View style={s.sheetBackdrop}>
+        {/* Sibling, not a wrapper, for the same reason as in ConfirmDialog. */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} focusable={false} />
+        <Animated.View
+          style={[s.sheet, { paddingBottom: space.md + insets.bottom, transform: [{ translateY: rise }] }]}
+          accessibilityViewIsModal
+        >
+          <Text style={[pencil.date, s.question]} accessibilityRole="header">
+            {title}
+          </Text>
+          <Text style={s.sheetCount} accessibilityLiveRegion="polite">
+            {t.tagPicker.count(max, selected.length)}
+          </Text>
+          <ScrollView style={s.sheetList}>
+            {TAG_GROUPS.map((kind) => {
+              const items = tags.filter((tag) => tag.kind === kind);
+              if (items.length === 0) return null;
+              return (
+                <View key={kind}>
+                  <Text style={s.sheetGroup} accessibilityRole="header">
+                    {t.tagPicker.groups[kind]}
+                  </Text>
+                  {items.map(({ id }) => {
+                    const on = selected.includes(id);
+                    const off = full && !on;
+                    return (
+                      <FocusPressable
+                        key={id}
+                        onPress={() => onToggle(id)}
+                        disabled={off}
+                        accessibilityRole="checkbox"
+                        accessibilityLabel={tagLabel(id)}
+                        accessibilityState={{ checked: on, disabled: off }}
+                        style={({ pressed }) => [s.checkRow, pressed && s.dim, off && s.faded]}
+                      >
+                        <MaterialCommunityIcons
+                          name={on ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                          size={24}
+                          color={on ? album.ink : album.pencil}
+                        />
+                        <Text style={s.checkLabel}>{tagLabel(id)}</Text>
+                      </FocusPressable>
+                    );
+                  })}
+                </View>
+              );
+            })}
+          </ScrollView>
+          {/* ConfirmDialog's safe button: a clip primary would vanish on the clip sheet. */}
+          <FocusPressable
+            onPress={onClose}
+            accessibilityRole="button"
+            style={({ pressed }) => [s.dialogButton, s.sheetDone, pressed && s.pressedSelected]}
+          >
+            <Text style={s.keepText} maxFontSizeMultiplier={2}>
+              {t.tagPicker.done}
+            </Text>
+          </FocusPressable>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
 // Brings a TextField back above the keyboard; null outside FormScrollView.
 const RevealContext = createContext<((input: TextInput) => void) | null>(null);
 
@@ -1245,6 +1415,24 @@ const s = StyleSheet.create({
     backgroundColor: album.hairline,
   },
   pillSelected: { backgroundColor: album.ink },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  sheetBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: album.scrim },
+  sheet: {
+    ...shadow,
+    elevation: 6,
+    maxHeight: '80%',
+    backgroundColor: album.clip,
+    borderTopLeftRadius: radius.paper,
+    borderTopRightRadius: radius.paper,
+    paddingTop: space.lg,
+    paddingHorizontal: space.screen,
+  },
+  sheetCount: { ...text.caption, color: album.pencil, marginTop: space.xs },
+  sheetList: { flexGrow: 0, marginTop: space.sm, marginBottom: space.md },
+  sheetGroup: { ...text.caption, color: album.pencil, marginTop: space.md, marginBottom: space.xs },
+  checkRow: { minHeight: touch.min, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: space.sm },
+  checkLabel: { ...text.body, color: album.ink, flex: 1 },
+  sheetDone: { backgroundColor: album.ink },
   pillText: { ...text.button, color: album.pencil },
   pillTextSelected: { color: album.page },
 

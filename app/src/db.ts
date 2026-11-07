@@ -1,6 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
-import { normalizeTags, setTagList, TAGS_BUNDLED, type Tag } from './tags';
+import { normalizeTags, setTagList, TAGS_BUNDLED, UNKNOWN_TAG, type Tag } from './tags';
 
 /**
  * On-device SQLite — the source of truth for Entries. Works with no network and no account.
@@ -222,6 +222,19 @@ export function listEntries(): Entry[] {
        from entries where deleted_at is null order by occurred_at desc`,
     )
     .map(toEntry);
+}
+
+/**
+ * How often this person picked each Tag, from their own Entries — orders TagPicker's row (ADR 0009 §5).
+ * Not `unknown`: normalizeTags writes it for "no Tag", so it was never a choice.
+ */
+export function tagUsage(): Record<string, number> {
+  const rows = db.getAllSync<{ id: string; n: number }>(
+    `select j.value as id, count(*) as n from entries e, json_each(e.tags) j
+     where e.deleted_at is null and j.value <> ? group by j.value`,
+    UNKNOWN_TAG,
+  );
+  return Object.fromEntries(rows.map((r) => [r.id, r.n]));
 }
 
 export function getEntry(id: string): Entry | null {

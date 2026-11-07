@@ -58,6 +58,19 @@ export const formTags = (selected: readonly string[]) =>
 export const findTag = (id: string) => list.find((tag) => tag.id === id);
 
 /**
+ * TagPicker's row (ADR 0009 §5): the `size` Tags this person picked most (`usage` = count per id from their
+ * own Entries; ties and first use follow the admin `sort`), plus every selected Tag so a pick from the
+ * sheet stays visible. `more`: some candidate is only in the sheet.
+ */
+export function quickTags(candidates: readonly Tag[], usage: Record<string, number>, selected: readonly string[], size = 6) {
+  const row = [...candidates]
+    .sort((a, b) => (usage[b.id] ?? 0) - (usage[a.id] ?? 0) || a.sort - b.sort)
+    .slice(0, size);
+  for (const tag of candidates) if (selected.includes(tag.id) && !row.includes(tag)) row.push(tag);
+  return { row, more: candidates.length > row.length };
+}
+
+/**
  * Only joy Tags: request_comfort() never falls back to `unknown` for them, so "no Comfort" needs the
  * joy wording.
  */
