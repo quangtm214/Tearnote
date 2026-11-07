@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 
@@ -11,6 +11,7 @@ import {
   FAB_CLEARANCE,
   FormScrollView,
   LinkRow,
+  Loading,
   PrimaryButton,
   ScreenFooter,
   SecondaryButton,
@@ -89,7 +90,7 @@ export default function ResetPasswordScreen() {
           </Text>
           {link === 'checking' ? (
             <View style={s.center}>
-              <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
+              <Loading label={t.common.loading} />
             </View>
           ) : link === 'offline' ? (
             <>

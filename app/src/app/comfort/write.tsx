@@ -213,7 +213,7 @@ export default function WriteComfortScreen() {
           <Text style={[pencil.date, s.label]} accessibilityRole="header">
             {t.write.languageLabel}
           </Text>
-          <View style={s.tagRow} accessibilityRole="radiogroup">
+          <View style={s.tagRow} accessibilityRole="radiogroup" accessibilityLabel={t.write.languageLabel}>
             {LANGS.map((l) => (
               <Pill
                 key={l}
@@ -264,7 +264,7 @@ export default function WriteComfortScreen() {
           <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
         </FormScrollView>
         <ScreenFooter>
-          <PrimaryButton label={t.write.send} onPress={send} busy={sending} />
+          <PrimaryButton label={t.write.send} onPress={send} busy={sending} busyLabel={t.write.sending} />
         </ScreenFooter>
       </KeyboardAvoidingView>
       <ConfirmDialog request={dialog} onClose={() => setDialog(null)} />
