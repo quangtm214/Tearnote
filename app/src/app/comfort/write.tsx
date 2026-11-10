@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -16,8 +17,8 @@ import { LANGS, currentLang, tagLabel, t, NATIVE_NAMES, type Lang } from '@/i18n
 import { isRealAccount, supabase } from '@/supabase';
 import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
-import { check, comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH } from '@/validation';
-import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, TopBar, leave, type ConfirmRequest } from '@/ui';
+import { comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH, useFormCheck } from '@/validation';
+import { ScreenFooter, FAB_CLEARANCE, FieldError, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, TopBar, leave, type ConfirmRequest } from '@/ui';
 
 /**
  * Write a Comfort. The two key rules are NOT here: "real accounts only" and "max 5 / 24h" are
@@ -35,6 +36,9 @@ export default function WriteComfortScreen() {
   const [done, setDone] = useState(false);
   const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
   const sentToLogin = useRef(false);
+  const scroll = useRef<ScrollView>(null);
+  // y of each checked field inside the scroll content, to scroll to the first error on submit.
+  const fieldY = useRef({ body: 0, tags: 0 });
 
   // Losing a draft to an accidental Back hurts as much as losing a Reflection: confirm before leaving.
   // Going to login is a push, not a leave, so it does not ask.
@@ -70,7 +74,11 @@ export default function WriteComfortScreen() {
   );
 
   const length = countChars(body);
-  const canSend = 'data' in check(comfortDraft, { body, tags, sourceLang }) && !sending;
+  // The schema only says "too short"; the screen says by how much.
+  const form = useFormCheck(comfortDraft, { body, tags, sourceLang }, (_field, code) =>
+    code === 'bodyTooShort' ? t.write.shortBy(MIN_COMFORT_LENGTH - length) : undefined,
+  );
+  const tagsError = form.errorOf('tags');
 
   function toggleTag(tag: TagId) {
     setTags((prev) =>
@@ -88,7 +96,14 @@ export default function WriteComfortScreen() {
   };
 
   async function send() {
-    if (!canSend) return;
+    if (sending) return;
+    const result = form.submit();
+    if (!('data' in result)) {
+      if (result.field === 'body' || result.field === 'tags') {
+        scroll.current?.scrollTo({ y: Math.max(0, fieldY.current[result.field] - space.lg) });
+      }
+      return;
+    }
     setError(null);
     setSessionExpired(false);
     setSending(true);
@@ -171,27 +186,29 @@ export default function WriteComfortScreen() {
       <TopBar />
       {/* Android: KAV, iOS: ScrollView keyboard insets. Why both: new.tsx. */}
       <KeyboardAvoidingView style={s.screen} behavior="padding" enabled={Platform.OS === 'android'}>
-        <FormScrollView contentContainerStyle={s.content}>
+        <FormScrollView ref={scroll} contentContainerStyle={s.content}>
           <Text style={[pencil.title, s.title]} accessibilityRole="header">
             {t.write.title}
           </Text>
           <Text style={s.explanation}>{t.write.intro}</Text>
           <Text style={s.caption}>{t.write.guidance}</Text>
 
-          <TextField
-            style={s.textArea}
-            value={body}
-            onChangeText={setBody}
-            accessibilityLabel={t.write.inputLabel}
-            multiline
-            textAlignVertical="top"
-            placeholder={t.write.inputPlaceholder}
-            editable={!sending}
-          />
-          <Text style={s.counter} accessibilityLabel={t.write.counterA11y(length, MAX_COMFORT_LENGTH)}>
-            {length}/{MAX_COMFORT_LENGTH}
-            {length < MIN_COMFORT_LENGTH ? t.write.shortBy(MIN_COMFORT_LENGTH - length) : ''}
-          </Text>
+          <View style={s.field} onLayout={(e) => (fieldY.current.body = e.nativeEvent.layout.y)}>
+            <TextField
+              style={s.textArea}
+              value={body}
+              onChangeText={setBody}
+              accessibilityLabel={t.write.inputLabel}
+              multiline
+              textAlignVertical="top"
+              placeholder={t.write.inputPlaceholder}
+              editable={!sending}
+              error={form.errorOf('body')}
+            />
+            <Text style={s.counter} accessibilityLabel={t.write.counterA11y(length, MAX_COMFORT_LENGTH)}>
+              {length} / {MAX_COMFORT_LENGTH}
+            </Text>
+          </View>
 
           <Text style={[pencil.date, s.label]} accessibilityRole="header">
             {t.write.languageLabel}
@@ -209,27 +226,33 @@ export default function WriteComfortScreen() {
             ))}
           </View>
 
-          <Text style={[pencil.date, s.label]} accessibilityRole="header">
+          <Text
+            style={[pencil.date, s.label]}
+            accessibilityRole="header"
+            onLayout={(e) => (fieldY.current.tags = e.nativeEvent.layout.y)}
+          >
             {t.write.topicLabel}
           </Text>
           <Text style={s.caption}>{t.write.pickTags(MAX_COMFORT_TAGS, tagLabel('unknown'))}</Text>
-          <View style={s.tagRow}>
-            {TAG_IDS.map((tag) => {
-              const selected = tags.includes(tag);
-              return (
-                <Pill
-                  key={tag}
-                  label={tagLabel(tag)}
-                  selected={selected}
-                  disabled={sending || (!selected && tags.length >= MAX_COMFORT_TAGS)}
-                  onPress={() => toggleTag(tag)}
-                />
-              );
-            })}
+          <View>
+            <View style={s.tagRow}>
+              {TAG_IDS.map((tag) => {
+                const selected = tags.includes(tag);
+                return (
+                  <Pill
+                    key={tag}
+                    label={tagLabel(tag)}
+                    selected={selected}
+                    disabled={sending || (!selected && tags.length >= MAX_COMFORT_TAGS)}
+                    onPress={() => toggleTag(tag)}
+                  />
+                );
+              })}
+            </View>
+            {tagsError ? <FieldError message={tagsError} /> : null}
           </View>
 
           {/* Explicit consent before the Comfort enters the pool — overview.md §6. */}
-          {length >= MIN_COMFORT_LENGTH && tags.length === 0 ? <Text style={s.caption}>{t.write.needTag}</Text> : null}
           <Text style={[s.caption, s.consent]}>{t.write.consent(LANGS.filter((l) => l !== sourceLang))}</Text>
 
           {error ? <Text style={s.error}>{error}</Text> : null}
@@ -240,7 +263,7 @@ export default function WriteComfortScreen() {
           <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
         </FormScrollView>
         <ScreenFooter>
-          <PrimaryButton label={t.write.send} onPress={send} disabled={!canSend && !sending} busy={sending} />
+          <PrimaryButton label={t.write.send} onPress={send} busy={sending} />
         </ScreenFooter>
       </KeyboardAvoidingView>
       <ConfirmDialog request={dialog} onClose={() => setDialog(null)} />
@@ -265,6 +288,7 @@ const s = StyleSheet.create({
   label: { color: album.pencil, marginTop: space.md },
   caption: { ...text.caption, color: album.pencil },
   consent: { marginTop: space.md },
+  field: { gap: space.md },
   textArea: { minHeight: 160, paddingVertical: space.md - 2 },
   counter: { ...text.caption, color: album.pencil },
   error: { ...text.body, color: album.alert },

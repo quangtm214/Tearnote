@@ -183,7 +183,7 @@ const ja: Dictionary = {
     inputLabel: '見知らぬ人へのことば',
     inputPlaceholder: 'あのとき聞きたかったことばを。',
     counterA11y: (n, max) => `${max}文字中${n}文字`,
-    shortBy: (n) => ` · あと${n}文字`,
+    shortBy: (n) => `あと${n}文字必要です。`,
     languageLabel: '何語で書きますか？',
     topicLabel: 'どんなことへのことば？',
     pickTags: (max, unknownLabel) => `1つか${max}つ選んでください。誰にでも合うことばなら「${unknownLabel}」を。`,
@@ -194,7 +194,6 @@ const ja: Dictionary = {
     leaveQuestion: '送らずに戻りますか？',
     leaveDetail: 'いま書いていることばは消えます。',
     keepWriting: '書き続ける',
-    needTag: '上から1つ以上選んでください。',
   },
 
   myComforts: {
@@ -264,7 +263,7 @@ const ja: Dictionary = {
     passwordMismatch: '2つのパスワードが一致しません。',
     bodyTooShort: '少し短いようです。もう少し書き足してください。',
     bodyTooLong: '長すぎます。少し短くしてください。',
-    tagsNone: 'テーマを1つ以上選んでください。',
+    tagsNone: '上から1つ以上選んでください。',
     tagsTooMany: 'テーマは2つまで選べます。',
     langInvalid: '書いた言語を選んでください。',
   },
