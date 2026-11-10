@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 import { authErrorText, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, PrimaryButton, TextField, TopBar, leave } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, FormScrollView, LinkRow, PrimaryButton, TextField, TopBar, leave, showSnackbar } from '@/ui';
 import { loginForm, useFormCheck } from '@/validation';
 
 /**
@@ -39,7 +39,10 @@ export default function LoginScreen() {
 
   useEffect(() => {
     // With a real session this screen is done — send the user back where they came from.
-    if (registered === 'done') return leave();
+    if (registered === 'done') {
+      showSnackbar(t.login.signedIn);
+      return leave();
+    }
     if (registered !== 'verify') return;
     const msg = t.login.verificationSent;
     if (newEmail) setEmail(newEmail);
@@ -60,6 +63,7 @@ export default function LoginScreen() {
     try {
       const { error } = await supabase.auth.signInWithPassword(data);
       if (error) return reportError(authErrorText(error, t.login.error));
+      showSnackbar(t.login.signedIn);
       leave();
     } catch {
       reportError(t.common.networkError);

@@ -223,6 +223,7 @@ const vi = {
   },
 
   login: {
+    signedIn: 'Đã đăng nhập.',
     verificationSent: 'Đã gửi thư xác minh tới email của bạn. Xác minh xong thì đăng nhập ở đây.',
     error: 'Không đăng nhập được. Kiểm tra lại email, mật khẩu và kết nối mạng.',
     explanation:
