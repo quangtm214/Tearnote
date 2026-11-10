@@ -25,7 +25,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: album.page } }}
-      tabBar={({ state, navigation, insets }) => (
+      tabBar={({ state, navigateToTab, insets }) => (
         <View style={[s.bar, { paddingBottom: insets.bottom }]} accessibilityRole="tablist">
           {TABS.map((tab) => {
             const selected = state.routes[state.index].name === tab.name;
@@ -33,13 +33,15 @@ export default function TabLayout() {
             return (
               <FocusPressable
                 key={tab.name}
-                onPress={() => navigation.navigate(tab.name)}
+                onPress={() => navigateToTab(state.routes.find((r) => r.name === tab.name)!.key)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
                 accessibilityLabel={t.tab[tab.name]}
                 style={({ pressed }) => [s.item, pressed && s.dim]}
               >
-                <View style={[s.indicator, selected && s.indicatorSelected]}>
+                {/* key: on RN 0.88 Android the rounded corners are lost when the background is added after
+                    mount (a plain style update, even from 'transparent'); a fresh view keeps them. */}
+                <View key={String(selected)} style={[s.indicator, selected && s.indicatorSelected]}>
                   <MaterialCommunityIcons name={selected ? tab.iconSelected : tab.icon} size={24} color={color} />
                 </View>
                 <Text style={[s.label, { color }]} maxFontSizeMultiplier={1.5}>

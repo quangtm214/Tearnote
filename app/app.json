@@ -40,7 +40,10 @@
           "photosPermission": "Tearnote opens your photo library so you can add photos to a cry. Photos stay on your phone.",
           "cameraPermission": "Tearnote uses the camera so you can take a photo for a cry. Photos stay on your phone."
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-status-bar"
     ],
     "locales": {
       "vi": "./locales/vi.json",

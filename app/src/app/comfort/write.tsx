@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type ScrollViewInstance,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -36,7 +37,7 @@ export default function WriteComfortScreen() {
   // Set when Send opened the account modal; on return with a real account the Comfort is sent right away.
   const sendAfterSignIn = useRef(false);
   const inFlight = useRef(false);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   // y of each checked field inside the scroll content, to scroll to the first error on submit.
   const fieldY = useRef({ body: 0, tags: 0 });
 
