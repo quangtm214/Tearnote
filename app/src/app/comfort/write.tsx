@@ -17,7 +17,7 @@ import { isRealAccount, supabase } from '@/supabase';
 import { formTags, MAX_COMFORT_TAGS, UNKNOWN_TAG } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
 import { comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH, useFormCheck } from '@/validation';
-import { ScreenFooter, FAB_CLEARANCE, FieldError, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, TopBar, leave, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, FieldError, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, TagPicker, TopBar, leave, type ConfirmRequest } from '@/ui';
 
 /**
  * Write a Comfort. The two key rules are NOT here: "real accounts only" and "max 5 / 24h" are
@@ -235,20 +235,14 @@ export default function WriteComfortScreen() {
           </Text>
           <Text style={s.caption}>{t.write.pickTags(MAX_COMFORT_TAGS, tagLabel(UNKNOWN_TAG))}</Text>
           <View>
-            <View style={s.tagRow}>
-              {formTags(tags).map(({ id }) => {
-                const selected = tags.includes(id);
-                return (
-                  <Pill
-                    key={id}
-                    label={tagLabel(id)}
-                    selected={selected}
-                    disabled={sending || (!selected && tags.length >= MAX_COMFORT_TAGS)}
-                    onPress={() => toggleTag(id)}
-                  />
-                );
-              })}
-            </View>
+            <TagPicker
+              tags={formTags(tags)}
+              selected={tags}
+              max={MAX_COMFORT_TAGS}
+              label={t.write.topicLabel}
+              disabled={sending}
+              onToggle={toggleTag}
+            />
             {tagsError ? <FieldError message={tagsError} /> : null}
           </View>
 

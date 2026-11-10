@@ -83,6 +83,14 @@ const vi = {
     newEntry: 'Ghi lại nhật ký',
   },
 
+  // TagPicker / TagSheet (ui.tsx). "chuyện" is the UI word for a Tag.
+  tagPicker: {
+    more: 'Chuyện khác…',
+    count: (max: number, n: number) => `Chọn tối đa ${max} · đã chọn ${n}`,
+    groups: { sad: 'Chuyện buồn', joy: 'Chuyện vui', unknown: 'Chưa rõ' },
+    done: 'Xong',
+  },
+
   newEntry: {
     ago: (minutes: number) =>
       minutes === 0 ? 'Vừa xong' : minutes === 60 * 24 ? 'Hôm qua' : `${minutes / 60} giờ trước`,

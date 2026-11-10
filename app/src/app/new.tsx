@@ -22,7 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { insertEntry } from '@/db';
-import { tagLabel, t } from '@/i18n';
+import { t } from '@/i18n';
 import { formTags, MAX_ENTRY_TAGS } from '@/tags';
 import { album, pencil, space, text, touch } from '@/theme';
 import {
@@ -42,6 +42,7 @@ import {
   TextField,
   formatClock,
   Pill,
+  TagPicker,
   DURATION_OPTIONS,
   FocusPressable,
   TopBar,
@@ -97,7 +98,6 @@ export default function NewEntryScreen() {
   const setIntensityAt = (x: number) =>
     sliderWidth.current > 0 && setIntensity(clamp(Math.floor((x / sliderWidth.current) * 5) + 1));
 
-  const tagsFull = tags.length >= MAX_ENTRY_TAGS;
   // Same format as the Timeline: "Saturday, September 26 · 00:05".
   const when = Date.now() - backMinutes * 60_000;
 
@@ -298,19 +298,15 @@ export default function NewEntryScreen() {
             {t.newEntry.whyLabel}
           </Text>
           <Text style={styles.caption}>{t.newEntry.maxTags(MAX_ENTRY_TAGS)}</Text>
-          <View style={styles.row}>
+          <View style={styles.tags}>
             {/* No "unknown" here: picking nothing already means it (normalizeTags). */}
-            {formTags(tags)
-              .filter((tag) => tag.kind !== 'unknown')
-              .map(({ id }) => (
-                <Pill
-                  key={id}
-                  label={tagLabel(id)}
-                  selected={tags.includes(id)}
-                  disabled={tagsFull && !tags.includes(id)}
-                  onPress={() => toggleTag(id)}
-                />
-              ))}
+            <TagPicker
+              tags={formTags(tags).filter((tag) => tag.kind !== 'unknown')}
+              selected={tags}
+              max={MAX_ENTRY_TAGS}
+              label={t.newEntry.whyLabel}
+              onToggle={toggleTag}
+            />
           </View>
 
           <Text style={[pencil.date, styles.label]} accessibilityRole="header">
@@ -425,6 +421,7 @@ const styles = StyleSheet.create({
   label: { color: album.pencil, marginTop: space.lg },
   caption: { ...text.caption, color: album.pencil, marginTop: space.xs },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
+  tags: { marginTop: space.md },
   slider: { flex: 1, height: touch.min, justifyContent: 'center' },
   track: { flexDirection: 'row', gap: 3, height: 8 },
   segment: { flex: 1, borderRadius: 4 },

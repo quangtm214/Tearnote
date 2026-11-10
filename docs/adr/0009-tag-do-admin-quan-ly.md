@@ -94,10 +94,11 @@ Dashboard chạy bằng `postgres`, bỏ qua RLS, nên mọi luật bảo vệ (
 Đếm thẳng từ `entries` trên máy, không thêm bảng hay key `settings`:
 
 ```sql
-select j.value as id, count(*) as n from entries e, json_each(e.tags) j group by j.value
+select j.value as id, count(*) as n from entries e, json_each(e.tags) j
+where e.deleted_at is null and j.value <> 'unknown' group by j.value
 ```
 
-Hàng nhanh = Tag `active` hợp với màn, xếp theo `n` giảm dần rồi `sort`, lấy 6; cộng mọi Tag đang chọn; nút "Chuyện khác…" chỉ hiện khi còn Tag chưa nằm trên hàng. Máy chưa có lần khóc nào thì toàn bộ theo `sort`. Màn viết lời dùng cùng bộ đếm: người viết thường viết về chuyện chính mình từng khóc. Xoá lần khóc thì bộ đếm tự đổi vì đếm từ source of truth. `TagSheet` không đổi thứ tự theo số lần dùng (design system: tìm được theo trí nhớ).
+Hàng nhanh = Tag `active` hợp với màn, xếp theo `n` giảm dần rồi `sort`, lấy 6; cộng mọi Tag đang chọn, và Tag đã chọn rồi bỏ trong lần mở màn này (để Pill không biến mất dưới ngón tay); nút "Chuyện khác…" chỉ hiện khi còn Tag chưa nằm trên hàng. Máy chưa có lần khóc nào thì toàn bộ theo `sort`. Màn viết lời dùng cùng bộ đếm: người viết thường viết về chuyện chính mình từng khóc. Xoá lần khóc thì bộ đếm tự đổi vì đếm từ source of truth. `TagSheet` không đổi thứ tự theo số lần dùng (design system: tìm được theo trí nhớ).
 
 ## 6. Test thay cho `tags.test.ts`
 

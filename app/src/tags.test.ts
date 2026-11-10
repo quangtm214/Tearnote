@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { LANGS } from './i18n';
-import { isJoyOnly, MAX_ENTRY_TAGS, normalizeTags, TAGS_BUNDLED, UNKNOWN_TAG } from './tags';
+import { isJoyOnly, MAX_ENTRY_TAGS, normalizeTags, quickTags, TAGS_BUNDLED, UNKNOWN_TAG } from './tags';
 import { tagRow } from './validation';
 
 // i18n imports db.ts, which opens SQLite on import — Jest does not have it.
@@ -72,5 +72,34 @@ describe('normalizeTags', () => {
 
   it('giữ nguyên khi đã hợp lệ', () => {
     expect(normalizeTags(['moved'])).toEqual(['moved']);
+  });
+});
+
+describe('quickTags (hàng nhanh của TagPicker)', () => {
+  const ids = (tags: { id: string }[]) => tags.map((tag) => tag.id);
+  const sad = TAGS_BUNDLED.filter((tag) => tag.kind === 'sad'); // 8 tags, sort 10..80
+
+  it('lần đầu (chưa đếm) theo sort, tối đa 6, còn lại vào tấm', () => {
+    const { row, more } = quickTags(sad, {}, []);
+    expect(ids(row)).toEqual(['heartbreak', 'grief', 'pressure', 'self_worth', 'loneliness', 'family']);
+    expect(more).toBe(true);
+  });
+
+  it('hay chọn lên trước; bằng số lần thì theo sort', () => {
+    const { row } = quickTags(sad, { anxiety: 3, overwhelm: 3, family: 1 }, []);
+    expect(ids(row).slice(0, 3)).toEqual(['overwhelm', 'anxiety', 'family']);
+    expect(row).toHaveLength(6);
+  });
+
+  it('chuyện đang chọn luôn có mặt, kể cả ngoài 6', () => {
+    const { row, more } = quickTags(sad, {}, ['anxiety']);
+    expect(ids(row)).toContain('anxiety');
+    expect(row).toHaveLength(7);
+    expect(more).toBe(true);
+  });
+
+  it('không còn gì ngoài hàng thì không có "Chuyện khác…"', () => {
+    expect(quickTags(sad.slice(0, 5), {}, []).more).toBe(false);
+    expect(quickTags(sad, {}, ['overwhelm', 'anxiety']).more).toBe(false);
   });
 });
