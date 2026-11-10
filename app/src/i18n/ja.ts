@@ -28,7 +28,6 @@ const ja: Dictionary = {
     intensity: (n) => `強さは5段階中${n}`,
     signIn: 'ログイン',
     wordsYouWrote: '書いたことば',
-    writeForStranger: '見知らぬ人へのことばを書く',
     email: 'メールアドレス',
     emailPlaceholder: 'you@example.com',
     password: 'パスワード',
@@ -37,7 +36,16 @@ const ja: Dictionary = {
     remove: '削除する',
   },
 
-  tab: { index: '日記', write: '見知らぬ人へ', calendar: 'カレンダー', settings: '設定' },
+  tab: { index: '日記', strangers: '見知らぬ人へ', calendar: 'カレンダー', settings: '設定' },
+
+  /** "For strangers" tab ((tabs)/strangers.tsx). */
+  strangers: {
+    title: '見知らぬ人へのことば',
+    intro: '書いたことばは、似たようなことで泣いたばかりの見知らぬ人に届きます。お互いに相手が誰かはわかりません。',
+    rules: 'ログインが必要です。24時間に5件まで。送る前に確認があります。',
+    wordsYouWroteDetail: '読み返したり、取り下げたりできます。',
+    writeOne: '見知らぬ人に書く',
+  },
 
   card: {
     photos: (n) => `写真${n}枚`,
@@ -133,8 +141,6 @@ const ja: Dictionary = {
     signedOut: 'ログアウトしました。',
     receiveComforts: '見知らぬ人からのことばを受け取る',
     receiveComfortsDetail: 'オフにすると、見知らぬ人からのことばは届かなくなります。記録はこれまでどおりです。',
-    wordsYouWroteDetail: '読み返したり、取り下げたりできます。',
-    writeForStrangerDetail: 'ログインが必要です。24時間に5件まで。',
     account: 'アカウント',
     signOut: 'ログアウト',
     signOutDetail: '泣いた記録はこの端末に残ります。',
@@ -169,7 +175,7 @@ const ja: Dictionary = {
     sendError: '送れませんでした。文章は残っています。少ししてから、もう一度お試しください。',
     title: '見知らぬ人への\nことばを書く',
     doneTitle: 'ことばを\n預かりました',
-    doneDetail: '確認を経てから、見知らぬ人に届きます。取り下げるときは「設定 → 書いたことば」から。',
+    doneDetail: '確認を経てから、見知らぬ人に届きます。取り下げるときは「見知らぬ人へ → 書いたことば」から。',
     done: '完了',
     intro:
       'このことばは、似たようなことで泣いたばかりの見知らぬ人に届きます。お互いに相手が誰かはわかりません。',
@@ -182,7 +188,7 @@ const ja: Dictionary = {
     topicLabel: 'どんなことへのことば？',
     pickTags: (max, unknownLabel) => `1つか${max}つ選んでください。誰にでも合うことばなら「${unknownLabel}」を。`,
     consent: (others) =>
-      `「送る」を押すと、このことばが確認を経て${joinList(others.map((lang) => LANG_NAMES[lang]))}に翻訳され、匿名で見知らぬ人に届くことに同意したことになります。「設定 → 書いたことば」から取り下げられますが、すでに受け取った人の手元には残ります。`,
+      `「送る」を押すと、このことばが確認を経て${joinList(others.map((lang) => LANG_NAMES[lang]))}に翻訳され、匿名で見知らぬ人に届くことに同意したことになります。「見知らぬ人へ → 書いたことば」から取り下げられますが、すでに受け取った人の手元には残ります。`,
     signInAgain: 'もう一度ログイン',
     send: '送る',
     leaveQuestion: '送らずに戻りますか？',
