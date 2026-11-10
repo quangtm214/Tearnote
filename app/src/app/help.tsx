@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HOTLINES_FALLBACK, topCountry, type Hotline } from '@/hotlines';
 import { currentLang, t, deviceRegion, type Lang } from '@/i18n';
 import { album, pencil, radius, space, text, touch } from '@/theme';
-import { shadow, LinkRow, HelpButton, leave, FocusPressable } from '@/ui';
+import { shadow, LinkRow, HelpButton, leave, FocusPressable, TopBar } from '@/ui';
 
 /** Must work in airplane mode: reads only the bundled list, no network calls. */
 const COUNTRY_NAMES: Record<string, Record<Lang, string>> = {
@@ -42,6 +42,7 @@ export default function Help() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
+      <TopBar />
       <ScrollView contentContainerStyle={s.scroll}>
         <Text style={[pencil.title, s.title]} accessibilityRole="header">
           {t.common.needHelp}

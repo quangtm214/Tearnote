@@ -44,6 +44,7 @@ import {
   Pill,
   DURATION_OPTIONS,
   FocusPressable,
+  TopBar,
   type ConfirmRequest,
 } from '@/ui';
 
@@ -198,6 +199,7 @@ export default function NewEntryScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+      <TopBar />
       {/* Android edge-to-edge does not resize for the keyboard: without this the keyboard covers the input.
           iOS does not scroll to the focused input by itself; only automaticallyAdjustKeyboardInsets does, and it
           measures against the keyboard, so KAV padding on top would leave the input behind the footer. */}

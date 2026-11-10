@@ -16,6 +16,7 @@ const vi = {
 
   common: {
     back: 'Quay lại',
+    close: 'Đóng',
     networkError: 'Không kết nối được. Kiểm tra mạng rồi thử lại.',
     loading: 'Đang tải',
     keep: 'Giữ lại',

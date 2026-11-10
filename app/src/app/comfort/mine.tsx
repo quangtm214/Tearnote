@@ -1,13 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { z } from 'zod';
 
 import { tagLabels, t } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, leave, type ConfirmRequest } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, LinkRow, ConfirmDialog, SecondaryButton, ComfortCard, TopBar, leave, type ConfirmRequest } from '@/ui';
 import { myComfortRows } from '@/validation';
 
 /**
@@ -75,51 +75,55 @@ export default function MyComfortsScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
-        <Text style={[pencil.title, s.title]} accessibilityRole="header">
-          {t.common.wordsYouWrote}
-        </Text>
+      <TopBar />
+      {/* Own box under the TopBar: the help FAB is placed inside it, so it can never cover ←. */}
+      <View style={s.screen}>
+        <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
+          <Text style={[pencil.title, s.title]} accessibilityRole="header">
+            {t.common.wordsYouWrote}
+          </Text>
 
-        {items === null ? (
-          <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
-        ) : items === 'signedOut' ? (
-          <>
-            <Text style={s.explanation}>{t.myComforts.keptByAccount}</Text>
-            <LinkRow label={t.myComforts.signInToView} chevron onPress={() => router.push('/login')} />
-          </>
-        ) : items.length === 0 && !error ? (
-          <Text style={s.explanation}>{t.myComforts.empty}</Text>
-        ) : (
-          items.map((comfort) => (
-            <ComfortCard key={comfort.id}>
-              <Text style={s.body}>{comfort.body}</Text>
-              <Text style={[pencil.note, s.muted]}>
-                {tagLabels(comfort.tags)} · {t.myComforts.status[comfort.status]}
-              </Text>
-              {/* Nothing to retract once retracted, or once rejected (no longer in the pool). */}
-              {comfort.status === 'pending' || comfort.status === 'approved' ? (
-                <SecondaryButton
-                  label={retractingId === comfort.id ? t.myComforts.retracting : t.myComforts.retract}
-                  onPress={() => askRetract(comfort.id)}
-                  disabled={retractingId === comfort.id}
-                  accessibilityLabel={t.myComforts.retractA11y(comfort.body.slice(0, 40))}
-                  accessibilityHint={t.myComforts.irreversible}
-                />
-              ) : null}
-            </ComfortCard>
-          ))
-        )}
+          {items === null ? (
+            <ActivityIndicator color={album.pencil} accessibilityLabel={t.common.loading} />
+          ) : items === 'signedOut' ? (
+            <>
+              <Text style={s.explanation}>{t.myComforts.keptByAccount}</Text>
+              <LinkRow label={t.myComforts.signInToView} chevron onPress={() => router.push('/login')} />
+            </>
+          ) : items.length === 0 && !error ? (
+            <Text style={s.explanation}>{t.myComforts.empty}</Text>
+          ) : (
+            items.map((comfort) => (
+              <ComfortCard key={comfort.id}>
+                <Text style={s.body}>{comfort.body}</Text>
+                <Text style={[pencil.note, s.muted]}>
+                  {tagLabels(comfort.tags)} · {t.myComforts.status[comfort.status]}
+                </Text>
+                {/* Nothing to retract once retracted, or once rejected (no longer in the pool). */}
+                {comfort.status === 'pending' || comfort.status === 'approved' ? (
+                  <SecondaryButton
+                    label={retractingId === comfort.id ? t.myComforts.retracting : t.myComforts.retract}
+                    onPress={() => askRetract(comfort.id)}
+                    disabled={retractingId === comfort.id}
+                    accessibilityLabel={t.myComforts.retractA11y(comfort.body.slice(0, 40))}
+                    accessibilityHint={t.myComforts.irreversible}
+                  />
+                ) : null}
+              </ComfortCard>
+            ))
+          )}
 
-        {error ? (
-          <>
-            <Text style={s.error}>{error}</Text>
-            <LinkRow icon="refresh" label={t.myComforts.retry} onPress={() => void load()} />
-          </>
-        ) : null}
+          {error ? (
+            <>
+              <Text style={s.error}>{error}</Text>
+              <LinkRow icon="refresh" label={t.myComforts.retry} onPress={() => void load()} />
+            </>
+          ) : null}
 
-        <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
-      </ScrollView>
-      <ScreenFooter />
+          <LinkRow icon="arrow-left" label={t.common.back} onPress={leave} />
+        </ScrollView>
+        <ScreenFooter />
+      </View>
       <ConfirmDialog request={dialog} onClose={() => setDialog(null)} />
     </SafeAreaView>
   );

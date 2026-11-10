@@ -27,6 +27,7 @@ const en: Dictionary = {
 
   common: {
     back: 'Back',
+    close: 'Close',
     networkError: "Couldn't connect. Check your connection and try again.",
     loading: 'Loading',
     keep: 'Keep',
