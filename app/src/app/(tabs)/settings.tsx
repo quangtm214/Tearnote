@@ -1,13 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { AccessibilityInfo, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { setComfortReceivingEnabled, isComfortReceivingEnabled } from '@/db';
 import { setLanguage, LANGS, currentLang, t, NATIVE_NAMES } from '@/i18n';
 import { supabase } from '@/supabase';
 import { album, pencil, space, text } from '@/theme';
-import { ScreenFooter, LinkRow, Pill } from '@/ui';
+import { ScreenFooter, LinkRow, Pill, FocusPressable } from '@/ui';
 
 export default function SettingsScreen() {
   const [receiving, setReceiving] = useState(true);
@@ -45,7 +45,7 @@ export default function SettingsScreen() {
         </Text>
 
         {/* The whole row is the switch: this safety net (overview §6) must be easy to hit. */}
-        <Pressable
+        <FocusPressable
           onPress={() => toggleReceiving(!receiving)}
           accessibilityRole="switch"
           accessibilityState={{ checked: receiving }}
@@ -64,7 +64,7 @@ export default function SettingsScreen() {
               thumbColor={receiving ? album.ink : album.pencil}
             />
           </View>
-        </Pressable>
+        </FocusPressable>
 
         <LinkRow
           chevron

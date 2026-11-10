@@ -15,7 +15,6 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -43,6 +42,7 @@ import {
   formatClock,
   Pill,
   DURATION_OPTIONS,
+  FocusPressable,
   type ConfirmRequest,
 } from '@/ui';
 
@@ -326,7 +326,7 @@ export default function NewEntryScreen() {
           {photos.length > 0 && (
             <View style={styles.photoRow}>
               {photos.map((uri, i) => (
-                <Pressable
+                <FocusPressable
                   key={uri}
                   onPress={() =>
                     askDiscard(t.newEntry.removePhotoQuestion, () => setPhotos((prev) => prev.filter((x) => x !== uri)))
@@ -342,7 +342,7 @@ export default function NewEntryScreen() {
                   <View style={styles.removeMark} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
                     <MaterialCommunityIcons name="close" size={16} color={album.ink} />
                   </View>
-                </Pressable>
+                </FocusPressable>
               ))}
             </View>
           )}

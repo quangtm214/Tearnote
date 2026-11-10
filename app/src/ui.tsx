@@ -14,6 +14,7 @@ import {
   Text,
   TextInput,
   View,
+  type PressableProps,
   type ScrollViewProps,
   type TextInputProps,
 } from 'react-native';
@@ -32,6 +33,28 @@ import { album, pencil, radius, space, text, touch } from './theme';
 // Go back, or go home when the screen was opened directly from a deep link.
 // `'/' as Href` works around typed routes generated wrong on Windows (CLAUDE.md).
 export const leave = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
+
+/**
+ * Pressable with a visible focus ring for keyboard / D-pad users (DESIGN.md › "Vòng focus").
+ * A touch never moves focus, so the ring does not show on tap.
+ */
+export function FocusPressable({ style, onFocus, onBlur, ...rest }: PressableProps) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <Pressable
+      {...rest}
+      onFocus={(e) => {
+        setFocused(true);
+        onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        setFocused(false);
+        onBlur?.(e);
+      }}
+      style={(state) => [typeof style === 'function' ? style(state) : style, focused && s.focusRing]}
+    />
+  );
+}
 
 /** Soft, low shadow: a card rests on the page, it does not float. */
 export const shadow = {
@@ -180,7 +203,7 @@ export function EntryCard({
   return (
     <View style={[s.cardSlot, clipLabel ? s.belowClip : null]}>
       {onPress ? (
-        <Pressable
+        <FocusPressable
           onPress={onPress}
           accessibilityRole="button"
           accessibilityLabel={spokenLabel}
@@ -190,7 +213,7 @@ export function EntryCard({
           {photoRow}
           {words}
           {clip}
-        </Pressable>
+        </FocusPressable>
       ) : (
         <View style={s.card}>
           <PhotoCorners />
@@ -263,7 +286,7 @@ function Polaroid({ uri, index, onPress }: { uri: string; index: number; onPress
   // shouldRasterizeIOS: iOS antialiases only the rotated view's own edge, so the photo inside shows jagged
   // edges; rasterizing flattens frame + photo into one bitmap before it is rotated.
   return onPress ? (
-    <Pressable
+    <FocusPressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={t.newEntry.photoN(index + 1)}
@@ -272,7 +295,7 @@ function Polaroid({ uri, index, onPress }: { uri: string; index: number; onPress
       shouldRasterizeIOS
     >
       {photo}
-    </Pressable>
+    </FocusPressable>
   ) : (
     <View style={frame} shouldRasterizeIOS>
       {photo}
@@ -301,7 +324,7 @@ export function VoicePlayer({ uri }: { uri: string }) {
 
   const label = status.playing ? t.card.pause : t.card.listen;
   return (
-    <Pressable
+    <FocusPressable
       onPress={toggle}
       accessibilityRole="button"
       accessibilityLabel={t.card.listenA11y(label, Math.round(status.duration))}
@@ -315,7 +338,7 @@ export function VoicePlayer({ uri }: { uri: string }) {
         {status.playing ? `${formatClock(status.currentTime)} / ` : ''}
         {formatClock(status.duration)}
       </Text>
-    </Pressable>
+    </FocusPressable>
   );
 }
 
@@ -339,7 +362,7 @@ export function LinkRow({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <FocusPressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -354,7 +377,7 @@ export function LinkRow({
         </View>
         {chevron ? <MaterialCommunityIcons name="chevron-right" size={24} color={album.pencil} /> : null}
       </View>
-    </Pressable>
+    </FocusPressable>
   );
 }
 
@@ -378,7 +401,7 @@ export function SecondaryButton({
   accessibilityHint?: string;
 }) {
   return (
-    <Pressable
+    <FocusPressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -389,7 +412,7 @@ export function SecondaryButton({
     >
       {icon ? <MaterialCommunityIcons name={icon} size={20} color={album.pencil} /> : null}
       <Text style={s.secondaryText}>{label}</Text>
-    </Pressable>
+    </FocusPressable>
   );
 }
 
@@ -411,29 +434,29 @@ export function PrimaryButton({
   busyLabel?: string;
 }) {
   return (
-    <Pressable
+    <FocusPressable
       onPress={onPress}
       disabled={disabled || busy}
       accessibilityRole="button"
       accessibilityLabel={busy && busyLabel ? busyLabel : label}
       accessibilityState={{ disabled: !!disabled, busy: !!busy }}
-      style={({ pressed }) => [s.primaryButton, pressed && s.pressedButton, disabled && s.faded]}
+      style={({ pressed }) => [s.primaryButton, pressed && s.pressedPrimary, disabled && s.faded]}
     >
       {busy ? (
         <View style={s.waitRow}>
           <ActivityIndicator color={album.ink} />
           {busyLabel ? (
-            <Text style={s.primaryText} maxFontSizeMultiplier={1.6}>
+            <Text style={s.primaryText} maxFontSizeMultiplier={2}>
               {busyLabel}
             </Text>
           ) : null}
         </View>
       ) : (
-        <Text style={s.primaryText} maxFontSizeMultiplier={1.6}>
+        <Text style={s.primaryText} maxFontSizeMultiplier={2}>
           {label}
         </Text>
       )}
-    </Pressable>
+    </FocusPressable>
   );
 }
 
@@ -471,7 +494,7 @@ export function HelpButton({
   accessibilityHint?: string;
 }) {
   return (
-    <Pressable
+    <FocusPressable
       onPress={onPress}
       accessibilityRole="button"
       // Explicit label so screen readers do not read the icon glyph.
@@ -484,12 +507,12 @@ export function HelpButton({
           {icon ? (
             <MaterialCommunityIcons name={icon} size={24} color={pressed ? album.page : album.lamp} />
           ) : null}
-          <Text style={[s.helpText, pressed && s.helpTextPressed]} maxFontSizeMultiplier={1.6}>
+          <Text style={[s.helpText, pressed && s.helpTextPressed]} maxFontSizeMultiplier={2}>
             {label}
           </Text>
         </>
       )}
-    </Pressable>
+    </FocusPressable>
   );
 }
 
@@ -508,7 +531,7 @@ export function Pill({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <FocusPressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole={single ? 'radio' : 'checkbox'}
@@ -521,7 +544,7 @@ export function Pill({
       ]}
     >
       <Text style={[s.pillText, selected && s.pillTextSelected]}>{label}</Text>
-    </Pressable>
+    </FocusPressable>
   );
 }
 
@@ -568,7 +591,7 @@ export function FormScrollView(props: ScrollViewProps) {
 }
 
 /**
- * Text input. The 2px border is always there (transparent until focused) so focus does not shift the text.
+ * Text input. The 2px border is always there (`fieldBorder` at rest, `pencil` on focus) so focus does not shift the text.
  * `error` turns the border `alert` and shows the message right under the field. `ref` is a normal prop in React 19.
  * Inside FormScrollView it scrolls itself back above the iOS keyboard while the user types.
  */
@@ -646,7 +669,7 @@ export function ConfirmDialog({ request, onClose }: { request: ConfirmRequest | 
     >
       <View style={[s.backdrop, { paddingBottom: space.md + insets.bottom }]}>
         {/* Backdrop is a sibling, not a wrapper: wrapping makes screen readers merge the dialog into one item. */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} focusable={false} />
         {request ? (
           <View style={s.dialog} accessibilityViewIsModal>
             <ScrollView style={s.dialogScroll}>
@@ -655,7 +678,7 @@ export function ConfirmDialog({ request, onClose }: { request: ConfirmRequest | 
               </Text>
               {request.detail ? <Text style={s.dialogDetail}>{request.detail}</Text> : null}
             </ScrollView>
-            <Pressable
+            <FocusPressable
               onPress={() => {
                 const action = request.onConfirm;
                 onClose();
@@ -664,19 +687,19 @@ export function ConfirmDialog({ request, onClose }: { request: ConfirmRequest | 
               accessibilityRole="button"
               style={({ pressed }) => [s.dialogButton, s.confirmButton, pressed && s.dim]}
             >
-              <Text style={s.confirmText} maxFontSizeMultiplier={1.6}>
+              <Text style={s.confirmText} maxFontSizeMultiplier={2}>
                 {request.confirmLabel}
               </Text>
-            </Pressable>
-            <Pressable
+            </FocusPressable>
+            <FocusPressable
               onPress={onClose}
               accessibilityRole="button"
               style={({ pressed }) => [s.dialogButton, s.keepButton, pressed && s.pressedSelected]}
             >
-              <Text style={s.keepText} maxFontSizeMultiplier={1.6}>
+              <Text style={s.keepText} maxFontSizeMultiplier={2}>
                 {request.keepLabel ?? t.common.keep}
               </Text>
-            </Pressable>
+            </FocusPressable>
           </View>
         ) : null}
       </View>
@@ -771,6 +794,8 @@ const s = StyleSheet.create({
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm + space.xs },
   linkBlock: { flex: 1 },
   dim: { opacity: 0.6 },
+  // `outline` draws outside the layout and follows borderRadius, so focus does not move anything.
+  focusRing: { outlineColor: album.pencil, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
   linkText: { ...text.button, color: album.ink },
   linkDetail: { ...text.caption, color: album.pencil, marginTop: space.xs, maxWidth: 320 },
 
@@ -792,9 +817,11 @@ const s = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: space.lg,
     borderRadius: radius.touch,
-    backgroundColor: album.card,
+    // One step brighter than every other control, so the screen's main action stands out.
+    backgroundColor: album.clip,
   },
   // Pressed = one step lighter: shadows barely show on a black page, brightness does.
+  pressedPrimary: { backgroundColor: album.clipPressed },
   pressedButton: { backgroundColor: album.clip },
   pressedSelected: { opacity: 0.85 },
   faded: { opacity: 0.35 },
@@ -853,7 +880,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: space.md,
     borderRadius: radius.touch,
-    backgroundColor: album.card,
+    backgroundColor: album.hairline,
   },
   pillSelected: { backgroundColor: album.ink },
   pillText: { ...text.button, color: album.pencil },
@@ -868,7 +895,7 @@ const s = StyleSheet.create({
     backgroundColor: album.card,
     borderRadius: radius.touch,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: album.fieldBorder,
     paddingHorizontal: space.md - 2,
     minHeight: touch.min,
   },

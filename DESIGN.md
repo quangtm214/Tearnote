@@ -5,10 +5,12 @@ colors:
   trang: "#1A1614"
   tam: "#2B2622"
   kep: "#3A322C"
+  kep-nhan: "#463D36"
   chu: "#E4DCCF"
   but-chi: "#B3AA9C"
   po-luya: "rgba(228, 220, 207, 0.06)"
   vien-mo: "rgba(228, 220, 207, 0.12)"
+  vien-o-nhap: "rgba(179, 170, 156, 0.6)"
   lich-0: "rgba(228, 220, 207, 0.06)"
   lich-1: "rgba(228, 220, 207, 0.22)"
   lich-2: "rgba(228, 220, 207, 0.40)"
@@ -75,13 +77,13 @@ components:
     rounded: "{rounded.giay}"
     padding: "4px 16px"
   nut-chinh:
-    backgroundColor: "{colors.tam}"
+    backgroundColor: "{colors.kep}"
     textColor: "{colors.chu}"
     typography: "{typography.nut}"
     rounded: "{rounded.tay}"
     height: "56px"
   nut-chinh-pressed:
-    backgroundColor: "{colors.kep}"
+    backgroundColor: "{colors.kep-nhan}"
   nut-tro-giup:
     backgroundColor: "{colors.trang}"
     textColor: "{colors.den}"
@@ -97,7 +99,7 @@ components:
     padding: "16px 0"
     height: "48px"
   lua-chon:
-    backgroundColor: "{colors.tam}"
+    backgroundColor: "{colors.vien-mo}"
     textColor: "{colors.but-chi}"
     typography: "{typography.nut}"
     rounded: "{rounded.tay}"
@@ -112,6 +114,7 @@ components:
     typography: "{typography.than}"
     rounded: "{rounded.tay}"
     padding: "14px"
+    borderColor: "{colors.vien-o-nhap}"
   o-nhap-focus:
     borderColor: "{colors.but-chi}"
   nut-phu:
@@ -171,12 +174,14 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 
 ### Neutral
 - **Trang Giấy Bồi** (`trang`): nền mọi màn trong world, và nền footer cố định.
-- **Tấm Dán** (`tam`): mặt Entry và nút chính. Sáng hơn trang vừa đủ để thấy nó nằm trên trang.
-- **Mẩu Giấy Kẹp** (`kep`): Comfort người lạ kẹp vào tấm. Sáng hơn tấm một nấc.
+- **Tấm Dán** (`tam`): mặt Entry và ô nhập. Sáng hơn trang vừa đủ để thấy nó nằm trên trang.
+- **Mẩu Giấy Kẹp** (`kep`): Comfort người lạ kẹp vào tấm, hộp thoại, nền nút chính. Sáng hơn tấm một nấc.
+- **Kẹp Đang Nhấn** (`kep-nhan`, `album.clipPressed`): nút chính đang nhấn — sáng hơn `kep` một bậc (`chu` trên nó 7.8:1).
+- **Viền Ô Nhập** (`vien-o-nhap`, `album.fieldBorder`): viền ô nhập lúc nghỉ — `but-chi` 60%, ≥ 3:1 trên cả trang và tấm (WCAG 1.4.11).
 - **Chữ Ngà** (`chu`): chữ trên tấm (Reflection, nhãn nút), tiêu đề màn. ~11:1 trên tấm.
 - **Bút Chì Trắng** (`but-chi`): ngày, chú thích, giọt cường độ, dòng phụ. ~7.8:1 trên trang. Góc dán (`album.corner`) dùng cùng giá trị.
 - **Giấy Pơ-luya** (`po-luya`): thân tờ ngăn giữa hai đêm; mép trên của nó là cùng tông ở opacity 0.22.
-- **Viền Mờ** (`vien-mo`): đường hairline duy nhất được dùng: mép trên footer, khung trang trống; ngoài hairline, nó là lớp phủ nền của nút phụ, indicator của tab đang mở và nút hành động trong hộp thoại.
+- **Viền Mờ** (`vien-mo`): đường hairline duy nhất được dùng: mép trên footer, khung trang trống; ngoài hairline, nó là lớp phủ nền của nút phụ, lựa chọn chưa chọn (`but-chi` trên nó 5.9:1), indicator của tab đang mở và nút hành động trong hộp thoại.
 - **Tấm Đang Nhấn** (`tam-nhac`): tấm Entry khi đang nhấn — sáng lên giữa `tam` và `kep`.
 - **Màn Che** (`che`): nền sau hộp thoại, nền dấu × trên ảnh nhỏ — đen ấm 0.72, không `#000`.
 - **Thang Lịch** (`album.calendar`): chỉ cho bảng năm và thanh chọn cường độ ở màn ghi — cả hai cùng nghĩa "nặng hơn". Sáu nấc của cùng tông `chu`, chỉ đổi opacity: ô trống 0.06 (bằng `po-luya`) rồi 5 mức 0.22 / 0.40 / 0.58 / 0.78 / 1. Không thêm sắc độ mới, không dùng `den`.
@@ -206,7 +211,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 
 **The Một Family Một Ngôn Ngữ Rule.** Luật này chỉ cho chữ tay: Patrick Hand cho tiếng Việt và tiếng Anh, Yomogi (`app/assets/fonts/Yomogi-Regular.ttf`) cho tiếng Nhật vì Patrick Hand không có kana. Không dùng Yomogi cho tiếng Việt: chữ Latin rộng cố định làm tách chữ có dấu. `pencil` tự đổi family khi đổi ngôn ngữ (`setHandwriting` trong `theme.ts`), nên luôn dùng mảng style `[pencil.x, s.y]` — đừng spread `...pencil.x` vào StyleSheet cấp module. Chữ thân thì ngược lại: một family hệ thống cho mọi ngôn ngữ.
 
-**The Không Dưới 14 Rule.** Không cỡ chữ nào dưới 14; line height rộng (~1.5) vì dấu tiếng Việt chồng hai tầng. Layout phải chịu được font scale hệ thống. **Ngoại lệ có chủ đích:** chrome cố định có trần cỡ chữ — `maxFontSizeMultiplier` 1.6 cho nhãn nút chính, nút trợ giúp, nút hộp thoại; 1.3 cho nhãn thanh điều hướng — để footer không nuốt gần nửa màn ở cỡ chữ 200%; nhãn hàng/cột bảng năm không theo cỡ chữ hệ thống (cao đúng một ô). Nội dung và dòng lối không có trần.
+**The Không Dưới 14 Rule.** Không cỡ chữ nào dưới 14; line height rộng (~1.5) vì dấu tiếng Việt chồng hai tầng. Layout phải chịu được font scale hệ thống. **Ngoại lệ có chủ đích:** chrome cố định có trần cỡ chữ — `maxFontSizeMultiplier` 2.0 cho nhãn nút chính, nút trợ giúp, nút hộp thoại (đủ 200% của WCAG 1.4.4; ở cỡ lớn nhãn được xuống 2 dòng); 1.5 cho nhãn thanh điều hướng (bốn cột chia đều không chứa nổi chữ to hơn; `accessibilityLabel` vẫn mang đủ tên mục); nhãn hàng/cột bảng năm không theo cỡ chữ hệ thống (cao đúng một ô). Nội dung và dòng lối không có trần.
 
 **The Tiêu Đề Tiếng Nhật Rule.** Yomogi 34 chứa ~9 ký tự một dòng ở máy 360dp. Tiêu đề dài hơn thì rút chữ (key dùng chung) hoặc ngắt `\n` trong file dịch ở ranh cụm (chỉ key dùng đúng một chỗ: `ghi.tieuDe`, `viet.tieuDe`, `viet.xongTieuDe`). Không hạ cỡ chữ tay — Yomogi mảnh, nhỏ là mờ.
 
@@ -221,7 +226,10 @@ Footer cố định ngoài vùng cuộn (`ScreenFooter` trong `ui.tsx`), **ở m
 
 ## Elevation & Depth
 
-Chiều sâu là bậc sáng `trang` → `tam` → `kep`. Bóng giữ làm phụ trợ, nhưng đo trên máy thật nó chỉ lệch ~2/255 trên `trang` — đừng dựa vào bóng để nói "nổi". Nhấn là **sáng lên một bậc**: tấm Entry sang `tam-nhac` (kèm nhấc −3), nút chính / dải Nghe lại / lựa chọn sang `kep`. Không dùng viền để tạo lớp (viền focus của ô nhập là trạng thái, không phải lớp).
+Chiều sâu là bậc sáng `trang` → `tam` → `kep`. Bóng giữ làm phụ trợ, nhưng đo trên máy thật nó chỉ lệch ~2/255 trên `trang` — đừng dựa vào bóng để nói "nổi". Nhấn là **sáng lên một bậc**: tấm Entry sang `tam-nhac` (kèm nhấc −3), nút chính `kep` sang `kep-nhan`, dải Nghe lại / lựa chọn sang `kep`. Không dùng viền để tạo lớp (viền ô nhập và vòng focus là trạng thái, không phải lớp).
+
+### Vòng focus
+Mọi thứ bấm được (nút, lựa chọn, dòng lối, tấm Entry, polaroid, ảnh nhỏ ở màn ghi, ô bảng năm, hàng công tắc ở Cài đặt, link website ở màn hotline, mục thanh điều hướng) đi qua `FocusPressable` trong `ui.tsx`; chỉ nền che của hộp thoại (không nhận focus) và trình xem ảnh phủ cả màn là Pressable thường. Khi focus bằng bàn phím / D-pad thì có viền `but-chi` 2px cách mép 2px (`outline`, nằm ngoài layout nên không xê dịch gì), theo bo góc của nó. Chạm không chuyển focus nên vòng không hiện khi chạm. Ô nhập không có vòng riêng — viền `but-chi` của nó là focus.
 
 ### Shadow Vocabulary
 - **Nằm trên trang** (`shadowColor #000, offset 0/3, opacity 0.45, radius 6, elevation 3`): tấm Entry, dải Nghe lại, mẩu giấy kẹp, tấm lời, card hotline, hộp thoại (mẩu kẹp, tấm lời và hộp thoại dùng elevation 6). Nút chính không có bóng.
@@ -237,7 +245,7 @@ Chiều sâu là bậc sáng `trang` → `tam` → `kep`. Bóng giữ làm phụ
 ## Components
 
 ### Buttons
-- **Nút chính** ("Ghi lại nhật ký", "Lưu lại", "Gửi", "Đăng nhập", "Tạo tài khoản"): nền `tam`, bo 14, không góc dán, không bóng, chữ `nut` màu `chu`; nhấn thì nền sáng lên `kep`. Ở footer. Khi chờ lâu (xin lời) thì kèm chữ cạnh spinner ("Đang tìm một lời…").
+- **Nút chính** ("Ghi lại nhật ký", "Lưu lại", "Gửi", "Đăng nhập", "Tạo tài khoản"): nền `kep` (không phải `tam`: nút chính và lựa chọn chưa chọn không được trông giống nhau), bo 14, không góc dán, không bóng, chữ `nut` màu `chu` (9.2:1); nhấn thì nền sáng lên `kep-nhan`. Ở footer. Khi chờ lâu (xin lời) thì kèm chữ cạnh spinner ("Đang tìm một lời…").
 - **Nút trợ giúp** ("Cần trợ giúp ngay"): viền `den` 1.5px trên nền trang, bo 14, icon `lifebuoy` 24 trước nhãn, chữ và icon `den`; nhấn thì tô kín `den`, chữ và icon chuyển `trang`. Luôn ở footer, luôn cùng chỗ. Nút "Gọi …" ở màn hotline cùng kiểu, icon `phone-outline`.
 - **Dòng lối** (ví dụ "Viết một lời cho người lạ", "Lời bạn đã viết", "Quay lại"): không nền, không viền, cả hàng là vùng bấm; nhãn `nut` màu `chu`, dòng giải thích `phu` màu `but-chi` (tối đa 320 rộng). `icon` (24, `chu`) đứng trước khi lối làm một việc ngay (Quay lại / Để sau `arrow-left`, Đăng xuất `logout`, Thôi `close`, Xoá `trash-can-outline`, Thử lại `refresh`); `mui` (chevron phải 24, `but-chi`) ở cuối khi lối dẫn sang màn khác. Nhấn thì mờ 0.6. Screen reader đọc nhãn, dòng giải thích là hint.
 - **Nút phụ** (`SecondaryButton`): hành động tại chỗ (Chụp ảnh, Chọn ảnh, Ghi âm, Dừng ghi, Bỏ ghi âm, Cảm ơn, Thu hồi): mảnh nền `vien-mo` bo 14 cao 48, icon 20 `but-chi` tuỳ chọn, chữ `nut` `chu`; nhấn mờ 0.6; hết lượt thì mờ 0.35 và tắt, không ẩn (vị trí không nhảy).
@@ -246,13 +254,13 @@ Chiều sâu là bậc sáng `trang` → `tam` → `kep`. Bóng giữ làm phụ
 Thay mọi `Alert` hệ thống (Alert Android trắng giữa app tối; làm nó tối cần `expo-system-ui`). `Modal` của RN core: tờ `kep` bo 6 neo đáy, nền che `che`; câu hỏi `ngay` màu `chu` (header), câu phụ `than` màu `but-chi`; hai nút full-width cao 56 bo 14 xếp dọc — hành động ("Bỏ", "Xoá", "Thoát", "Thu hồi"; nền `vien-mo`, chữ `chu`) ở trên, nút an toàn ("Giữ lại", "Ghi tiếp", "Viết tiếp"; tô `chu`, chữ `trang`) ở **dưới cùng**, dưới ngón cái: muốn bỏ thì phải với lên. Chạm nền / Back = nút an toàn. Không đỏ, không chữ hoa.
 
 ### Thanh điều hướng (`app/src/app/(tabs)/_layout.tsx`)
-Dưới cùng, sau footer; nền `trang`, **không** hairline riêng (hairline của footer đã tách trang), padding theo inset đáy. Bốn mục chia đều: Nhật ký · Viết lời (en "For strangers", ja "見知らぬ人へ" — en/ja không dùng động từ "viết" để khỏi trùng nút "Ghi lại nhật ký") · Lịch · Cài đặt — icon MaterialCommunityIcons 24 trong khung indicator 56×32 bo 14, trên nhãn `phu` (trần cỡ chữ 1.3), vùng bấm tối thiểu 48; mục canh trên để nhãn hai dòng không lệch icon. Mục đang mở: khung tô `vien-mo` + icon tô đặc + màu `chu`; mục khác: icon viền, màu `but-chi`. Nhấn thì mờ 0.6. "Viết lời" (icon `note-edit-outline`) không phải tab — nó mở màn viết đè lên (không có thanh này). Không dùng `den`.
+Dưới cùng, sau footer; nền `trang`, **không** hairline riêng (hairline của footer đã tách trang), padding theo inset đáy. Bốn mục chia đều: Nhật ký · Viết lời (en "For strangers", ja "見知らぬ人へ" — en/ja không dùng động từ "viết" để khỏi trùng nút "Ghi lại nhật ký") · Lịch · Cài đặt — icon MaterialCommunityIcons 24 trong khung indicator 56×32 bo 14, trên nhãn `phu` (trần cỡ chữ 1.5), vùng bấm tối thiểu 48; mục canh trên để nhãn hai dòng không lệch icon. Mục đang mở: khung tô `vien-mo` + icon tô đặc + màu `chu`; mục khác: icon viền, màu `but-chi`. Nhấn thì mờ 0.6. "Viết lời" (icon `note-edit-outline`) không phải tab — nó mở màn viết đè lên (không có thanh này). Không dùng `den`.
 
 ### Lựa chọn và ô nhập (màn ghi, viết lời, đăng nhập)
-- **Lựa chọn** (Tag, thời điểm, thời lượng, ngôn ngữ): mảnh `tam` bo 14 cao 48, chữ `nut` màu `but-chi`; nhấn thì nền `kep` (đang chọn thì mờ 0.85). Lựa chọn ngôn ngữ (Cài đặt; "Bạn viết bằng tiếng gì?" ở màn viết lời) ghi tên ngôn ngữ bằng chính nó: Tiếng Việt · English · 日本語. Chọn thì tô `chu`, chữ đổi sang `trang` — tương phản đủ để thấy qua mắt nhoè mà không cần màu thứ hai. Hết lượt chọn thì các lựa chọn còn lại mờ 0.35. Screen reader: chọn một là `radio`, chọn nhiều (Tag) là `checkbox`.
+- **Lựa chọn** (Tag, thời điểm, thời lượng, ngôn ngữ): mảnh `vien-mo` bo 14 cao 48 (không `tam`: để không giống nút chính), chữ `nut` màu `but-chi`; nhấn thì nền `kep` (đang chọn thì mờ 0.85). Lựa chọn ngôn ngữ (Cài đặt; "Bạn viết bằng tiếng gì?" ở màn viết lời) ghi tên ngôn ngữ bằng chính nó: Tiếng Việt · English · 日本語. Chọn thì tô `chu`, chữ đổi sang `trang` — tương phản đủ để thấy qua mắt nhoè mà không cần màu thứ hai. Hết lượt chọn thì các lựa chọn còn lại mờ 0.35. Screen reader: chọn một là `radio`, chọn nhiều (Tag) là `checkbox`.
 - **Nhãn mục** ("Lúc nào?", "Vì chuyện gì?"): `ngay` (Patrick Hand) màu `but-chi`, role header.
 - **Chọn cường độ**: slider tự viết (Gesture Responder của RN core), vùng chạm cao 48 chiếm hết bề ngang. Thanh là 5 đoạn cao 8, gap 3, bo 4; đoạn tới mức đã chọn tô `album.calendar[1..5]` (đậm dần về cuối), đoạn trên mức là `vien-mo`. Thumb tròn 28 màu `chu`, viền 2 màu `trang` như khoét khỏi thanh, bóng "nằm trên trang", tâm ở giữa đoạn đang chọn. Kéo hoặc chạm, bắt vào 5 nấc; cạnh đó là giọt cường độ xem trước (đầy dần khi kéo — đúng hình sẽ nằm trên tấm) rồi "3 / 5" bằng `chu-thich`. Screen reader: `adjustable`, vuốt lên/xuống để tăng/giảm.
-- **Ô nhập** (`TextField`, mọi ô dùng nó): nền `tam`, bo 14, chữ `than` màu `chu`, placeholder và con trỏ `but-chi`. Viền 2px luôn có — trong suốt khi nghỉ, `but-chi` khi đang gõ (focus thấy được mà không xê dịch chữ). Validate sai (prop `error`): viền `dat-nung`, ngay dưới ô (cách `xs`) là icon `alert-circle-outline` 18 + câu lỗi `phu` màu `dat-nung`; screen reader được đọc câu lỗi khi bấm gửi. Chỉ báo lỗi đầu tiên. Trước lần gửi đầu không báo lỗi lúc đang gõ; từ lần gửi đầu, lỗi tính lại mỗi lần đổi chữ — sửa đúng là lỗi tắt ngay, lỗi kế (nếu có) hiện lên, không cần bấm gửi lại (`useFormCheck` trong `validation.ts`). Lỗi từ server (sai mật khẩu, mất mạng…) vẫn là dòng `than` màu `dat-nung` cuối form. Ô Reflection ở màn ghi cao cố định 3 dòng `than`; viết dài hơn thì cuộn bên trong ô, không đẩy phần còn lại của form xuống.
+- **Ô nhập** (`TextField`, mọi ô dùng nó): nền `tam`, bo 14, chữ `than` màu `chu`, placeholder và con trỏ `but-chi`. Viền 2px luôn có — `vien-o-nhap` khi nghỉ (thấy được ranh giới ô, WCAG 1.4.11), `but-chi` đặc khi đang gõ (focus thấy được mà không xê dịch chữ). Validate sai (prop `error`): viền `dat-nung`, ngay dưới ô (cách `xs`) là icon `alert-circle-outline` 18 + câu lỗi `phu` màu `dat-nung`; screen reader được đọc câu lỗi khi bấm gửi. Chỉ báo lỗi đầu tiên. Trước lần gửi đầu không báo lỗi lúc đang gõ; từ lần gửi đầu, lỗi tính lại mỗi lần đổi chữ — sửa đúng là lỗi tắt ngay, lỗi kế (nếu có) hiện lên, không cần bấm gửi lại (`useFormCheck` trong `validation.ts`). Lỗi từ server (sai mật khẩu, mất mạng…) vẫn là dòng `than` màu `dat-nung` cuối form. Ô Reflection ở màn ghi cao cố định 3 dòng `than`; viết dài hơn thì cuộn bên trong ô, không đẩy phần còn lại của form xuống.
 - **Kèm ảnh hay ghi âm** (màn ghi, sau ô Reflection): ba nút phụ có icon "Chụp ảnh" (`camera-outline`) · "Chọn ảnh" (`image-outline`) · "Ghi âm" (`microphone-outline`) nằm một hàng (xuống dòng khi chật), gap `sm`, luôn hiện. Ảnh đã chọn là ảnh nhỏ vuông 96, hạ sáng 0.85, góc dán 10 vẽ **đè** lên mép ảnh như ảnh thật giữ trong album, dấu × tròn 24 nền `che` ở góc trên phải (trang trí; cả ảnh là một vùng bấm), gap giữa các ảnh 12; bấm ảnh thì hộp thoại "Bỏ ảnh này?" (Bỏ / Giữ lại). Đủ 3 ảnh thì hai nút ảnh mờ 0.35; đang ghi thì cả ba mờ. Đang ghi: chú thích `chu-thich` màu `chu` "Đang ghi âm · 0:12 / 5:00", dưới là nút phụ "Dừng ghi"; ghi xong thì thay bằng dải Nghe lại và nút phụ "Bỏ ghi âm".
 - **Nút gạt** (Cài đặt): Switch của nền tảng; bật: track `but-chi`, thumb `chu`; tắt: track `kep`, thumb `but-chi`. Cả hàng (nhãn + dòng phụ + công tắc) là một vùng bấm role `switch`.
 - **Ngôn ngữ** (cuối Cài đặt): nhãn mục `ngay` màu `but-chi` "Ngôn ngữ" rồi một hàng lựa chọn (chọn một). Bấm là cả giao diện render lại ở ngôn ngữ mới, vẫn đứng ở Cài đặt.
@@ -307,4 +315,5 @@ Ngoại lệ luật Một Trục. 12 cột tháng × 31 hàng ngày, cột nhãn
 
 ## Lịch sử thay đổi
 
+- 2026-11-01 — Change 15 (audit UX vòng 1–2): nút chính nền `kep`, nhấn `kep-nhan`; lựa chọn chưa chọn nền `vien-mo`; ô nhập viền `vien-o-nhap` lúc nghỉ; vòng focus `but-chi` 2px qua `FocusPressable`; trần cỡ chữ 2.0 cho nút chính / trợ giúp / hộp thoại, 1.5 cho nhãn tab.
 - 2026-10-07 — Review toàn app (ba vai visual / UX / nội dung thảo luận ba vòng; quyết định chi tiết ở `tearnote-evidence/review-2026-10-06/design/decisions.md`, ngoài repo): "giấy vuông, tay mềm" (`radius.touch` 14 / `radius.paper` 6), nút chính bỏ góc dán và sáng lên khi nhấn, `ConfirmDialog` thay Alert, `TextField` có focus, `SecondaryButton`, tấm lời có kẹp giấy, nút chính của mọi màn ở footer, hỏi lại trước khi rời màn có nhập liệu, xoá một lần khóc, Lịch đủ 31 hàng + hôm nay, hotline đưa nước của máy lên đầu.
