@@ -20,6 +20,7 @@ const ja: Dictionary = {
     loading: '読み込み中',
     keep: '残す',
     needHelp: '助けが必要なとき',
+    help: '相談する',
     needHelpHint: '相談窓口の電話番号。オフラインでも開けます',
     thanked: 'お礼済み',
     autoTranslated: '自動翻訳済み',

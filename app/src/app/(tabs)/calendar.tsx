@@ -8,7 +8,7 @@ import { listEntries, type Entry } from '@/db';
 import { t } from '@/i18n';
 import { colorLevel, THRESHOLDS, dailyTotals } from '@/calendar';
 import { album, pencil, space, text, touch } from '@/theme';
-import { ScreenFooter, FocusPressable, type IconName } from '@/ui';
+import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, FocusPressable, type IconName } from '@/ui';
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 /** "1–2" … "10+", derived from THRESHOLDS so the legend never drifts from them. */
@@ -41,7 +41,7 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={s.scroll}>
+      <ScrollView contentContainerStyle={s.scroll} {...fabScrollProps}>
         {/* Year sits on the title row: no picker, and it saves room to fit all 31 rows on one screen. */}
         <View style={s.header}>
           <Text style={[pencil.title, s.title]} accessibilityRole="header">
@@ -163,7 +163,7 @@ const GAP = 2;
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: album.page },
-  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: space.lg },
+  scroll: { paddingHorizontal: space.screen, paddingTop: space.lg, paddingBottom: FAB_CLEARANCE },
   header: {
     flexDirection: 'row',
     flexWrap: 'wrap',

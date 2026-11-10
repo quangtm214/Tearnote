@@ -1,12 +1,26 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { router, type Href } from 'expo-router';
-import { createContext, useContext, useRef, useState, type ReactNode, type Ref } from 'react';
+import { router, useFocusEffect, type Href } from 'expo-router';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Image,
   Keyboard,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -14,16 +28,21 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   type PressableProps,
   type ScrollViewProps,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Defs, Path } from 'react-native-svg';
+import type { z } from 'zod';
 
-import type { Attachment, Entry } from './db';
+import { getSetting, setSetting, type Attachment, type Entry } from './db';
 import { tagLabels, t } from './i18n';
 import { album, pencil, radius, space, text, touch } from './theme';
+import { fabPosition } from './validation';
 
 /**
  * Only for pieces already used on at least two screens. Do not add anything here before
@@ -461,25 +480,192 @@ export function PrimaryButton({
 }
 
 /**
- * Fixed footer outside the scroll area. Always ends with the help button: ADR 0005 requires it on
- * every screen, in the same place (except the hotline screen itself). The screen's primary button
- * (Save, Send, Log in…) goes here too, above the help button.
+ * Fixed footer outside the scroll area, holding only the screen's primary button (Save, Send, Log in…).
+ * With no children there is no footer bar. Either way it anchors the help FAB above it: ADR 0005 requires
+ * the help entry on every screen except the hotline screen itself.
  */
 export function ScreenFooter({ children }: { children?: ReactNode }) {
+  const footer = useRef<View>(null);
+  const layer = useRef<View>(null);
+  const insets = useSafeAreaInsets();
+  const [anchor, setAnchor] = useState<FabAnchor | null>(null);
+  // Measured on screen, not from onLayout: an absolute child is placed inside the parent's padding
+  // (the SafeAreaView top inset), while onLayout y counts from outside it.
+  const measure = () =>
+    footer.current?.measure((_x, _y, _w, _h, _px, footerY) =>
+      layer.current?.measure((_x2, _y2, _w2, height, _px2, layerY) =>
+        setAnchor({
+          minLift: layerY + height - footerY + space.md,
+          maxLift: height - touch.min - space.md - Math.max(0, insets.top - layerY),
+        }),
+      ),
+    );
   return (
-    <View style={s.footer}>
-      {children}
-      <HelpButton
-        label={t.common.needHelp}
-        icon="lifebuoy"
-        accessibilityHint={t.common.needHelpHint}
-        onPress={() => router.push('/help')}
-      />
-    </View>
+    <>
+      <View ref={footer} style={children ? s.footer : null} onLayout={measure}>
+        {children}
+      </View>
+      <View ref={layer} style={StyleSheet.absoluteFill} pointerEvents="box-none" onLayout={measure}>
+        {anchor ? <HelpFab {...anchor} /> : null}
+      </View>
+    </>
   );
 }
 
-/** Help button — the only place that uses `album.lamp`. */
+/** Bottom padding for a scroll area so its last line can scroll clear of the help FAB. */
+export const FAB_CLEARANCE = touch.min + space.md + space.sm;
+
+/** dp range for `lift` on this screen: `md` above the footer at least, `md` under the status bar at most. */
+type FabAnchor = { minLift: number; maxLift: number };
+type FabPosition = z.infer<typeof fabPosition>;
+/** settings key, JSON FabPosition. `lift` = dp from the bottom of the screen area to the FAB (docs/db.md). */
+const FAB_KEY = 'help_fab_position';
+// Below this a touch is a tap that opens help, not a drag.
+const FAB_SLOP = 6;
+
+// One FAB per screen, but the user sees one button: position and fold state are shared by all of them.
+type FabState = { position: FabPosition; collapsed: boolean };
+let fab: FabState | null = null;
+const fabListeners = new Set<() => void>();
+// Read lazily, not at import: importing ui.tsx must not touch SQLite.
+const fabSnapshot = (): FabState => {
+  if (!fab) {
+    let saved: unknown;
+    try {
+      saved = JSON.parse(getSetting(FAB_KEY) ?? 'null');
+    } catch {}
+    fab = { position: fabPosition.parse(saved), collapsed: false };
+  }
+  return fab;
+};
+const setFab = (next: Partial<FabState>) => {
+  fab = { ...fabSnapshot(), ...next };
+  fabListeners.forEach((l) => l());
+};
+const subscribeFab = (l: () => void) => {
+  fabListeners.add(l);
+  return () => void fabListeners.delete(l);
+};
+
+// Only the user's own drags fold the FAB: scrollTo (Timeline on open / after Save) must not.
+let scrollDragging = false;
+let lastScrollY = 0;
+const stopScrollDrag = () => {
+  scrollDragging = false;
+};
+/** Spread on a screen's ScrollView: the help FAB folds to a circle scrolling down, opens scrolling up. */
+export const fabScrollProps = {
+  scrollEventThrottle: 16,
+  onScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollDragging = true;
+    lastScrollY = e.nativeEvent.contentOffset.y;
+  },
+  onScrollEndDrag: stopScrollDrag,
+  onMomentumScrollEnd: stopScrollDrag,
+  onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!scrollDragging) return;
+    const y = e.nativeEvent.contentOffset.y;
+    const dy = y - lastScrollY;
+    lastScrollY = y;
+    const { collapsed } = fabSnapshot();
+    if (y <= 0) {
+      if (collapsed) setFab({ collapsed: false });
+    } else if (Math.abs(dy) > 4 && (dy > 0) !== collapsed) setFab({ collapsed: dy > 0 });
+  },
+} satisfies ScrollViewProps;
+
+/**
+ * Floating help button (DESIGN.md › Layout). Drag past FAB_SLOP to move it: on release it snaps to the nearer
+ * side and keeps its height. `lift` is kept from the bottom of the screen area, so it sits in the same spot
+ * on every screen unless this screen's footer pushes it up.
+ */
+function HelpFab({ minLift, maxLift }: FabAnchor) {
+  const { position, collapsed } = useSyncExternalStore(subscribeFab, fabSnapshot);
+  const { side } = position;
+  const lift = Math.max(minLift, Math.min(position.lift, maxLift));
+  const { width: screenWidth } = useWindowDimensions();
+  const [keyboard, setKeyboard] = useState(Keyboard.isVisible());
+  const [dragging, setDragging] = useState(false);
+  const [width, setWidth] = useState<number>(touch.min);
+  const offset = useRef(new Animated.ValueXY()).current;
+
+  useEffect(() => {
+    const shown = Keyboard.addListener('keyboardDidShow', () => setKeyboard(true));
+    const hidden = Keyboard.addListener('keyboardDidHide', () => setKeyboard(false));
+    return () => {
+      shown.remove();
+      hidden.remove();
+    };
+  }, []);
+
+  // Every screen opens with the label showing.
+  useFocusEffect(useCallback(() => setFab({ collapsed: false }), []));
+
+  // Drop the drag offset only once the new side / lift is laid out, or the FAB jumps back for a frame.
+  useLayoutEffect(() => offset.setValue({ x: 0, y: 0 }), [dragging, side, lift, offset]);
+
+  const pan = useMemo(() => {
+    const startX = side === 'left' ? space.screen : screenWidth - space.screen - width;
+    const at = (dx: number, dy: number) => ({
+      x: Math.min(Math.max(0, startX + dx), screenWidth - width),
+      lift: Math.min(Math.max(minLift, lift - dy), maxLift),
+    });
+    const end = (dx: number, dy: number) => {
+      const p = at(dx, dy);
+      const next: FabPosition = { side: p.x + width / 2 < screenWidth / 2 ? 'left' : 'right', lift: Math.round(p.lift) };
+      setSetting(FAB_KEY, JSON.stringify(next));
+      setFab({ position: next });
+      setDragging(false);
+    };
+    return PanResponder.create({
+      // Capture: take the touch from the Pressable inside only once it moves, so a tap still opens help.
+      onMoveShouldSetPanResponderCapture: (_e, g) => Math.hypot(g.dx, g.dy) > FAB_SLOP,
+      onPanResponderGrant: () => setDragging(true),
+      onPanResponderMove: (_e, g) => {
+        const p = at(g.dx, g.dy);
+        offset.setValue({ x: p.x - startX, y: lift - p.lift });
+      },
+      onPanResponderRelease: (_e, g) => end(g.dx, g.dy),
+      onPanResponderTerminate: (_e, g) => end(g.dx, g.dy),
+      onPanResponderTerminationRequest: () => false,
+    });
+  }, [side, lift, minLift, maxLift, screenWidth, width, offset]);
+
+  if (keyboard) return null;
+  return (
+    <Animated.View
+      {...pan.panHandlers}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      style={[
+        s.fabSlot,
+        side === 'left' ? { left: space.screen } : { right: space.screen },
+        { bottom: lift, transform: offset.getTranslateTransform() },
+      ]}
+    >
+      <FocusPressable
+        onPress={() => router.push('/help')}
+        accessibilityRole="button"
+        // The short visible label is not enough for a screen reader user looking for help.
+        accessibilityLabel={t.common.needHelp}
+        accessibilityHint={t.common.needHelpHint}
+        style={({ pressed }) => [s.fab, collapsed && s.fabCollapsed, dragging && s.fabDragging, pressed && s.helpPressed]}
+      >
+        {({ pressed }) => (
+          <>
+            <MaterialCommunityIcons name="lifebuoy" size={22} color={pressed ? album.page : album.lamp} />
+            {collapsed ? null : (
+              <Text style={[s.helpText, pressed && s.helpTextPressed]} maxFontSizeMultiplier={2}>
+                {t.common.help}
+              </Text>
+            )}
+          </>
+        )}
+      </FocusPressable>
+    </Animated.View>
+  );
+}
+
+/** Hotline Call button. With the help FAB, the only places that use `album.lamp` (DESIGN.md › One Lamp rule). */
 export function HelpButton({
   label,
   onPress,
@@ -579,10 +765,11 @@ export function FormScrollView(props: ScrollViewProps) {
         ref={ref}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
-        scrollEventThrottle={16}
+        {...fabScrollProps}
         {...props}
         onScroll={(e) => {
           offset.current = e.nativeEvent.contentOffset.y;
+          fabScrollProps.onScroll(e);
           props.onScroll?.(e);
         }}
       />
@@ -872,6 +1059,25 @@ const s = StyleSheet.create({
     borderRadius: radius.touch,
   },
   helpPressed: { backgroundColor: album.lamp },
+  fabSlot: { position: 'absolute' },
+  // Solid page fill: content scrolling under the label must not show through.
+  fab: {
+    ...shadow,
+    height: touch.min,
+    minWidth: touch.min,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingLeft: 12,
+    paddingRight: space.md,
+    backgroundColor: album.page,
+    borderWidth: 1.5,
+    borderColor: album.lamp,
+    borderRadius: radius.touch,
+  },
+  fabCollapsed: { width: touch.min, paddingLeft: 0, paddingRight: 0, borderRadius: touch.min / 2 },
+  fabDragging: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.6, shadowRadius: 12, elevation: 10 },
   helpText: { ...text.button, color: album.lamp, textAlign: 'center', flexShrink: 1 },
   helpTextPressed: { color: album.page },
 
