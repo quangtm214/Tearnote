@@ -43,7 +43,7 @@ export default function MyComfortsScreen() {
     setItems(rows.data);
   }, []);
 
-  // On focus, so it reloads when coming back from login.
+  // On focus, so it reloads when coming back from the account modal.
   useFocusEffect(
     useCallback(() => {
       void load();
@@ -88,7 +88,11 @@ export default function MyComfortsScreen() {
           ) : items === 'signedOut' ? (
             <>
               <Text style={s.explanation}>{t.myComforts.keptByAccount}</Text>
-              <LinkRow label={t.myComforts.signInToView} chevron onPress={() => router.push('/login')} />
+              <LinkRow
+                label={t.myComforts.signInToView}
+                chevron
+                onPress={() => router.push({ pathname: '/account', params: { reason: 'mine' } })}
+              />
             </>
           ) : items.length === 0 && !error ? (
             <Text style={s.explanation}>{t.myComforts.empty}</Text>

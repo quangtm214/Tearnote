@@ -44,6 +44,9 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
+      // PKCE: an email link carries a one-time `?code=` that only this device (which holds the verifier) can
+      // exchange. The implicit flow would put raw tokens in the URL, readable by any app or log that sees it.
+      flowType: 'pkce',
     },
   },
 );
@@ -82,7 +85,19 @@ const AUTH_ERROR_KEY = new Map<string, keyof typeof t.authError>([
   ['email_address_not_authorized', 'emailNotSent'],
   ['invalid_credentials', 'wrongCredentials'],
   ['email_not_confirmed', 'emailNotConfirmed'],
+  ['same_password', 'samePassword'],
 ]);
+
+// Errors that belong under a field (DESIGN.md › TextField); any other code is a form-level line.
+const EMAIL_ERROR_CODES = new Set(['email_address_invalid', 'email_exists', 'user_already_exists', 'email_address_not_authorized']);
+const PASSWORD_ERROR_CODES = new Set(['weak_password', 'invalid_credentials', 'same_password']);
+
+/** Where an auth error is shown: under a field, at the end of the form, or null = network (snackbar). */
+export function authErrorField(error: AuthError): 'email' | 'password' | 'form' | null {
+  if (isAuthRetryableFetchError(error)) return null;
+  const code = error.code ?? '';
+  return EMAIL_ERROR_CODES.has(code) ? 'email' : PASSWORD_ERROR_CODES.has(code) ? 'password' : 'form';
+}
 
 /** Network failures come back in `error` instead of being thrown, so a screen's catch never sees them. */
 export function authErrorText(error: AuthError, fallback: string): string {

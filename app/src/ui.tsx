@@ -430,7 +430,8 @@ export function TopBar({ close }: { close?: boolean }) {
   );
 }
 
-type Snack = { id: number; message: string; kind: 'done' | 'deleted' };
+// 'offline': a network error that belongs to no field (DESIGN.md › TextField) — same paper, own icon.
+type Snack = { id: number; message: string; kind: 'done' | 'deleted' | 'offline' };
 let snack: Snack | null = null;
 let snackTimer: ReturnType<typeof setTimeout> | undefined;
 // Focused screens with a TopBar: a counter, not a flag, because the next screen's focus can run before
@@ -475,6 +476,8 @@ export function SnackbarHost() {
   );
 }
 
+const SNACK_ICON: Record<Snack['kind'], IconName> = { done: 'check', deleted: 'trash-can-outline', offline: 'wifi-off' };
+
 function SnackPaper({ message, kind }: Snack) {
   const y = useRef(new Animated.Value(-touch.min - space.lg)).current;
   useEffect(() => {
@@ -487,7 +490,7 @@ function SnackPaper({ message, kind }: Snack) {
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
     >
-      <MaterialCommunityIcons name={kind === 'deleted' ? 'trash-can-outline' : 'check'} size={20} color={album.pencil} />
+      <MaterialCommunityIcons name={SNACK_ICON[kind]} size={20} color={album.pencil} />
       <Text style={s.snackText}>{message}</Text>
     </Animated.View>
   );
@@ -887,14 +890,26 @@ export function TextField({
   onBlur,
   onChangeText,
   onContentSizeChange,
+  hint,
+  password,
   ...rest
-}: TextInputProps & { ref?: Ref<TextInput>; error?: string | null }) {
+}: TextInputProps & {
+  ref?: Ref<TextInput>;
+  error?: string | null;
+  /** Fixed rule under the field ("At least 6 characters."); the error takes its place. Not a placeholder: that disappears while typing. */
+  hint?: string;
+  /** Hidden text with a 48×48 eye button to show it; no "repeat password" field. DESIGN.md › "Ô nhập". */
+  password?: boolean;
+}) {
   const [focus, setFocus] = useState(false);
+  const [shown, setShown] = useState(false);
   const reveal = useContext(RevealContext);
   const input = useRef<TextInput>(null);
   return (
     <View>
       <TextInput
+        secureTextEntry={password && !shown}
+        accessibilityHint={hint}
         ref={(node) => {
           input.current = node;
           if (typeof ref === 'function') ref(node);
@@ -921,9 +936,26 @@ export function TextField({
           setFocus(false);
           onBlur?.(e);
         }}
-        style={[s.input, rest.multiline && s.inputMultiline, focus && s.inputFocus, error && s.inputError, style]}
+        style={[
+          s.input,
+          rest.multiline && s.inputMultiline,
+          password && s.inputPassword,
+          focus && s.inputFocus,
+          error && s.inputError,
+          style,
+        ]}
       />
-      {error ? <FieldError message={error} /> : null}
+      {password ? (
+        <FocusPressable
+          onPress={() => setShown(!shown)}
+          accessibilityRole="button"
+          accessibilityLabel={shown ? t.common.hidePassword : t.common.showPassword}
+          style={({ pressed }) => [s.eye, pressed && s.dim]}
+        >
+          <MaterialCommunityIcons name={shown ? 'eye-off-outline' : 'eye-outline'} size={24} color={album.pencil} />
+        </FocusPressable>
+      ) : null}
+      {error ? <FieldError message={error} /> : hint ? <Text style={s.fieldHint}>{hint}</Text> : null}
     </View>
   );
 }
@@ -1230,6 +1262,10 @@ const s = StyleSheet.create({
     minHeight: touch.min,
   },
   inputMultiline: { lineHeight: text.body.lineHeight },
+  // Room for the eye button so long passwords never run under it.
+  inputPassword: { paddingRight: touch.min },
+  eye: { position: 'absolute', top: 0, right: 0, width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center' },
+  fieldHint: { ...text.caption, color: album.pencil, marginTop: space.xs },
   inputFocus: { borderColor: album.pencil },
   inputError: { borderColor: album.alert },
   fieldError: { flexDirection: 'row', gap: space.xs, marginTop: space.xs },
