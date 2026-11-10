@@ -1,7 +1,7 @@
 import { I18nManager } from 'react-native';
 
 import { getSetting, setSetting } from '../db';
-import { TAG_LABEL, type TagId } from '../tags';
+import { findTag } from '../tags';
 import { setHandwriting } from '../theme';
 import en from './en';
 import ja from './ja';
@@ -76,9 +76,13 @@ export function subscribeLanguage(listener: (l: Lang) => void) {
   };
 }
 
-export const tagLabel = (tag: TagId) => TAG_LABEL[current][tag];
+/** Label in the app language, else English; '' for an id the device does not know yet (skipped by tagLabels). */
+export const tagLabel = (id: string) => {
+  const labels = findTag(id)?.labels;
+  return labels?.[current] ?? labels?.en ?? '';
+};
 
 /** Some labels contain commas, so Tags are joined with a per-language separator (`tagSeparator`). */
-export const tagLabels = (tags: readonly TagId[]) => tags.map(tagLabel).join(t.tagSeparator);
+export const tagLabels = (ids: readonly string[]) => ids.map(tagLabel).filter(Boolean).join(t.tagSeparator);
 
 apply(pickLanguage(getSetting(LANG_SETTING_KEY), deviceLocale()));

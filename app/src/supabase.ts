@@ -1,11 +1,13 @@
 import { type AuthError, createClient, isAuthRetryableFetchError } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
+import { saveTags } from './db';
 import { t } from './i18n';
+import { tagRow } from './validation';
 
 /**
- * The server does 4 things: the Comfort pool, translations, hotlines, and an Entry copy for users who
- * turn on sync. Entries are NOT uploaded automatically — ADR 0004.
+ * The server does 5 things: the Comfort pool, translations, hotlines, the Tag list, and an Entry copy for
+ * users who turn on sync. Entries are NOT uploaded automatically — ADR 0004.
  */
 
 // ponytail: SecureStore allows ~2KB per value. The current session fits; if the JWT grows
@@ -104,4 +106,18 @@ export function authErrorText(error: AuthError, fallback: string): string {
   if (isAuthRetryableFetchError(error)) return t.common.networkError;
   const key = AUTH_ERROR_KEY.get(error.code ?? '');
   return key ? t.authError[key] : fallback;
+}
+
+/**
+ * Copies the server Tag list (hidden ones included) into SQLite at app start — ADR 0009 §4. The whole table
+ * each time: a few dozen rows cost less than tracking what changed. On any failure the device copy stays.
+ */
+export async function refreshTags(): Promise<void> {
+  const { data, error } = await supabase.from('tags').select('id, kind, labels, sort, active');
+  if (error || !Array.isArray(data)) return;
+  // Per row: one row this app version cannot read (e.g. a new `kind`) must not drop the whole list.
+  saveTags(data.flatMap((row) => {
+    const parsed = tagRow.safeParse(row);
+    return parsed.success ? [parsed.data] : [];
+  }));
 }

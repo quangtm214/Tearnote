@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LANGS, currentLang, tagLabel, t, NATIVE_NAMES, type Lang } from '@/i18n';
 import { isRealAccount, supabase } from '@/supabase';
-import { MAX_COMFORT_TAGS, TAG_IDS, type TagId } from '@/tags';
+import { formTags, MAX_COMFORT_TAGS, UNKNOWN_TAG } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
 import { comfortDraft, countChars, MAX_COMFORT_LENGTH, MIN_COMFORT_LENGTH, useFormCheck } from '@/validation';
 import { ScreenFooter, FAB_CLEARANCE, FieldError, FormScrollView, LinkRow, ConfirmDialog, PrimaryButton, TextField, Pill, TopBar, leave, type ConfirmRequest } from '@/ui';
@@ -25,7 +25,7 @@ import { ScreenFooter, FAB_CLEARANCE, FieldError, FormScrollView, LinkRow, Confi
  */
 export default function WriteComfortScreen() {
   const [body, setBody] = useState('');
-  const [tags, setTags] = useState<TagId[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   // source_lang: the translation batch translates from it. Defaults to the app language; the writer can change it.
   const [sourceLang, setSourceLang] = useState<Lang>(currentLang);
   const [sending, setSending] = useState(false);
@@ -60,7 +60,7 @@ export default function WriteComfortScreen() {
   );
   const tagsError = form.errorOf('tags');
 
-  function toggleTag(tag: TagId) {
+  function toggleTag(tag: string) {
     setTags((prev) =>
       prev.includes(tag)
         ? prev.filter((x) => x !== tag)
@@ -233,18 +233,18 @@ export default function WriteComfortScreen() {
           >
             {t.write.topicLabel}
           </Text>
-          <Text style={s.caption}>{t.write.pickTags(MAX_COMFORT_TAGS, tagLabel('unknown'))}</Text>
+          <Text style={s.caption}>{t.write.pickTags(MAX_COMFORT_TAGS, tagLabel(UNKNOWN_TAG))}</Text>
           <View>
             <View style={s.tagRow}>
-              {TAG_IDS.map((tag) => {
-                const selected = tags.includes(tag);
+              {formTags(tags).map(({ id }) => {
+                const selected = tags.includes(id);
                 return (
                   <Pill
-                    key={tag}
-                    label={tagLabel(tag)}
+                    key={id}
+                    label={tagLabel(id)}
                     selected={selected}
                     disabled={sending || (!selected && tags.length >= MAX_COMFORT_TAGS)}
-                    onPress={() => toggleTag(tag)}
+                    onPress={() => toggleTag(id)}
                   />
                 );
               })}

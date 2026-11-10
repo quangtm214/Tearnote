@@ -23,7 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { insertEntry } from '@/db';
 import { tagLabel, t } from '@/i18n';
-import { MAX_ENTRY_TAGS, TAG_IDS, type TagId } from '@/tags';
+import { formTags, MAX_ENTRY_TAGS } from '@/tags';
 import { album, pencil, space, text, touch } from '@/theme';
 import {
   shadow,
@@ -63,7 +63,7 @@ export default function NewEntryScreen() {
   const [backMinutes, setBackMinutes] = useState(0);
   const [durationMin, setDurationMin] = useState<number | null>(null);
   const [intensity, setIntensity] = useState(3);
-  const [tags, setTags] = useState<TagId[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [reflection, setReflection] = useState('');
   // Temporary cache URIs — copied to storage only on Save, so abandoning leaves nothing behind.
   const [photos, setPhotos] = useState<string[]>([]);
@@ -101,7 +101,7 @@ export default function NewEntryScreen() {
   // Same format as the Timeline: "Saturday, September 26 · 00:05".
   const when = Date.now() - backMinutes * 60_000;
 
-  const toggleTag = (tag: TagId) =>
+  const toggleTag = (tag: string) =>
     setTags((prev) => (prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag]));
 
   const askDiscard = (question: string, onConfirm: () => void) =>
@@ -299,15 +299,18 @@ export default function NewEntryScreen() {
           </Text>
           <Text style={styles.caption}>{t.newEntry.maxTags(MAX_ENTRY_TAGS)}</Text>
           <View style={styles.row}>
-            {TAG_IDS.map((tag) => (
-              <Pill
-                key={tag}
-                label={tagLabel(tag)}
-                selected={tags.includes(tag)}
-                disabled={tagsFull && !tags.includes(tag)}
-                onPress={() => toggleTag(tag)}
-              />
-            ))}
+            {/* No "unknown" here: picking nothing already means it (normalizeTags). */}
+            {formTags(tags)
+              .filter((tag) => tag.kind !== 'unknown')
+              .map(({ id }) => (
+                <Pill
+                  key={id}
+                  label={tagLabel(id)}
+                  selected={tags.includes(id)}
+                  disabled={tagsFull && !tags.includes(id)}
+                  onPress={() => toggleTag(id)}
+                />
+              ))}
           </View>
 
           <Text style={[pencil.date, styles.label]} accessibilityRole="header">
