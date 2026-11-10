@@ -1,6 +1,6 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -27,7 +27,7 @@ export default function Timeline() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [comfortStates, setComfortStates] = useState<Record<string, ComfortState>>({});
   const [attachments, setAttachments] = useState<Record<string, Attachment[]>>({});
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   /** Night key to scroll to on the next render; null after scrolling. */
   const scrollTarget = useRef<string | null>(null);
   /** Entries shown on the previous focus — null on first open. */

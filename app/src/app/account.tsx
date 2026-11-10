@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
-  type TextInput,
+  type TextInputInstance,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AuthError } from '@supabase/supabase-js';
@@ -53,7 +53,7 @@ export default function AccountScreen() {
   // An anonymous user is upgraded with updateUser, which confirms with an 'email_change' email, not 'signup'.
   const [verifyType, setVerifyType] = useState<'signup' | 'email_change'>('signup');
   const [cooldown, setCooldown] = useState(0);
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
   // One check per mode, so switching modes starts quiet again.
   const signInCheck = useFormCheck(loginForm, { email, password });
   const createCheck = useFormCheck(registerForm, { email, password });
