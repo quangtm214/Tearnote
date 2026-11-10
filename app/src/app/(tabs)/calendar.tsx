@@ -35,6 +35,7 @@ export default function CalendarScreen() {
     thisYear,
   );
   const totals = dailyTotals(entries, year);
+  const emptyYear = totals.every((month) => month.every((day) => !day));
   // Today is marked only on the current year's grid.
   const currentMonth = year === thisYear ? today.getMonth() : -1;
   const currentDay = today.getDate() - 1;
@@ -127,6 +128,10 @@ export default function CalendarScreen() {
           })}
         </View>
 
+        {/* The empty grid stays: it shows what the page will become. One line under it (not above, so all
+            31 rows still fit one screen) says why it is blank. */}
+        {emptyYear ? <Text style={s.empty}>{t.calendar.emptyYear(year)}</Text> : null}
+
         <View style={s.legend} accessible accessibilityLabel={t.calendar.legendA11y(spokenLevels())}>
           <Text style={[pencil.note, s.legendTitle]}>{t.calendar.legendTitle}</Text>
           {LEVEL_LABELS.map((label, i) => (
@@ -177,6 +182,7 @@ const s = StyleSheet.create({
   pressed: { opacity: 0.6 },
   faded: { opacity: 0.35 },
   yearText: { ...text.button, color: album.ink },
+  empty: { ...text.body, color: album.pencil, marginTop: space.lg },
 
   grid: { flexDirection: 'row', gap: GAP },
   column: { flex: 1, gap: GAP },

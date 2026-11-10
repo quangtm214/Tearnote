@@ -864,7 +864,8 @@ export function TagPicker({
   };
   return (
     <>
-      <View style={s.tagRow} role="group">
+      {/* Gives the group a name for TalkBack group navigation, like the other choice groups. */}
+      <View style={s.tagRow} role="group" accessibilityLabel={label}>
         {row.map(({ id }) => {
           const on = selected.includes(id);
           return (
@@ -1000,8 +1001,8 @@ function TagSheet({
   );
 }
 
-// Brings a TextField back above the keyboard; null outside FormScrollView.
-const RevealContext = createContext<((input: TextInput) => void) | null>(null);
+// Brings a TextField (or its error) back above the keyboard; null outside FormScrollView.
+const RevealContext = createContext<{ follow: (input: TextInput) => void; showError: (box: View) => void } | null>(null);
 
 /**
  * ScrollView for screens with TextFields. iOS `automaticallyAdjustKeyboardInsets` scrolls to the input only
@@ -1025,8 +1026,22 @@ export function FormScrollView({ ref: outerRef, ...props }: ScrollViewProps & { 
       });
     });
   };
+  // An error that appears under the focused field lands behind the keyboard on both platforms
+  // (Android only scrolls to the cursor). Scroll just enough to show the field with its error.
+  // ponytail: only the focused field; an error under an unfocused field lower down can stay hidden.
+  const showError = (box: View) => {
+    const view = ref.current;
+    if (!view) return;
+    const keyboardTop = Keyboard.metrics()?.screenY ?? Infinity;
+    box.measureInWindow((_x, top, _w, height) => {
+      view.getNativeScrollRef()?.measureInWindow((_x2, viewTop, _w2, viewHeight) => {
+        const below = top + height + space.md - Math.min(viewTop + viewHeight, keyboardTop);
+        if (below > 0) view.scrollTo({ y: offset.current + below });
+      });
+    });
+  };
   return (
-    <RevealContext value={reveal}>
+    <RevealContext value={{ follow: reveal, showError }}>
       <ScrollView
         ref={(node) => {
           ref.current = node;
@@ -1075,8 +1090,15 @@ export function TextField({
   const [shown, setShown] = useState(false);
   const reveal = useContext(RevealContext);
   const input = useRef<TextInput>(null);
+  const box = useRef<View>(null);
+  const hasError = !!error;
+  useEffect(() => {
+    // After the error has been laid out, so the measured box includes it.
+    if (hasError && input.current?.isFocused()) requestAnimationFrame(() => box.current && reveal?.showError(box.current));
+    // Only when an error appears, not on every keystroke while it stays (the context object is new on every render).
+  }, [hasError]);
   return (
-    <View>
+    <View ref={box}>
       <TextInput
         secureTextEntry={password && !shown}
         accessibilityHint={hint}
@@ -1091,12 +1113,12 @@ export function TextField({
         {...rest}
         onChangeText={(value) => {
           onChangeText?.(value);
-          if (input.current) reveal?.(input.current);
+          if (input.current) reveal?.follow(input.current);
         }}
         // A multiline input grows after onChangeText has measured it.
         onContentSizeChange={(e) => {
           onContentSizeChange?.(e);
-          if (input.current?.isFocused()) reveal?.(input.current);
+          if (input.current?.isFocused()) reveal?.follow(input.current);
         }}
         onFocus={(e) => {
           setFocus(true);
@@ -1130,7 +1152,10 @@ export function TextField({
   );
 }
 
-/** Validation error right under what is wrong: a TextField (via its `error` prop) or a group of choices. */
+/**
+ * Error right under what failed: a TextField (via its `error` prop), a group of choices, or an action that
+ * did not work (requesting a Comfort). Not for states that are not errors, like an empty pool. DESIGN.md › "Báo lỗi".
+ */
 export function FieldError({ message }: { message: string }) {
   return (
     <View style={s.fieldError} accessibilityRole="alert">
@@ -1143,6 +1168,18 @@ export function FieldError({ message }: { message: string }) {
         accessibilityElementsHidden
       />
       <Text style={s.fieldErrorText}>{message}</Text>
+    </View>
+  );
+}
+
+/** A spinner never stands alone: it says what it waits for, and screen readers hear it when it appears. */
+export function Loading({ label }: { label: string }) {
+  // A live region is not read reliably when it first mounts.
+  useEffect(() => AccessibilityInfo.announceForAccessibility(label), [label]);
+  return (
+    <View style={s.loading} accessible accessibilityLabel={label}>
+      <ActivityIndicator color={album.pencil} />
+      <Text style={s.loadingText}>{label}</Text>
     </View>
   );
 }
@@ -1460,6 +1497,8 @@ const s = StyleSheet.create({
   // Centers the 18 icon on the first 20-high caption line.
   fieldErrorIcon: { marginTop: 1 },
   fieldErrorText: { ...text.caption, color: album.alert, flex: 1 },
+  loading: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.md },
+  loadingText: { ...text.caption, color: album.pencil },
 
   backdrop: {
     flex: 1,

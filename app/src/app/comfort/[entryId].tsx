@@ -31,6 +31,7 @@ import {
   SecondaryButton,
   EntryCard,
   ComfortCard,
+  FieldError,
   leave,
   TopBar,
   showSnackbar,
@@ -46,7 +47,8 @@ export default function EntryComfortScreen() {
   const [comforts, setComforts] = useState<ReceivedComfort[]>([]);
   const [requesting, setRequesting] = useState(false);
   const [receivingOn, setReceivingOn] = useState(true);
-  const [notice, setNotice] = useState<string | null>(null);
+  // `error`: the request failed (alert + icon). An empty pool or a used-up quota is information, not an error.
+  const [notice, setNotice] = useState<{ message: string; error: boolean } | null>(null);
   const [dialog, setDialog] = useState<ConfirmRequest | null>(null);
 
   const reload = useCallback(() => {
@@ -60,8 +62,8 @@ export default function EntryComfortScreen() {
   useEffect(reload, [reload]);
 
   // TalkBack may skip a message that just mounted — announce it explicitly.
-  const notify = (msg: string) => {
-    setNotice(msg);
+  const notify = (msg: string, error = false) => {
+    setNotice({ message: msg, error });
     AccessibilityInfo.announceForAccessibility(msg);
   };
 
@@ -80,12 +82,12 @@ export default function EntryComfortScreen() {
 
       if (error) {
         // supabase-js reports network errors in `error` with an empty code; a code means the server refused.
-        notify(error.code ? t.entry.receiveError : t.common.networkError);
+        notify(error.code ? t.entry.receiveError : t.common.networkError, true);
         return;
       }
 
       const parsed = comfortRows.safeParse(data ?? []);
-      if (!parsed.success) return notify(t.entry.receiveError);
+      if (!parsed.success) return notify(t.entry.receiveError, true);
       const row = parsed.data[0];
       if (!row) {
         // Two different reasons, two different messages (required edge case, CLAUDE.md).
@@ -102,7 +104,7 @@ export default function EntryComfortScreen() {
       reload();
       AccessibilityInfo.announceForAccessibility(row.body);
     } catch {
-      notify(t.common.networkError);
+      notify(t.common.networkError, true);
     } finally {
       setRequesting(false);
     }
@@ -185,7 +187,13 @@ export default function EntryComfortScreen() {
             ))
           )}
 
-          {notice ? <Text style={s.notice}>{notice}</Text> : null}
+          {notice?.error ? (
+            <View style={s.notice}>
+              <FieldError message={notice.message} />
+            </View>
+          ) : notice ? (
+            <Text style={[s.explanation, s.notice]}>{notice.message}</Text>
+          ) : null}
 
           {/* One Comfort per Entry (ADR 0007); with receiving turned off there is no request button anywhere. */}
           {comforts.length === 0 && receivingOn ? (
@@ -198,6 +206,7 @@ export default function EntryComfortScreen() {
             <Text style={[s.explanation, s.requestButton]}>{t.entry.receivingOff}</Text>
           ) : null}
 
+          {/* Far from "Quay lại" below: a destructive row must not sit where Back is expected. DESIGN.md › "Xoá một lần khóc". */}
           <View style={s.removeRow}>
             <LinkRow icon="trash-can-outline" label={t.entry.remove} onPress={askRemove} />
           </View>
@@ -237,7 +246,7 @@ const s = StyleSheet.create({
   explanation: { ...text.body, color: album.pencil },
   body: { ...text.body, color: album.ink },
   muted: { color: album.pencil },
-  notice: { ...text.body, color: album.ink, marginTop: space.md },
+  notice: { marginTop: space.md },
   requestButton: { marginTop: space.lg },
-  removeRow: { marginTop: space.lg },
+  removeRow: { marginTop: space.lg, marginBottom: space.xl },
 });

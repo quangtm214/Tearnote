@@ -178,6 +178,7 @@ Bảng màu giấy và bút chì trong bóng tối: nâu đen ấm, một tông 
 
 ### Báo lỗi
 - **Đất Nung** (`dat-nung`, `album.alert` trong theme): đỏ đất nung ấm, chỉ cho lỗi — chữ và viền ô nhập sai, dòng lỗi của form (~7:1 trên trang). Không phải đỏ cảnh báo chói; không dùng cho trạng thái chọn, nhấn mạnh hay trang trí. Không tính là màu nổi thứ hai của luật Một Ngọn Đèn: nó chỉ hiện khi có sự cố.
+- **Lỗi khác thông tin.** Việc hỏng (mất mạng, server từ chối, không có quyền camera/micro) hiện bằng `FieldError`: icon `alert-circle-outline` + chữ `dat-nung`, ngay cạnh chỗ vừa bấm. Ngoại lệ còn giữ dòng chữ `dat-nung` không icon: lỗi tải / thu hồi ở "Lời bạn đã viết" (`comfort/mine.tsx`) và dòng lỗi server cuối form ở màn viết lời và Tài khoản. Trạng thái không phải lỗi — pool rỗng, hết lượt 3 lời / 24 giờ — là chữ thường `but-chi`. Lỗi do quyền máy kèm nút phụ "Mở Cài đặt" (`cog-outline`, `Linking.openSettings`): câu lỗi nói chỗ sửa thì phải có đường tới đó.
 
 ### Neutral
 - **Trang Giấy Bồi** (`trang`): nền mọi màn trong world, và nền footer cố định.
@@ -308,9 +309,13 @@ Tiêu đề, một câu "gọi cấp cứu nếu đang nguy hiểm", rồi từn
 
 ### Trang trống
 Khung chờ cao tối thiểu 160 với bốn góc dán và hairline `vien-mo`, câu chú thích bút chì canh giữa.
+Bảng năm ở Lịch giữ nguyên lưới khi năm đó chưa có lần khóc nào (lưới là hình của trang sẽ thành), thêm một dòng `but-chi` ngay dưới lưới (trên chú thích màu, để 31 hàng vẫn vừa một màn): "Năm 2025 chưa có lần khóc nào."
+
+### Đang chờ
+Không có spinner đứng một mình: `Loading` (`app/src/ui.tsx`) là spinner `but-chi` kèm chữ chú thích nói đang chờ gì ("Đang tải…"), tự `announceForAccessibility` khi hiện (live region lúc mới mount không được đọc chắc chắn). Nút chính đang `busy` cũng nói việc đang làm ("Đang tìm một lời…", "Đang gửi…").
 
 ### Xoá một lần khóc
-Dòng lối `trash-can-outline` "Xoá lần khóc này" cuối màn một lần khóc, trước "Quay lại". Hỏi lại bằng hộp thoại; câu phụ nói rõ mất gì (và lời người lạ nếu có). Xoá thật khỏi máy, kể cả file ảnh và ghi âm. Không đỏ, không thùng rác, không hoàn tác, không hỏi lý do.
+Dòng lối `trash-can-outline` "Xoá lần khóc này" cuối màn một lần khóc, trước "Quay lại", cách nó `xl` (40) — dòng phá huỷ không nằm sát chỗ ngón tay quen tìm lối lùi. Hỏi lại bằng hộp thoại; câu phụ nói rõ mất gì (và lời người lạ nếu có). Xoá thật khỏi máy, kể cả file ảnh và ghi âm. Không đỏ, không thùng rác, không hoàn tác, không hỏi lý do.
 
 ### Bảng năm (màn Lịch)
 Ngoại lệ luật Một Trục. 12 cột tháng × 31 hàng ngày, cột nhãn ngày bên trái; nhãn cột theo ngôn ngữ và không quá ~22 rộng để vừa ô: `T1`…`T12` (vi), `J F M …` (en), `1`…`12` (ja — "10月" không vừa); ô chữ nhật rộng theo cột (~26×16 ở 411dp), cao 16, gap 2, bo 3 — vừa đủ 31 hàng trong một màn Pixel 6 — không viền, không số trên ô, không bấm được. Một ô = **tổng** cường độ các Entry trong ngày đó (ngày theo giờ máy, như Timeline), quy ra 5 mức theo ngưỡng cố định 1–2 · 3–4 · 5–6 · 7–9 · 10+ (`THRESHOLDS` trong `app/src/calendar.ts`) và tô bằng `album.calendar`. Ngày có thật mà không có Entry là ô `calendar[0]`; ngày không tồn tại (30/2…) không tô gì. Nhãn cột/hàng là Patrick Hand 14 màu `but-chi`, line height khít ô vì chỉ là chữ số không dấu, không theo cỡ chữ hệ thống (ở 200% "10" còn "1"). Hôm nay (bảng năm hiện tại): ô có vòng 1.5 — `chu` khi mức < 3, `trang` khi mức ≥ 3 — và nhãn tháng / ngày của hôm nay màu `chu`. Dưới bảng là dòng "Tổng cường độ trong ngày" rồi chú thích màu: 5 ô kèm ngưỡng. Năm nằm cùng hàng với tiêu đề, bên phải: một năm thì chỉ là chữ; từ hai năm trở lên thì `‹ 2026 ›` (nút 48×48, hết đầu / cuối thì mờ 0.35). Không có hộp chọn năm. Screen reader đọc một nhãn tóm tắt cho mỗi cột tháng, không đọc từng ô.
@@ -335,6 +340,7 @@ Ngoại lệ luật Một Trục. 12 cột tháng × 31 hàng ngày, cột nhãn
 
 ## Lịch sử thay đổi
 
+- 2026-11-07 — Change 26 (phần còn lại của audit UX): lỗi xin lời từ người lạ màu `dat-nung` + icon (pool rỗng / hết lượt vẫn chữ thường); "Mở Cài đặt" khi bị từ chối quyền camera / micro; dòng trống cho năm chưa có lần khóc ở Lịch; `Loading` có chữ, nút Gửi "Đang gửi…"; lỗi dưới ô đang gõ cuộn lên khỏi bàn phím; nhãn cho mọi nhóm lựa chọn; microcopy lỗi không "mình", không khuyên, "chuyện" cho Tag; "Xoá lần khóc này" cách "Quay lại" `xl`.
 - 2026-11-07 — Change 25: chọn chuyện bằng `TagPicker` (hàng nhanh 6 chuyện hay chọn + đang chọn + "Chuyện khác…") và `TagSheet` (đủ danh sách, chia nhóm buồn / vui / chưa rõ) ở màn ghi và màn viết lời.
 - 2026-11-03 — Change 21: một modal Tài khoản thay hai màn đăng nhập / tạo tài khoản, chỉ hỏi khi bấm Gửi (gửi luôn sau khi đăng nhập); `TextField` có `password` (con mắt) và `hint`, bỏ ô nhập lại mật khẩu; lỗi server dưới đúng ô; trạng thái Kiểm tra hộp thư; Quên mật khẩu + màn Đặt mật khẩu mới; dải báo `wifi-off` cho mất mạng.
 - 2026-11-03 — Change 20: nút Gửi ở màn viết lời không còn tắt vì thiếu dữ liệu; bấm thì báo `FieldError` dưới ô và dưới nhóm chuyện, cuộn tới lỗi đầu; counter chỉ "n / 500".
