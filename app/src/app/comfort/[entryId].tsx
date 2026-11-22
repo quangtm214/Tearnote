@@ -17,6 +17,7 @@ import {
 } from '@/db';
 import { currentLang, t } from '@/i18n';
 import { ensureSession, supabase } from '@/supabase';
+import { requestSync } from '@/sync';
 import { isJoyOnly } from '@/tags';
 import { album, pencil, space, text } from '@/theme';
 import {
@@ -130,6 +131,7 @@ export default function EntryComfortScreen() {
       confirmLabel: t.common.remove,
       onConfirm: () => {
         deleteEntry(entry.id);
+        void requestSync();
         showSnackbar(t.entry.removed, 'deleted');
         leave();
       },

@@ -64,6 +64,27 @@ export const tagRow = z.object({
   active: z.boolean(),
 });
 
+// One row of the server `entries` table (sync.ts). A tombstone has no payload (0005_entry_payload.sql).
+export const remoteEntryRow = z.object({
+  id: z.string(),
+  payload: z.string().nullable(),
+  deleted_at: z.string().nullable(),
+});
+
+// The decrypted `payload` of a remote Entry. Shape written by sync.ts › pushNew; changing it needs old payloads
+// to stay readable.
+export const entryPayload = z.object({
+  occurredAt: z.number(),
+  durationMin: z.number().nullable(),
+  intensity: z.number(),
+  tags: z.array(z.string()),
+  reflection: z.string().nullable(),
+  attachments: z.array(z.object({ id: z.string(), kind: z.enum(['image', 'audio']), path: z.string() })),
+});
+
+// The backup key as the server keeps it in user_metadata (sync.ts): hex strings.
+export const wrappedKey = z.object({ id: z.string(), salt: z.string(), box: z.string() });
+
 // The `help_fab_position` setting (ui.tsx, docs/db.md). Anything unreadable falls back to the default spot.
 export const fabPosition = z
   .object({ side: z.enum(['left', 'right']), lift: z.number().min(0) })

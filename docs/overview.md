@@ -2,7 +2,7 @@
 
 Tài liệu này mô tả Tearnote là gì, MVP gồm những gì và cố tình bỏ những gì. Từ vựng chuẩn nằm ở [CONTEXT.md](../CONTEXT.md); lý do đằng sau từng quyết định nằm ở [docs/adr/](./adr/).
 
-Trạng thái: schema đã deploy và verify bằng SQL thật; app đã có timeline, ghi Entry, hotline, đăng nhập, viết/nhận Comfort, giao diện Anh / Việt / Nhật. Chưa chạy trên thiết bị thật, chưa launch. Mục 8 liệt kê phần còn thiếu.
+Trạng thái: schema đã deploy và verify bằng SQL thật; app đã có timeline, ghi Entry, hotline, đăng nhập, viết/nhận Comfort, sao lưu nhật ký theo tài khoản ([ADR 0010](./adr/0010-sync-entry.md)), giao diện Anh / Việt / Nhật. Chưa chạy trên thiết bị thật, chưa launch. Mục 8 liệt kê phần còn thiếu.
 
 ## 1. Sản phẩm
 

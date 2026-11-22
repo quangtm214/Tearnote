@@ -7,6 +7,7 @@ import { View } from 'react-native';
 
 import { currentLang, subscribeLanguage } from '@/i18n';
 import { refreshTags } from '@/supabase';
+import { requestSync } from '@/sync';
 import { album } from '@/theme';
 import { SnackbarHost } from '@/ui';
 
@@ -36,6 +37,7 @@ export default function RootLayout() {
   // Background: forms read the SQLite copy, so a slow or failed fetch never blocks them.
   useEffect(() => {
     refreshTags().catch(() => {});
+    void requestSync();
   }, []);
 
   // Language change from Settings: `t` already holds the new text; changing `key` rebuilds every screen.

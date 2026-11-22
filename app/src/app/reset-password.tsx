@@ -6,6 +6,7 @@ import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 
 import { t } from '@/i18n';
 import { authErrorField, authErrorText, supabase } from '@/supabase';
+import { requestSync, unlockBackup } from '@/sync';
 import { album, pencil, space, text } from '@/theme';
 import {
   FAB_CLEARANCE,
@@ -40,6 +41,7 @@ export default function ResetPasswordScreen() {
   const [attempt, setAttempt] = useState(0);
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // A code works once: a re-render or a repeated URL event must not exchange it twice.
   const exchanged = useRef<string | null>(null);
@@ -70,12 +72,17 @@ export default function ResetPasswordScreen() {
       if (error && !authErrorField(error)) return showSnackbar(t.common.networkError, 'offline');
       if (error && DEAD_SESSION_CODES.has(error.code ?? '')) return setLink('invalid');
       if (error) return setError(authErrorText(error, t.reset.error));
+      // The backup key was wrapped by the old password: wrap it again if this device holds it (ADR 0010).
+      setUnlocking(true);
+      await unlockBackup(result.data.password, false).catch(() => false);
+      void requestSync();
       showSnackbar(t.reset.saved);
       router.replace('/' as Href);
     } catch {
       showSnackbar(t.common.networkError, 'offline');
     } finally {
       setBusy(false);
+      setUnlocking(false);
     }
   }
 
@@ -130,7 +137,7 @@ export default function ResetPasswordScreen() {
           )}
         </FormScrollView>
         <ScreenFooter>
-          {link === 'ready' ? <PrimaryButton label={t.reset.save} onPress={save} busy={busy} /> : null}
+          {link === 'ready' ? <PrimaryButton label={t.reset.save} onPress={save} busy={busy} busyLabel={unlocking ? t.account.unlocking : undefined} /> : null}
         </ScreenFooter>
       </KeyboardAvoidingView>
     </SafeAreaView>

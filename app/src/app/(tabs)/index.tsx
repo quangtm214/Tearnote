@@ -1,5 +1,5 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,6 +13,7 @@ import {
   type Entry,
 } from '@/db';
 import { t } from '@/i18n';
+import { onSync } from '@/sync';
 import { album, pencil, space } from '@/theme';
 import { ScreenFooter, FAB_CLEARANCE, fabScrollProps, PhotoCorners, formatDate, PrimaryButton, EntryCard, type ComfortState } from '@/ui';
 
@@ -33,27 +34,28 @@ export default function Timeline() {
   /** Entries shown on the previous focus — null on first open. */
   const seenIds = useRef<Set<string> | null>(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      const list = listEntries();
-      const states: Record<string, ComfortState> = {};
-      const atts: Record<string, Attachment[]> = {};
-      for (const e of list) {
-        const received = listReceivedComforts(e.id);
-        if (received.length) states[e.id] = received.every((c) => c.thanked) ? 'thanked' : 'clipped';
-        atts[e.id] = listAttachments(e.id);
-      }
-      // On app start: scroll to the last opened Entry's night. After Save: scroll to the new Entry's night —
-      // otherwise the page keeps its old position and the user cannot see what they just saved.
-      const seen = seenIds.current;
-      const target = seen ? list.find((e) => !seen.has(e.id)) : list.find((e) => e.id === getSetting(LAST_OPENED_KEY));
-      scrollTarget.current = target ? dayKey(target.occurredAt) : null;
-      seenIds.current = new Set(list.map((e) => e.id));
-      setEntries(list);
-      setComfortStates(states);
-      setAttachments(atts);
-    }, []),
-  );
+  const load = useCallback(() => {
+    const list = listEntries();
+    const states: Record<string, ComfortState> = {};
+    const atts: Record<string, Attachment[]> = {};
+    for (const e of list) {
+      const received = listReceivedComforts(e.id);
+      if (received.length) states[e.id] = received.every((c) => c.thanked) ? 'thanked' : 'clipped';
+      atts[e.id] = listAttachments(e.id);
+    }
+    // On app start: scroll to the last opened Entry's night. After Save: scroll to the new Entry's night —
+    // otherwise the page keeps its old position and the user cannot see what they just saved.
+    const seen = seenIds.current;
+    const target = seen ? list.find((e) => !seen.has(e.id)) : list.find((e) => e.id === getSetting(LAST_OPENED_KEY));
+    scrollTarget.current = target ? dayKey(target.occurredAt) : null;
+    seenIds.current = new Set(list.map((e) => e.id));
+    setEntries(list);
+    setComfortStates(states);
+    setAttachments(atts);
+  }, []);
+  useFocusEffect(load);
+  // A restore on a new device lands while the Timeline is open.
+  useEffect(() => onSync(load), [load]);
 
   const openEntry = (id: string) => {
     setSetting(LAST_OPENED_KEY, id);

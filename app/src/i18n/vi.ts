@@ -161,8 +161,27 @@ const vi = {
     account: 'Tài khoản',
     signOut: 'Đăng xuất',
     signOutDetail: 'Những lần khóc vẫn nằm nguyên trên máy.',
-    signInDetail: 'Chưa đăng nhập. Chỉ cần khi viết lời cho người lạ.',
+    signInDetail: 'Chưa đăng nhập. Chỉ cần khi viết lời cho người lạ hoặc sao lưu nhật ký.',
     language: 'Ngôn ngữ',
+    sync: 'Sao lưu nhật ký',
+    syncDetail: 'Chép những lần khóc, ảnh và ghi âm lên máy chủ để lấy lại khi đổi máy. Cần đăng nhập.',
+    syncing: 'Đang sao lưu…',
+    syncWaiting: 'Chưa sao lưu được. Sẽ thử lại khi có mạng.',
+    syncedAt: (date: string, time: string) => `Đã sao lưu lúc ${time}, ${date}.`,
+    syncOnQuestion: 'Bật sao lưu?',
+    syncOnDetail:
+      'Những lần khóc trên máy này, cả chữ, ảnh và ghi âm, sẽ được mã hoá bằng mật khẩu của bạn rồi chép lên máy chủ Tearnote — không ai khác đọc được, kể cả Tearnote. Đăng nhập trên máy khác là lấy lại được. Quên mật khẩu thì bản sao lưu không mở lại được. Tắt lúc nào cũng được.',
+    syncOn: 'Bật sao lưu',
+    syncOffQuestion: 'Tắt sao lưu?',
+    syncOffDetail: 'Bản sao trên máy chủ sẽ bị xoá. Những lần khóc trên máy này vẫn còn nguyên.',
+    syncOff: 'Tắt và xoá bản sao',
+    syncTurnedOn: 'Đã bật sao lưu.',
+    syncTurnedOff: 'Đã tắt sao lưu và xoá bản sao.',
+    syncLocked: 'Bản sao lưu đang khoá trên máy này. Nhập mật khẩu để tiếp tục sao lưu.',
+    syncLockedDetail:
+      'Bản sao lưu được khoá bằng một mật khẩu cũ nên không mở được. Đăng nhập trên máy cũ để mở, hoặc tắt rồi bật lại sao lưu để bắt đầu bản mới (bản cũ sẽ bị xoá).',
+    syncUnlock: 'Nhập mật khẩu',
+    syncBlocked: 'Máy này đang sao lưu cho một tài khoản khác nên không sao lưu cho tài khoản này.',
   },
 
   /** Single Entry screen (comfort/[entryId].tsx). */
@@ -182,7 +201,7 @@ const vi = {
     remove: 'Xoá lần khóc này',
     removeQuestion: 'Xoá lần khóc này?',
     removeDetail: (hasComfort: boolean) =>
-      `Chữ, ảnh và ghi âm sẽ bị xoá khỏi máy, không lấy lại được.${hasComfort ? ' Lời từ người lạ kẹp ở đây cũng mất theo.' : ''}`,
+      `Chữ, ảnh và ghi âm sẽ bị xoá, không lấy lại được.${hasComfort ? ' Lời từ người lạ kẹp ở đây cũng mất theo.' : ''}`,
     removed: 'Đã xoá.',
   },
 
@@ -247,11 +266,13 @@ const vi = {
     intro: {
       send: 'Đăng nhập để gửi lời này. Lời bạn viết vẫn còn nguyên.',
       mine: 'Lời bạn viết được giữ theo tài khoản.',
-      settings: 'Chỉ cần khi viết lời cho người lạ. Người đọc không thấy email của bạn.',
+      settings: 'Chỉ cần khi viết lời cho người lạ hoặc sao lưu nhật ký. Người đọc không thấy email của bạn.',
+      sync: 'Đăng nhập để sao lưu nhật ký. Đổi máy thì đăng nhập lại là có lại những lần khóc.',
     },
     modeLabel: 'Đăng nhập hay tạo tài khoản',
     create: 'Tạo tài khoản',
     signedIn: 'Đã đăng nhập.',
+    unlocking: 'Đang chuẩn bị khoá mã hoá nhật ký…',
     signInError: 'Không đăng nhập được. Kiểm tra lại email, mật khẩu và kết nối mạng.',
     createError: 'Không tạo được tài khoản. Thử lại sau một lát.',
     signInWithEmail: 'Đăng nhập bằng email này',

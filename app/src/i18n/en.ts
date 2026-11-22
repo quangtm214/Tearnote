@@ -168,8 +168,27 @@ const en: Dictionary = {
     account: 'Account',
     signOut: 'Sign out',
     signOutDetail: 'Your journal stays on this phone.',
-    signInDetail: 'Not signed in. Only needed to write words for strangers.',
+    signInDetail: 'Not signed in. Only needed to write words for strangers or back up your journal.',
     language: 'Language',
+    sync: 'Back up journal',
+    syncDetail: 'Copies your cries, photos and voice notes to the server so you get them back on a new phone. Needs sign-in.',
+    syncing: 'Backing up…',
+    syncWaiting: "Not backed up yet. It will try again when you're online.",
+    syncedAt: (date: string, time: string) => `Backed up at ${time}, ${date}.`,
+    syncOnQuestion: 'Turn on backup?',
+    syncOnDetail:
+      "The cries on this phone, with their words, photos and voice notes, will be encrypted with your password and copied to Tearnote's server — no one else can read them, not even Tearnote. Sign in on another phone to get them back. If you forget your password, the backup can't be opened again. You can turn it off anytime.",
+    syncOn: 'Turn on backup',
+    syncOffQuestion: 'Turn off backup?',
+    syncOffDetail: 'The copy on the server will be deleted. The cries on this phone stay as they are.',
+    syncOff: 'Turn off and delete copy',
+    syncTurnedOn: 'Backup is on.',
+    syncTurnedOff: 'Backup is off and the copy is deleted.',
+    syncLocked: 'The backup is locked on this phone. Enter your password to keep backing up.',
+    syncLockedDetail:
+      "The backup is locked with an older password, so it can't be opened. Sign in on your old phone to open it, or turn backup off and on to start a new one (the old one will be deleted).",
+    syncUnlock: 'Enter password',
+    syncBlocked: 'This phone backs up to another account, so it is not backing up to this one.',
   },
 
   entry: {
@@ -188,7 +207,7 @@ const en: Dictionary = {
     remove: 'Delete this cry',
     removeQuestion: 'Delete this cry?',
     removeDetail: (hasComfort: boolean) =>
-      `Its words, photos and voice note will be deleted from this phone. This can't be undone.${hasComfort ? ' The words from a stranger tucked in here will go too.' : ''}`,
+      `Its words, photos and voice note will be deleted. This can't be undone.${hasComfort ? ' The words from a stranger tucked in here will go too.' : ''}`,
     removed: 'Deleted.',
   },
 
@@ -250,11 +269,13 @@ const en: Dictionary = {
     intro: {
       send: 'Sign in to send these words. What you wrote stays as it is.',
       mine: 'Words you write are kept with your account.',
-      settings: 'Only needed to write words for strangers. Readers never see your email.',
+      settings: 'Only needed to write words for strangers or back up your journal. Readers never see your email.',
+      sync: 'Sign in to back up your journal. On a new phone, sign in again to get your cries back.',
     },
     modeLabel: 'Sign in or create an account',
     create: 'Create account',
     signedIn: 'Signed in.',
+    unlocking: 'Preparing your journal encryption key…',
     signInError: "Couldn't sign in. Check your email, password and connection.",
     createError: "Couldn't create the account. Try again in a moment.",
     signInWithEmail: 'Sign in with this email',

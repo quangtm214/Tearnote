@@ -3,7 +3,7 @@
 Hai kho tách biệt. Đọc [ADR 0004](./adr/0004-luu-tru-local-first.md) trước để hiểu vì sao.
 
 - **SQLite trên máy** — source of truth của Entry. Luôn có, kể cả khi không đăng nhập.
-- **Supabase (Postgres)** — pool Comfort, bản dịch, hotline, và bản sao Entry cho ai bật sync.
+- **Supabase (Postgres + Storage)** — pool Comfort, bản dịch, hotline, và bản sao Entry (kèm file) cho ai bật sao lưu.
 
 Đã apply lên project thật và verify bằng SQL — xem cuối mục `request_comfort()`.
 
@@ -132,21 +132,26 @@ Admin cập nhật; app vẫn đóng gói sẵn bản dự phòng — [ADR 0005]
 
 ## `entries`
 
-**Chỉ tồn tại cho người đã bật sync.** Bản sao của SQLite, không phải source of truth.
+**Chỉ tồn tại cho tài khoản thật đã bật sao lưu** ([ADR 0010](./adr/0010-sync-entry.md)). Bản sao của SQLite, không phải source of truth. **Mã hoá đầu-cuối:** server chỉ thấy `id`, chủ, thời điểm ghi lên và có bị xoá hay không.
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
 | `id` | uuid | PK | Do máy sinh, không phải server |
 | `user_id` | uuid | not null, FK → `auth.users` cascade | |
-| `occurred_at` | timestamptz | not null | Lúc khóc, không phải lúc ghi |
-| `duration_min` | int | ≥ 0 | |
-| `intensity` | smallint | not null, 1–5 | |
-| `tags` | text[] | not null, 1–3 phần tử | Trigger `check_tag_ids` như `comforts`: Entry cũ mang Tag đã ẩn vẫn sync được |
-| `reflection` | text | | |
-| `attachments` | text[] | | Đường dẫn trong Supabase Storage |
+| `payload` | text | not null trừ tombstone | hex(nonce 24 byte ‖ XChaCha20-Poly1305 của JSON `{occurredAt, durationMin, intensity, tags, reflection, attachments}`) bằng khoá sao lưu của tài khoản. `attachments` = `[{"id", "kind": "image" \| "audio", "path"}]` theo thứ tự hiện; `path` trong bucket `entry-attachments`, `id` = id dòng `attachments` trên máy. Dạng JSON: `entryPayload` (`app/src/validation.ts`) |
+| `deleted_at` | timestamptz | | Khác null = **tombstone**: Entry đã xoá, để máy khác của tài khoản xoá theo |
 | `created_at` | timestamptz | not null, default `now()` | |
+| `occurred_at`, `duration_min`, `intensity`, `tags`, `reflection`, `attachments` | | luôn null | Cột cũ trước khi mã hoá (`0004`). Giữ lại vì xoá cột cần migration phá huỷ được duyệt tay; CHECK bắt chúng null |
 
-**Index:** `(user_id, occurred_at desc)`
+**Index:** `(user_id, occurred_at desc)` — vô dụng từ khi `occurred_at` luôn null, bỏ cùng các cột cũ.
+
+**CHECK `entries_tombstone`:** `deleted_at` null ⇔ `payload` khác null, và các cột cũ luôn null (`0006_entry_payload.sql`). Server không bao giờ giữ nội dung đọc được.
+
+**Khoá sao lưu** nằm trong `user_metadata.entry_key` = `{id, salt, box}` (hex): `box` là khoá 32 byte mã hoá bằng scrypt(mật khẩu, `salt`). `null` khi sao lưu tắt. Trên máy: SecureStore `entry_key_<user id>` = `<id>:<khoá hex>`, xoá khi đăng xuất.
+
+## Storage `entry-attachments`
+
+Ảnh và ghi âm của Entry đã sao lưu, **mã hoá cả file** (nonce ‖ ciphertext, cùng khoá với `payload`), `contentType` `application/octet-stream`. Private, tối đa 25 MB mỗi file. Đường dẫn `<user id>/<entry id>/<tên file trên máy>`. Policy `entry_files_own` (mọi lệnh): thư mục đầu = `auth.uid()` và không phải anonymous. App tải qua signed URL 60 giây rồi giải mã trên máy. Xoá tài khoản không tự xoá file (cascade không tới Storage).
 
 ## RLS
 
@@ -157,7 +162,7 @@ Bật cho tất cả các bảng.
 | `comforts` | chỉ của chính mình | insert: tài khoản thật, ≤ 5/24h; update chỉ để đổi sang `retracted` |
 | `comfort_translations` | không ai | chỉ batch (service role) |
 | `deliveries` | chỉ dòng mình là người nhận | update `thanked` của chính mình |
-| `entries` | chỉ của mình | chỉ của mình |
+| `entries` | chỉ của mình, tài khoản thật | chỉ của mình, tài khoản thật |
 | `hotlines` | ai cũng đọc | chỉ admin |
 | `tags` | ai cũng đọc (`anon`, `authenticated`) | chỉ admin (dashboard / service role); không có policy ghi |
 
@@ -238,12 +243,12 @@ Source of truth. Tồn tại kể cả khi không có mạng, không có tài kh
 | `intensity` | integer | not null, 1–5 | |
 | `tags` | text | not null | JSON array các tag id |
 | `reflection` | text | | Không rời khỏi máy trừ khi bật sync |
-| `synced_at` | integer | | `null` = chưa sao lưu lên server |
-| `deleted_at` | integer | | Để dành cho sync (chưa làm): Entry đã sync thì xoá = giữ tombstone row với `deleted_at`, nội dung xoá sạch. Hiện chưa dùng |
+| `synced_at` | integer | | `null` = chưa có trên server của tài khoản trong `settings.sync_user` |
+| `deleted_at` | integer | | Khác null = tombstone chờ đẩy lên server; chữ, ảnh, ghi âm, lời đã nhận đã xoá. Mọi màn lọc `deleted_at is null` |
 
-`synced_at` là **toàn bộ** cơ chế sync: null thì đẩy lên, khác null thì thôi. Không vector clock, không resolve conflict — local luôn thắng, server chỉ là bản sao.
+`synced_at` là **toàn bộ** cơ chế sync: null thì đẩy lên, khác null thì thôi. Entry không sửa được sau khi lưu nên không có conflict — local luôn thắng, server chỉ là bản sao. Luồng đầy đủ ở `app/src/sync.ts` và [ADR 0010](./adr/0010-sync-entry.md).
 
-**Xoá một Entry** (`deleteEntry`, `app/src/db.ts`): khi `synced_at` null là hard delete — `delete from entries` (`attachments`, `received_comforts` đi theo `on delete cascade`, cần `pragma foreign_keys = ON`) rồi xoá các file `attachments/…`. Server không có gì để xoá: Delivery vẫn còn và vẫn tính vào limit 3 / 24h. Schema không đổi ⇒ migration Supabase không đổi (contract ba chỗ vẫn khớp).
+**Xoá một Entry** (`deleteEntry`, `app/src/db.ts`): `synced_at` null là hard delete (`purgeEntry`) — `delete from entries` (`attachments`, `received_comforts` đi theo `on delete cascade`, cần `pragma foreign_keys = ON`) rồi xoá các file `attachments/…`. `synced_at` khác null thì xoá dòng `attachments`, `received_comforts`, file, `reflection`, `duration_min`, đặt `deleted_at`; lần sync sau xoá file trên Storage, ghi tombstone lên server rồi mới `purgeEntry`. Delivery trên server vẫn còn và vẫn tính vào limit 3 / 24h.
 
 ## `attachments`
 
@@ -253,7 +258,7 @@ Source of truth. Tồn tại kể cả khi không có mạng, không có tài kh
 | `entry_id` | text | not null, FK → `entries` cascade | |
 | `kind` | text | not null, `image` \| `audio` | |
 | `path` | text | not null | Tương đối so với thư mục document của app: `attachments/<id>.<đuôi>`. Không lưu đường dẫn tuyệt đối — iOS đổi đường dẫn container sau mỗi lần cập nhật app |
-| `remote` | text | | Đường dẫn Storage, `null` nếu chưa sync |
+| `remote` | text | | Đường dẫn trong bucket `entry-attachments`, `null` nếu chưa đẩy lên. Khác null mà file trên máy chưa có = đang khôi phục, lần sync sau tải tiếp |
 
 Tối đa 3 ảnh và 1 ghi âm ≤ 5 phút mỗi Entry — chỉ app enforce (`app/src/app/new.tsx`), không có CHECK: SQLite không đếm qua bảng được trong CHECK. File từ picker / máy ghi âm nằm trong cache cho tới lúc bấm Lưu; Lưu mới chép vào `attachments/` rồi ghi Entry và các dòng này trong một transaction. Thứ tự ảnh = thứ tự thêm (`rowid`); Timeline xếp polaroid theo thứ tự này.
 
@@ -278,6 +283,11 @@ Key đang dùng:
   tới. `lift` = dp từ đáy vùng màn (trên thanh điều hướng / inset đáy) tới đáy nút; mỗi màn tự kẹp vào khoảng
   của nó (ít nhất `space.md` trên footer, nhiều nhất `space.md` dưới status bar), không ghi lại. Thiếu key
   hoặc giá trị đọc không được ⇒ góc dưới phải (`fabPosition` trong `app/src/validation.ts`).
+- `sync_user` = user id mà các dấu `synced_at` / `remote` trên máy đang nói tới; `''` hoặc thiếu = chưa sync với ai.
+  Khác user đang đăng nhập (đã bật sao lưu) ⇒ quên hết dấu rồi đẩy lại lên tài khoản mới.
+- `sync_last_at` = epoch ms của lượt sync xong gần nhất, hiện ở Cài đặt. `''` khi quên dấu.
+
+Công tắc sao lưu **không** nằm ở bảng này: nó là cờ `entry_sync` trong `user_metadata` của tài khoản, để mọi máy của tài khoản theo cùng một công tắc (ADR 0010).
 
 Key và value đều tiếng Anh. Máy cài bản cũ có key tiếng Việt (`nhan_comfort` = `bat` \| `tat`, `ngon_ngu`,
 `timeline_dung`): mở app là `app/src/db.ts` chép sang key mới một lần (`bat` → `on`, `tat` → `off`) rồi xoá key cũ.

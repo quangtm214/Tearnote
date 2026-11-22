@@ -161,6 +161,10 @@ const UUID_V4 = `select lower(hex(randomblob(4))) || '-' || lower(hex(randomblob
 
 const newId = () => db.getFirstSync<{ id: string }>(UUID_V4)!.id;
 
+/** Secure random bytes for keys and nonces (crypto.ts), from the same source as the ids. */
+export const randomBytes = (n: number) =>
+  db.getFirstSync<{ b: Uint8Array }>('select randomblob(?) as b', n)!.b;
+
 /** Photo / recording of an Entry. `uri` is a file:// URI usable directly by Image and the audio player. */
 export type Attachment = { kind: 'image' | 'audio'; uri: string };
 
@@ -247,11 +251,10 @@ export function getEntry(id: string): Entry | null {
 }
 
 /**
- * Hard delete while there is no sync: the Entry row (attachments and received_comforts cascade — needs
- * foreign_keys = ON), then its files in attachments/. Leaving the files would make "delete" a lie.
- * With sync, a synced Entry keeps a `deleted_at` tombstone instead (docs/db.md).
+ * The Entry row (attachments and received_comforts cascade — needs foreign_keys = ON), then its files in
+ * attachments/. Leaving the files would make "delete" a lie.
  */
-export function deleteEntry(id: string): void {
+export function purgeEntry(id: string): void {
   const rows = db.getAllSync<{ path: string }>(`select path from attachments where entry_id = ?`, id);
   db.runSync(`delete from entries where id = ?`, id);
   for (const { path } of rows) {
@@ -261,6 +264,131 @@ export function deleteEntry(id: string): void {
       // File already gone is fine — the row is deleted.
     }
   }
+}
+
+/**
+ * Nothing on the server ⇒ purge now. Otherwise wipe everything but a `deleted_at` tombstone, which sync sends
+ * to the server so the account's other devices delete it too, then purges (docs/db.md, ADR 0010).
+ * An uploaded file counts as "on the server" even if the row upload failed: it must be deleted there.
+ */
+export function deleteEntry(id: string): void {
+  const onServer = db.getFirstSync<{ n: number }>(
+    `select count(*) as n from entries e where e.id = ? and (e.synced_at is not null
+       or exists (select 1 from attachments a where a.entry_id = e.id and a.remote is not null))`,
+    id,
+  )!.n > 0;
+  if (!onServer) return purgeEntry(id);
+  const rows = db.getAllSync<{ path: string }>(`select path from attachments where entry_id = ?`, id);
+  db.withTransactionSync(() => {
+    db.runSync(`delete from attachments where entry_id = ?`, id);
+    db.runSync(`delete from received_comforts where entry_id = ?`, id);
+    db.runSync(`update entries set reflection = null, duration_min = null, deleted_at = ? where id = ?`, Date.now(), id);
+  });
+  for (const { path } of rows) {
+    try {
+      new File(Paths.document, path).delete();
+    } catch {
+      // File already gone is fine.
+    }
+  }
+}
+
+// ── Sync (app/src/sync.ts) ────────────────────────────────────────────────────
+
+export type LocalAttachment = { id: string; kind: Attachment['kind']; path: string; remote: string | null };
+
+/** Every Entry on the device, tombstones included: sync must not re-insert what was deleted here. */
+export const localEntryStates = () =>
+  db
+    .getAllSync<{ id: string; synced: number; deleted: number }>(
+      `select id, synced_at is not null as synced, deleted_at is not null as deleted from entries`,
+    )
+    .map((r) => ({ id: r.id, synced: r.synced === 1, deleted: r.deleted === 1 }));
+
+/** Entries not on the server yet, with their files in display order. */
+export function entriesToUpload(): (Entry & { attachments: LocalAttachment[] })[] {
+  return db
+    .getAllSync<EntryRow>(
+      `select id, occurred_at, duration_min, intensity, tags, reflection
+       from entries where synced_at is null and deleted_at is null`,
+    )
+    .map((r) => ({
+      ...toEntry(r),
+      attachments: db.getAllSync<LocalAttachment>(
+        `select id, kind, path, remote from attachments where entry_id = ? order by rowid`,
+        r.id,
+      ),
+    }));
+}
+
+export const tombstoneIds = () =>
+  db.getAllSync<{ id: string }>(`select id from entries where deleted_at is not null`).map((r) => r.id);
+
+export const setAttachmentRemote = (id: string, remote: string) =>
+  db.runSync(`update attachments set remote = ? where id = ?`, remote, id);
+
+/** False when the Entry is gone (deleted during the upload). */
+export const markSynced = (id: string) =>
+  db.runSync(`update entries set synced_at = ? where id = ? and deleted_at is null`, Date.now(), id).changes > 0;
+
+/** The server lost these (sync was turned off and on again): upload them again, files included. */
+export function markUnsynced(id: string) {
+  db.withTransactionSync(() => {
+    db.runSync(`update entries set synced_at = null where id = ?`, id);
+    db.runSync(`update attachments set remote = null where entry_id = ?`, id);
+  });
+}
+
+export const deleteAttachmentRow = (id: string) => db.runSync(`delete from attachments where id = ?`, id);
+
+export const hasAttachment = (path: string) =>
+  db.getFirstSync(`select 1 from attachments where path = ?`, path) !== null;
+
+/** An Entry from the server. Files are fetched later (filesToDownload), so a failed download is retried. */
+export function insertSyncedEntry(e: Entry, attachments: { id: string; kind: Attachment['kind']; remote: string }[]) {
+  db.withTransactionSync(() => {
+    db.runSync(
+      `insert into entries (id, occurred_at, duration_min, intensity, tags, reflection, synced_at)
+       values (?, ?, ?, ?, ?, ?, ?)`,
+      e.id,
+      e.occurredAt,
+      e.durationMin,
+      e.intensity,
+      JSON.stringify(normalizeTags(e.tags)),
+      e.reflection,
+      Date.now(),
+    );
+    for (const a of attachments) {
+      db.runSync(
+        `insert into attachments (id, entry_id, kind, path, remote) values (?, ?, ?, ?, ?)`,
+        a.id,
+        e.id,
+        a.kind,
+        `attachments/${a.remote.split('/').pop()}`,
+        a.remote,
+      );
+    }
+  });
+}
+
+/** Uploaded files whose local copy is missing — a restore that has not finished downloading. */
+export const filesToDownload = () =>
+  db
+    .getAllSync<{ path: string; remote: string }>(`select path, remote from attachments where remote is not null`)
+    .filter((r) => !new File(Paths.document, r.path).exists);
+
+/**
+ * Forget what was uploaded, for an account whose server copy is gone (sync turned off) or that is not the
+ * one this device synced with: everything uploads again if sync is turned on. Tombstones are purged.
+ */
+// ponytail: a tombstone left by another account is purged without reaching that account's server copy;
+// it deletes there only if that account signs in here again before. Rare: needs two accounts on one device.
+export function forgetSync(): void {
+  db.withTransactionSync(() => {
+    db.runSync(`update entries set synced_at = null`);
+    db.runSync(`update attachments set remote = null`);
+  });
+  for (const id of tombstoneIds()) purgeEntry(id);
 }
 
 export type ReceivedComfort = {
