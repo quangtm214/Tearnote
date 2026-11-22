@@ -255,7 +255,7 @@ Source of truth. Tồn tại kể cả khi không có mạng, không có tài kh
 | `path` | text | not null | Tương đối so với thư mục document của app: `attachments/<id>.<đuôi>`. Không lưu đường dẫn tuyệt đối — iOS đổi đường dẫn container sau mỗi lần cập nhật app |
 | `remote` | text | | Đường dẫn Storage, `null` nếu chưa sync |
 
-Tối đa 3 ảnh và 1 ghi âm ≤ 5 phút mỗi Entry — chỉ app enforce (`app/src/app/new.tsx`), không có CHECK: SQLite không đếm qua bảng được trong CHECK. File từ picker / máy ghi âm nằm trong cache cho tới lúc bấm Lưu; Lưu mới chép vào `attachments/` rồi ghi Entry và các dòng này trong một transaction. Thứ tự ảnh = thứ tự thêm (`rowid`); Timeline xếp polaroid theo thứ tự này.
+Tối đa 3 ảnh và 1 ghi âm ≤ 5 phút mỗi Entry — chỉ app enforce (`app/src/app/new.tsx`), không có CHECK: SQLite không đếm qua bảng được trong CHECK. File từ picker / máy ghi âm nằm trong cache cho tới lúc bấm Lưu; Lưu mới chép vào `attachments/` rồi ghi Entry và các dòng này trong một transaction. Ảnh đã nén lúc chọn/chụp (cạnh dài ≤ 1600 px, JPEG ⇒ đuôi `.jpg`; nén hỏng thì giữ ảnh gốc và đuôi gốc), ghi âm là AAC mono 64 kbps (`.m4a`); file cũ trước khi có nén giữ nguyên. Thứ tự ảnh = thứ tự thêm (`rowid`); Timeline xếp polaroid theo thứ tự này.
 
 ## `settings`
 
