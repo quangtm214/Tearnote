@@ -22,6 +22,7 @@ Tearnote là app nhật ký cảm xúc ghi lại các cơn khóc, giúp người
 | Lưu trữ dữ liệu | Local-first (SQLite trên máy); sync lên server là opt-in, cần đăng nhập | Entry là dữ liệu tâm lý nhạy cảm. Xem ADR 0004 |
 | Auth | Supabase anonymous auth cho phần nhật ký; tài khoản thật bắt buộc để **viết** Comfort hoặc bật sync | Không ép đăng ký để dùng app, nhưng viết cho người lạ đọc thì cần danh tính bền. Xem ADR 0002, 0004, 0006 |
 | Backend | Supabase (Postgres + auth + storage). Xem ADR 0006 | Server chỉ làm 5 việc nhỏ (pool Comfort, bản dịch, hotline, bản sao Entry khi bật sync, danh sách Tag), không đáng tự build |
+| Batch đêm (kiểm duyệt rồi dịch Comfort) | Routine Claude trên cloud 02:00 giờ VN, làm theo `supabase/batch/nightly.md` qua connector Supabase; chỉ ghi qua `batch_moderate` / `batch_translate` (`0005_nightly_batch.sql`, revoke khỏi `anon` / `authenticated`). Nghi ngờ ⇒ giữ `pending` + `mod_note = 'flag: <mã>'`, admin lọc trên Table Editor; batch tự loại ⇒ `rejected` + `batch: <mã>`; batch chỉ xem `pending` có `mod_note` null. Chưa launch: nghi là `flag`. Sửa `nightly.md` thì cập nhật prompt của routine | Không đổi `comfort_status` nên app không đổi; nội dung câu là dữ liệu không tin được, nên bề mặt ghi bị SQL giới hạn chứ không chỉ dặn bằng lời. ADR 0011, docs/db.md › Batch đêm |
 | Test runner | jest-expo | Đi kèm Expo, không thêm dependency |
 | Package manager | npm, kèm `legacy-peer-deps` | Mặc định của Expo; pnpm hay vỡ với native module RN. `app/.npmrc` bật `legacy-peer-deps` vì expo 57 kéo react-dom 19.3 còn RN 0.86 pin react 19.2 — không có nó thì mọi `npm i` đều ERESOLVE. Từ SDK 58 (`react` 19.3) `npm i` không còn ERESOLVE, chỉ cảnh báo; chưa bỏ `.npmrc` |
 | Chạy app khi máy tính tắt | EAS Update vào Expo Go: `expo-updates`, project `@quangtm/tearnote`, `runtimeVersion` policy `sdkVersion` (ra `exposdk:58.0.0`). Publish bản update mới: `cd app; npx eas-cli update --branch preview --environment preview --message "<msg>"`, mở trong Expo Go (đăng nhập tài khoản `quangtm`) › project › branch `preview` | User dùng iOS, không có Apple Developer nên không build được app iOS. Expo Go chỉ nhận update có runtime `exposdk:<sdk>` đúng SDK của Expo Go trên máy (App Store chỉ có bản mới nhất ⇒ Expo Go lên SDK mới thì app phải lên theo); policy `appVersion` thì Expo Go từ chối. `--environment preview` bỏ qua `app/.env`: biến `EXPO_PUBLIC_SUPABASE_*` lấy từ EAS env `preview` (`eas env:list preview`); đổi `.env` thì sửa cả bên đó |
@@ -161,6 +162,8 @@ Không có lệnh verify được thì **nói rõ đã verify bằng cách nào*
 * **Chữ UI mới vào cả ba file dịch, không hardcode vào JSX.** Nhánh tách từ trước khi có i18n hay
   mang chữ Việt hardcode vào — `i18n.test.ts` quét `app/src/app/` và `ui.tsx` rồi đỏ. Chữ Anh hardcode thì
   test không bắt được: tự soát khi merge.
+* **Mã lý do kiểm duyệt nằm ở ba chỗ**: mảng trong `batch_moderate` (`0005_nightly_batch.sql`) ⇄ bảng lý do
+  trong `supabase/batch/nightly.md` ⇄ docs/db.md › Batch đêm. Thêm mã mà quên hàm thì batch lỗi ở dòng đó.
 * **Rule pool nằm trong `request_comfort()`, không nằm trong app.** Đổi cách chọn Comfort thì viết
   migration, đừng sửa client. Luật "chuyện vui không fallback" đọc `tags.kind = 'joy'`, không còn chữ `'moved'`.
 * **`received_comforts.entry_id` chỉ tồn tại trên máy.** Server không biết Comfort nào thuộc Entry

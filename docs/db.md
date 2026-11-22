@@ -68,7 +68,7 @@ Lời động viên ẩn danh, bản gốc, bằng ngôn ngữ người viết.
 | `source_lang` | lang | not null | Luôn dịch từ đây, không dịch chuyền. Người viết chọn trên màn viết, mặc định là ngôn ngữ app |
 | `tags` | text[] | not null, 1–2 phần tử | Mỗi id phải có trong `tags` (trigger `check_tag_ids`, chỉ kiểm tồn tại, không kiểm `active`) |
 | `status` | comfort_status | not null, default `pending` | `pending` chính là hàng đợi duyệt |
-| `mod_note` | text | | Admin ghi lý do khi từ chối |
+| `mod_note` | text | | Lý do khi từ chối; `flag: …` = batch đẩy sang admin, vẫn `pending` (xem [Batch đêm](#batch-đêm)) |
 | `created_at` | timestamptz | not null, default `now()` | |
 
 **Index:** GIN trên `tags` (partial, `status='approved'`) · `(status, created_at)`
@@ -327,13 +327,26 @@ Hai bước, đúng thứ tự ([ADR 0002](./adr/0002-comfort-trong-mvp.md)):
 
 | # | Bước | Truy vấn | Kết quả |
 |---|---|---|---|
-| 1 | Kiểm duyệt | `comforts` đang `pending` | → `approved` / `rejected`; nghi ngờ thì để nguyên `pending` cho admin |
-| 2 | Dịch | `comforts` đã `approved`, thiếu dòng trong `comfort_translations` cho một `lang` | insert bản dịch, **dịch từ `body` gốc** |
+| 1 | Kiểm duyệt | `comforts` đang `pending` **và `mod_note` null** | `batch_moderate`: → `approved`; → `rejected` + `mod_note = 'batch: <lý do>'`; nghi ngờ thì giữ `pending` + `mod_note = 'flag: <lý do>'` cho admin |
+| 2 | Dịch | `comforts` đã `approved`, thiếu dòng trong `comfort_translations` cho một `lang` khác `source_lang` | `batch_translate`: insert bản dịch, **dịch từ `body` gốc** |
 
-Hai con số phải nhìn được — đó là cách duy nhất biết batch đã chết:
+Chạy bằng routine Claude lúc 02:00 giờ Việt Nam, làm theo `supabase/batch/nightly.md`; thiết kế ở [ADR 0011](./adr/0011-batch-dem-kiem-duyet-dich.md).
+
+**`mod_note`** vì thế có ba dạng: null (chưa ai xem, hoặc đã duyệt), `flag: <lý do>` (chờ admin), `batch: <lý do>` (batch tự loại); admin tự loại thì ghi gì cũng được. Lý do là mã cố định: `self_harm` `hate` `sexual` `contact` `medical` `spam` `injection` `off_topic` `unsure`.
+
+**Admin duyệt tay** trên Table Editor: `comforts`, lọc `status = pending` và `mod_note` like `flag:%`. Duyệt = đổi `status` sang `approved` / `rejected` (đêm sau batch dịch câu vừa duyệt); muốn batch xem lại thì xoá `mod_note`.
+
+**Hai hàm ghi** (`0005_nightly_batch.sql`), `security definer`, đã revoke khỏi `anon` / `authenticated`:
+
+- `batch_moderate(id, decision, reason)` — `decision` ∈ `approve` / `reject` / `flag`; chỉ đổi dòng `pending` có `mod_note` null, trả `false` nếu dòng không còn chờ (đã thu hồi, đã xem). Mã lý do lạ ⇒ lỗi.
+- `batch_translate(id, lang, body)` — chỉ insert khi Comfort `approved` và `lang <> source_lang`; bản dịch dài 1–1000 ký tự (sau `btrim`); đã có thì `on conflict do nothing`, trả `false`.
+
+Verify 2026-11-22 bằng `execute_sql`, mọi thay đổi rollback: flag giữ `pending` + `flag: unsure`, gọi lại trên dòng đã flag trả `false` · reject ghi `rejected` + `batch: spam` · không đụng dòng đã `approved` · mã lý do / quyết định lạ bị chặn · không dịch câu `pending` hay sang chính `source_lang` · dịch trùng không ghi đè · bản dịch rỗng bị chặn · `anon` / `authenticated` không có quyền `execute`. Lần chạy tay đầu tiên theo `nightly.md` (cùng ngày): trước `to_moderate=7 flagged=0 to_translate=0` → 1 duyệt (dịch en + ja), 5 loại (3 `off_topic` là câu test, 2 `spam`), 1 `flag: unsure` (hứa "mọi chuyện rồi sẽ ổn") → sau `to_moderate=0 flagged=1 to_translate=0`, `comfort_translations` 24 → 26.
+
+Hai con số phải nhìn được — đó là cách duy nhất biết batch đã chết (câu chờ admin không tính: chúng đợi người, không đợi batch):
 
 ```sql
-select count(*) from comforts where status = 'pending';
+select count(*) from comforts where status = 'pending' and mod_note is null;
 select count(*) from comforts c cross join unnest(enum_range(null::lang)) l
 where c.status = 'approved'
   and not exists (select 1 from comfort_translations t
