@@ -30,10 +30,13 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type HostInstance,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type PressableProps,
+  type ScrollViewInstance,
   type ScrollViewProps,
+  type TextInputInstance,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -582,8 +585,8 @@ export function PrimaryButton({
  * the help entry on every screen except the hotline screen itself.
  */
 export function ScreenFooter({ children }: { children?: ReactNode }) {
-  const footer = useRef<View>(null);
-  const layer = useRef<View>(null);
+  const footer = useRef<HostInstance>(null);
+  const layer = useRef<HostInstance>(null);
   const insets = useSafeAreaInsets();
   const [anchor, setAnchor] = useState<FabAnchor | null>(null);
   // Measured on screen, not from onLayout: an absolute child is placed inside the parent's padding
@@ -1002,17 +1005,17 @@ function TagSheet({
 }
 
 // Brings a TextField (or its error) back above the keyboard; null outside FormScrollView.
-const RevealContext = createContext<{ follow: (input: TextInput) => void; showError: (box: View) => void } | null>(null);
+const RevealContext = createContext<{ follow: (input: TextInputInstance) => void; showError: (box: HostInstance) => void } | null>(null);
 
 /**
  * ScrollView for screens with TextFields. iOS `automaticallyAdjustKeyboardInsets` scrolls to the input only
  * when the keyboard opens; if the user scrolls away and types, or a multiline input grows, iOS does not follow.
  * So each TextField asks this view to scroll it back on every change. Android scrolls to the cursor natively.
  */
-export function FormScrollView({ ref: outerRef, ...props }: ScrollViewProps & { ref?: Ref<ScrollView> }) {
-  const ref = useRef<ScrollView>(null);
+export function FormScrollView({ ref: outerRef, ...props }: ScrollViewProps & { ref?: Ref<ScrollViewInstance> }) {
+  const ref = useRef<ScrollViewInstance>(null);
   const offset = useRef(0);
-  const reveal = (input: TextInput) => {
+  const reveal = (input: TextInputInstance) => {
     const view = ref.current;
     const keyboard = Keyboard.metrics();
     if (Platform.OS !== 'ios' || !view || !keyboard) return;
@@ -1029,7 +1032,7 @@ export function FormScrollView({ ref: outerRef, ...props }: ScrollViewProps & { 
   // An error that appears under the focused field lands behind the keyboard on both platforms
   // (Android only scrolls to the cursor). Scroll just enough to show the field with its error.
   // ponytail: only the focused field; an error under an unfocused field lower down can stay hidden.
-  const showError = (box: View) => {
+  const showError = (box: HostInstance) => {
     const view = ref.current;
     if (!view) return;
     const keyboardTop = Keyboard.metrics()?.screenY ?? Infinity;
@@ -1079,7 +1082,7 @@ export function TextField({
   password,
   ...rest
 }: TextInputProps & {
-  ref?: Ref<TextInput>;
+  ref?: Ref<TextInputInstance>;
   error?: string | null;
   /** Fixed rule under the field ("At least 6 characters."); the error takes its place. Not a placeholder: that disappears while typing. */
   hint?: string;
@@ -1089,8 +1092,8 @@ export function TextField({
   const [focus, setFocus] = useState(false);
   const [shown, setShown] = useState(false);
   const reveal = useContext(RevealContext);
-  const input = useRef<TextInput>(null);
-  const box = useRef<View>(null);
+  const input = useRef<TextInputInstance>(null);
+  const box = useRef<HostInstance>(null);
   const hasError = !!error;
   useEffect(() => {
     // After the error has been laid out, so the measured box includes it.
