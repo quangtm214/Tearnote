@@ -1,10 +1,13 @@
 import {
-  RecordingPresets,
+  AudioQuality,
+  IOSOutputFormat,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
+  type RecordingOptions,
 } from 'expo-audio';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useNavigation } from 'expo-router';
@@ -62,6 +65,31 @@ const clamp = (n: number) => Math.min(5, Math.max(1, n));
 const MAX_PHOTOS = 3;
 const MAX_RECORDING_SECONDS = 5 * 60;
 
+/** Voice only: mono AAC at 64 kbps is ~2.4 MB for 5 minutes, half of HIGH_QUALITY (stereo, 128 kbps). */
+const VOICE_RECORDING: RecordingOptions = {
+  extension: '.m4a',
+  sampleRate: 44100,
+  numberOfChannels: 1,
+  bitRate: 64000,
+  android: { outputFormat: 'mpeg4', audioEncoder: 'aac' },
+  ios: { outputFormat: IOSOutputFormat.MPEG4AAC, audioQuality: AudioQuality.MEDIUM },
+  web: {},
+};
+
+/**
+ * Long edge at most 1600 px, JPEG 0.7: a 3–8 MB phone photo becomes a few hundred KB (CLAUDE.md, attachments row).
+ * Done at pick time, so removing a photo stays free and `insertEntry` copies the small `.jpg`.
+ * The manipulator applies EXIF orientation while decoding, so the saved pixels are already upright.
+ */
+async function shrinkPhoto(uri: string): Promise<string> {
+  try {
+    const image = await ImageManipulator.manipulate(uri, { maxWidth: 1600, maxHeight: 1600 }).renderAsync();
+    return (await image.saveAsync({ compress: 0.7, format: SaveFormat.JPEG })).uri;
+  } catch {
+    return uri; // keep the original rather than lose the photo
+  }
+}
+
 export default function NewEntryScreen() {
   const [backMinutes, setBackMinutes] = useState(0);
   const [durationMin, setDurationMin] = useState<number | null>(null);
@@ -82,7 +110,7 @@ export default function NewEntryScreen() {
   };
 
   // Both a manual stop and the 5-minute auto-stop end up here.
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY, (status) => {
+  const recorder = useAudioRecorder(VOICE_RECORDING, (status) => {
     if (!status.isFinished) return;
     setIsRecording(false);
     void setAudioModeAsync({ allowsRecording: false });
@@ -144,7 +172,9 @@ export default function NewEntryScreen() {
             allowsMultipleSelection: remaining > 1,
             selectionLimit: remaining,
           });
-      if (!result.canceled) setPhotos((prev) => [...prev, ...result.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
+      if (result.canceled) return;
+      const uris = await Promise.all(result.assets.slice(0, remaining).map((a) => shrinkPhoto(a.uri)));
+      setPhotos((prev) => [...prev, ...uris].slice(0, MAX_PHOTOS));
     } catch {
       reportError(camera ? t.newEntry.cameraError : t.newEntry.libraryError);
     }
