@@ -26,6 +26,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { insertEntry } from '@/db';
+import { requestSync } from '@/sync';
 import { t } from '@/i18n';
 import { formTags, MAX_ENTRY_TAGS } from '@/tags';
 import { album, pencil, space, text, touch } from '@/theme';
@@ -225,6 +226,7 @@ export default function NewEntryScreen() {
           ...(audioUri ? [{ kind: 'audio' as const, uri: audioUri }] : []),
         ],
       );
+      void requestSync();
       showSnackbar(t.newEntry.saved);
       router.back();
     } catch {

@@ -15,6 +15,7 @@ import type { AuthError } from '@supabase/supabase-js';
 
 import { t } from '@/i18n';
 import { authErrorField, authErrorText, supabase } from '@/supabase';
+import { enableSync, requestSync, unlockBackup } from '@/sync';
 import { album, pencil, space, text } from '@/theme';
 import {
   FAB_CLEARANCE,
@@ -43,12 +44,16 @@ const RESEND_COOLDOWN_S = 60;
  * or from Settings (`reason`). The journal never needs an account (ADR 0004). DESIGN.md › "Tài khoản".
  */
 export default function AccountScreen() {
-  const { reason } = useLocalSearchParams<{ reason?: string }>();
-  const intro = t.account.intro[reason === 'send' || reason === 'mine' ? reason : 'settings'];
+  // `email`: prefilled when Settings asks the signed-in user for the password to unlock the backup.
+  const params = useLocalSearchParams<{ reason?: string; email?: string }>();
+  const reason = params.reason;
+  const intro = t.account.intro[reason === 'send' || reason === 'mine' || reason === 'sync' ? reason : 'settings'];
   const [mode, setMode] = useState<Mode>('signIn');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(params.email ?? '');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  // scrypt in pure JS takes seconds on a phone: say why the button spins.
+  const [unlocking, setUnlocking] = useState(false);
   const [server, setServer] = useState<ServerError | null>(null);
   // An anonymous user is upgraded with updateUser, which confirms with an 'email_change' email, not 'signup'.
   const [verifyType, setVerifyType] = useState<'signup' | 'email_change'>('signup');
@@ -87,8 +92,21 @@ export default function AccountScreen() {
     AccessibilityInfo.announceForAccessibility(message);
   };
 
-  const finish = () => {
-    showSnackbar(t.account.signedIn);
+  // The password opens the backup key (ADR 0010); it is never kept.
+  const finish = async (typed: string) => {
+    // From the backup switch: the user already agreed in Settings' dialog. Otherwise still unlock and sync:
+    // an account with backup on gets its journal back on this device.
+    setUnlocking(true);
+    const unlocked = await unlockBackup(typed, reason === 'sync');
+    if (reason === 'sync' && !unlocked) {
+      setServer({ field: 'form', message: t.settings.syncLockedDetail });
+      return AccessibilityInfo.announceForAccessibility(t.settings.syncLockedDetail);
+    }
+    if (reason === 'sync' && !(await enableSync())) showSnackbar(t.common.networkError, 'offline');
+    else {
+      void requestSync();
+      showSnackbar(t.account.signedIn);
+    }
     leave();
   };
 
@@ -103,7 +121,7 @@ export default function AccountScreen() {
     if (!('data' in result)) return;
     const { error } = await supabase.auth.signInWithPassword(result.data);
     if (error) return report(error, t.account.signInError);
-    finish();
+    await finish(result.data.password);
   }
 
   async function create() {
@@ -122,7 +140,7 @@ export default function AccountScreen() {
       // otherwise RLS still treats the user as anonymous and blocks writing.
       if (data.user.new_email || !data.user.email) return toVerify('email_change');
       await supabase.auth.refreshSession();
-      return finish();
+      return finish(credentials.password);
     }
     const { data, error } = await supabase.auth.signUp(credentials);
     if (error) return report(error, t.account.createError);
@@ -132,7 +150,7 @@ export default function AccountScreen() {
       return AccessibilityInfo.announceForAccessibility(t.authError.emailExists);
     }
     // No session returned = email verification is on for the project.
-    if (data.session) finish();
+    if (data.session) await finish(credentials.password);
     else toVerify('signup');
   }
 
@@ -147,6 +165,7 @@ export default function AccountScreen() {
       showSnackbar(t.common.networkError, 'offline');
     } finally {
       setBusy(false);
+      setUnlocking(false);
     }
   }
 
@@ -279,7 +298,7 @@ export default function AccountScreen() {
           )}
         </FormScrollView>
         <ScreenFooter>
-          <PrimaryButton label={primaryLabel} onPress={submit} busy={busy} />
+          <PrimaryButton label={primaryLabel} onPress={submit} busy={busy} busyLabel={unlocking ? t.account.unlocking : undefined} />
         </ScreenFooter>
       </KeyboardAvoidingView>
     </SafeAreaView>
